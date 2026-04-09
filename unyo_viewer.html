@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>東急線 運用ビューワー（閲覧・読込専用）</title>
+  <style>
+    :root { 
+      --toyoko: #d90240; --meguro: #009cd3; --dento: #01aa8f; 
+      --oimachi: #f08d41; --shinyoko: #890d84; --extra: #607d8b; 
+    }
+    body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background: #eef1f5; font-size: 13px; color: #333; }
+    header { background: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    h1 { margin: 0; font-size: 16px; color: #222; flex-shrink: 0; }
+    
+    .tab-area { display: flex; gap: 6px; margin-left: 20px; overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; padding-bottom: 2px; }
+    .tab-area::-webkit-scrollbar { display: none; }
+    .tab { padding: 6px 14px; cursor: pointer; border: 1px solid #ccc; background: #eee; border-radius: 4px; font-size: 12px; font-weight: bold; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
+    .tab:hover { background: #e0e0e0; }
+    .tab.active { background: #333; color: #fff; border-color: #333; }
+    .tab-daily { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; }
+    .tab-import { background: #fff3e0; border-color: #ffcc80; color: #ef6c00; }
+    .tab-custom { background: #e1bee7; border-color: #f48fb1; color: #880e4f; }
+    .tab-custom.active, .tab-daily.active, .tab-import.active { background: #333; color: #fff; border-color: #333; }
+    
+    .header-right { display: flex; align-items: center; gap: 15px; margin-left: auto; flex-shrink: 0; }
+    .btn-link { background: #333; color: #fff; border: none; padding: 7px 14px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; text-decoration: none; }
+    .btn-export { background: #1976d2; color: #fff; border: none; padding: 7px 14px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    .btn-reset { background: #e53935; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; }
+    #cloudStatus { font-family: monospace; font-size: 12px; color: #01aa8f; font-weight: bold; margin-left: 10px; }
+
+    .filter-bar { background: #fafafa; border-bottom: 2px solid #ddd; padding: 10px 20px; position: sticky; top: 51px; z-index: 999; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .filter-label { font-weight: bold; color: #555; font-size: 12px; margin-left: 8px; }
+    .filter-select { padding: 6px 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; font-weight: bold; }
+    
+    #container { padding: 20px; max-width: 1400px; margin: 0 auto; }
+    .line-section { margin-bottom: 35px; }
+    .line-header { padding: 12px 15px; font-size: 16px; font-weight: bold; color: #fff; border-radius: 6px 6px 0 0; }
+    .line-body { background: #f9fafc; border: 1px solid #ddd; border-top: none; border-radius: 0 0 6px 6px; padding: 15px; }
+    
+    .bg-toyoko { background: var(--toyoko); } .bg-meguro { background: var(--meguro); } .bg-dento { background: var(--dento); }
+    .bg-oimachi { background: var(--oimachi); } .bg-shinyoko { background: var(--shinyoko); } .bg-extra { background: var(--extra); }
+
+    .op-box { display: flex; align-items: stretch; background: #fff; border: 1px solid #cfd8dc; border-radius: 6px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .op-left { width: 85px; background: #f0f4f8; border-right: 1px solid #cfd8dc; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px 10px; flex-shrink: 0; }
+    .op-no { font-weight: bold; font-family: monospace; font-size: 20px; color: #d32f2f; }
+    .src-tag { font-size: 10px; background: #ddd; padding: 2px 6px; border-radius: 10px; color: #555; margin-top: 6px; text-align: center; line-height: 1.2; }
+    .op-right { flex: 1; display: flex; flex-direction: column; min-width: 0; width: 100%; }
+    
+    .train-row { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #eee; width: 100%; box-sizing: border-box; }
+    .train-row:last-child { border-bottom: none; }
+    .row-active { background: #fffde7; }
+
+    .t-basic { display: flex; align-items: center; flex-shrink: 0; }
+    .t-col { margin-right: 15px; flex-shrink: 0; }
+    .t-tr { width: 70px; font-family: monospace; color: #1976d2; font-weight: bold; font-size: 14px; text-align: center; }
+    
+    .t-dest-container { width: 160px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+    .dest-row { display: flex; align-items: center; white-space: nowrap; font-size: 13px; color: #444; font-weight: bold; }
+    .delay-row { display: flex; align-items: center; margin-top: 4px; }
+    .t-pos { width: 140px; font-size: 13px; color: #222; }
+
+    .t-hist { flex: 1; min-width: 0; width: 100%; overflow: hidden; }
+    .hist-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; align-items: center; }
+    .hist-scroll::-webkit-scrollbar { height: 6px; }
+    .hist-scroll::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+    
+    .hist-item { background: #f8f9fa; border: 1px solid #e0e0e0; padding: 4px 8px; border-radius: 4px; font-size: 11px; color: #333; display: inline-flex; align-items: center; white-space: nowrap; }
+    .hist-item.is-ekikan { background: transparent; border: none; color: #888; font-size: 10px; padding: 2px 4px; }
+    .hist-item strong { color: #555; margin-right: 4px; }
+    .hist-item.is-ekikan strong { color: #888; }
+    .hist-arrow { color: #ccc; font-size: 10px; }
+    
+    /* ★ 仮時刻の印（*）を赤く強調 */
+    .tentative-mark { color: #d90240; font-weight: bold; font-size: 12px; margin-left: 2px; }
+
+    .kind-badge { display: inline-block; padding: 2px 5px; border-radius: 3px; font-size: 11px; font-weight: bold; color: #fff; margin-right: 6px; text-align: center; min-width: 30px; }
+    .kind-各停 { background: #1976d2; } .kind-B { background: #1976d2; } .kind-G { background: #4caf50; } .kind-準急 { background: #4caf50; } .kind-急行 { background: #d90240; }
+    .kind-特急, .kind-F { background: #ff9800; } .kind-通勤特急, .kind-通特 { background: #ff9800; border-color: #d90240; border-style: solid; border-width: 1px; } 
+    .kind-Sトレイン { background: #009688; } .kind-回送 { background: #9e9e9e; }
+    
+    .delay { color: #d90240; font-weight: bold; font-size: 10px; background: #ffebee; padding: 2px 6px; border-radius: 4px; display: inline-block; border: 1px solid #ffcdd2; }
+
+    .import-container { text-align: center; padding: 40px; background: #fff; border-radius: 8px; border: 2px dashed #ccc; margin-top: 20px; }
+    .import-container p { color: #666; margin-bottom: 20px; font-size: 14px; }
+
+    @media (max-width: 850px) {
+      .train-row { flex-direction: column; align-items: flex-start; }
+      .t-basic { width: 100%; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+      .t-col { margin-right: 0; }
+      .t-dest-container { flex: 1; min-width: 120px; }
+      .t-pos { width: 100%; margin-top: 2px; }
+      .t-pos:empty { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>東急線 運用ビューワー</h1>
+  <div class="tab-area" id="tabArea">
+    <button id="tabW" class="tab" onclick="changeTab('weekday')">平日累計</button>
+    <button id="tabH" class="tab" onclick="changeTab('holiday')">土休日累計</button>
+    <button id="tabD" class="tab tab-daily" onclick="changeTab('daily')">毎日記録</button>
+    <button id="tabI1" class="tab tab-import" onclick="changeTab('import1')">読込1</button>
+    <button id="tabI2" class="tab tab-import" onclick="changeTab('import2')">読込2</button>
+    <button id="tabI3" class="tab tab-import" onclick="changeTab('import3')">読込3</button>
+  </div>
+  <div class="header-right">
+    <button class="btn-link" onclick="location.href='index.html'+location.search">路線図へ</button>
+    <button class="btn-export" onclick="exportData()">💾 現在のデータを保存</button>
+    <button class="btn-link" style="background:#01aa8f;" onclick="forceLoad()">🔄 手動更新</button>
+    <div id="cloudStatus">☁️ 待機中</div>
+  </div>
+</header>
+
+<div class="filter-bar">
+  <div id="contextFilters" style="display:flex; align-items:center; gap:8px;"></div>
+  
+  <span class="filter-label">区間:</span>
+  <select id="sectionFilter" class="filter-select" onchange="updateFilters(); render();">
+    <option value="all">すべての区間</option>
+    <option value="東横線">東横線</option><option value="目黒線">目黒線</option>
+    <option value="田園都市線">田園都市線</option><option value="大井町線">大井町線</option>
+    <option value="新横浜線">新横浜線</option>
+  </select>
+
+  <span class="filter-label">運用:</span>
+  <select id="opFilter" class="filter-select" onchange="render()">
+    <option value="all">すべての運用</option>
+    <option value="toyoko">東横線</option><option value="meguro">目黒線</option>
+    <option value="dento">田園都市線</option><option value="oimachi">大井町線</option>
+    <option value="extra_tymg">東横・目黒系 非定期</option><option value="extra_dtom">田都・大井町系 非定期</option>
+  </select>
+
+  <span class="filter-label">種別:</span>
+  <select id="kindFilter" class="filter-select" onchange="render()">
+    <option value="all">すべて表示</option>
+  </select>
+
+  <span class="filter-label">行先:</span>
+  <select id="destFilter" class="filter-select" onchange="render()">
+    <option value="all">すべての行先</option>
+  </select>
+</div>
+
+<div id="container"></div>
+
+<script>
+const CLOUD_BIN_ID = "69d7ccc236566621a895dafb"; 
+const CLOUD_API_KEY = "$2a$10$s5ZqhvHZu/EXfSz.w5JztuWmwTGq7lbwSVDVSSfL.zVHYRveG7n/6"; 
+
+let logs = { weekday: {}, holiday: {}, daily: {}, customViews: [], import1: null, import2: null, import3: null };
+let currentView = "weekday"; 
+let lastActiveKeys = new Set();
+
+const DB_NAME = 'TokyuDB_v43_viewer'; 
+const STORE_NAME = 'logsStore';
+const RECORD_KEY = 'logs_data'; 
+
+function openDBWithTimeout(dbName, version, timeoutMs) {
+  return new Promise((resolve) => {
+    let isDone = false;
+    const timer = setTimeout(() => { if (!isDone) { isDone = true; resolve(null); } }, timeoutMs);
+    try {
+      const req = indexedDB.open(dbName, version);
+      req.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME); };
+      req.onsuccess = e => { if (!isDone) { isDone = true; clearTimeout(timer); resolve(e.target.result); }};
+      req.onerror = () => { if (!isDone) { isDone = true; clearTimeout(timer); resolve(null); }};
+    } catch(e) { if (!isDone) { isDone = true; clearTimeout(timer); resolve(null); } }
+  });
+}
+
+async function loadLogs() {
+  const db = await openDBWithTimeout(DB_NAME, 1, 1500); 
+  if(!db) return null;
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction([STORE_NAME], 'readonly');
+      tx.objectStore(STORE_NAME).get(RECORD_KEY).onsuccess = e => { resolve(e.target.result || null); };
+    } catch(e) { resolve(null); }
+  });
+}
+
+async function saveLogs() {
+  const db = await openDBWithTimeout(DB_NAME, 1, 1500);
+  if(!db) return;
+  try { db.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME).put(logs, RECORD_KEY); } catch(e) {}
+}
+
+const KIND_OPTIONS = [ { value: "all", label: "すべて表示" }, { value: "各停", label: "各停" }, { value: "B", label: "B各停" }, { value: "G", label: "G各停" }, { value: "準急", label: "準急" }, { value: "急行", label: "急行" }, { value: "通特", label: "通特" }, { value: "特急_all", label: "Fラ/特急" }, { value: "特急", label: "特急" }, { value: "F", label: "Fラ" }, { value: "Sトレイン", label: "S" }, { value: "回送", label: "回送" } ];
+const SECTION_KIND_MAP = { "all": ["all", "各停", "B", "G", "準急", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "東横線": ["all", "各停", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "目黒線": ["all", "各停", "急行", "回送"], "田園都市線": ["all", "各停", "準急", "急行", "回送"], "大井町線": ["all", "各停", "B", "G", "急行", "回送"], "新横浜線": ["all", "各停", "急行", "特急_all", "特急", "F", "回送"] };
+const MASTER_LINE_ORDERS = { "東横線": ["副都心線", "渋谷", "中目黒", "自由が丘", "武蔵小杉", "元住吉", "日吉", "菊名", "横浜", "元町・中華街", "新横浜", "相鉄線"], "目黒線": ["三田線", "南北線", "目黒", "武蔵小山", "大岡山", "奥沢", "武蔵小杉", "元住吉", "日吉", "新横浜", "相鉄線"], "新横浜線": ["副都心線", "三田線", "南北線", "渋谷", "目黒", "日吉", "新横浜", "相鉄線"], "田園都市線": ["半蔵門線", "渋谷", "二子玉川", "溝の口", "梶が谷", "鷺沼", "あざみ野", "長津田", "中央林間", "大井町", "大岡山", "恩田", "こどもの国"], "大井町線": ["大井町", "大岡山", "自由が丘", "二子玉川", "溝の口", "鷺沼", "長津田", "恩田", "中央林間"] };
+const ST_COLOR_MAP = { "代官山":"var(--toyoko)","中目黒":"var(--toyoko)","祐天寺":"var(--toyoko)","学芸大学":"var(--toyoko)","都立大学":"var(--toyoko)","綱島":"var(--toyoko)","大倉山":"var(--toyoko)","菊名":"var(--toyoko)","妙蓮寺":"var(--toyoko)","白楽":"var(--toyoko)","東白楽":"var(--toyoko)","反町":"var(--toyoko)","横浜":"var(--toyoko)","目黒":"var(--meguro)","不動前":"var(--meguro)","武蔵小山":"var(--meguro)","西小山":"var(--meguro)","洗足":"var(--meguro)","奥沢":"var(--meguro)","池尻大橋":"var(--dento)","三軒茶屋":"var(--dento)","駒沢大学":"var(--dento)","桜新町":"var(--dento)","用賀":"var(--dento)","梶が谷":"var(--dento)","宮崎台":"var(--dento)","宮前平":"var(--dento)","鷺沼":"var(--dento)","たまプラーザ":"var(--dento)","あざみ野":"var(--dento)","江田":"var(--dento)","市が尾":"var(--dento)","藤が丘":"var(--dento)","青葉台":"var(--dento)","田奈":"var(--dento)","長津田":"var(--dento)","つくし野":"var(--dento)","すずかけ台":"var(--dento)","南町田":"var(--dento)","つきみ野":"var(--dento)","中央林間":"var(--dento)","恩田":"var(--dento)","こどもの国":"var(--dento)","大井町":"var(--oimachi)","下神明":"var(--oimachi)","戸越公園":"var(--oimachi)","中延":"var(--oimachi)","荏原町":"var(--oimachi)","旗の台":"var(--oimachi)","北千束":"var(--oimachi)","緑が丘":"var(--oimachi)","九品仏":"var(--oimachi)","尾山台":"var(--oimachi)","等々力":"var(--oimachi)","上野毛":"var(--oimachi)","新綱島":"var(--shinyoko)","新横浜":"var(--shinyoko)" };
+
+function getDailyKey(d = new Date()) { const dt = new Date(d.getTime() - 4 * 60 * 60 * 1000); return `${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}`; }
+
+function updateFilters() {
+  const section = document.getElementById("sectionFilter").value;
+  const kindSelect = document.getElementById("kindFilter");
+  const destSelect = document.getElementById("destFilter");
+  const currentKind = kindSelect.value || "all";
+  const currentDest = destSelect.value || "all";
+
+  kindSelect.innerHTML = '<option value="all">すべて表示</option>';
+  KIND_OPTIONS.forEach(opt => { if (opt.value !== "all" && (section === "all" || SECTION_KIND_MAP[section].includes(opt.value))) kindSelect.appendChild(new Option(opt.label, opt.value)); });
+  kindSelect.value = (section === "all" || SECTION_KIND_MAP[section].includes(currentKind)) ? currentKind : "all";
+
+  const data = getActiveData(); const presentDests = new Set();
+  if (section === "all") Object.values(MASTER_LINE_ORDERS).forEach(list => list.forEach(d => presentDests.add(d)));
+  else if (MASTER_LINE_ORDERS[section]) MASTER_LINE_ORDERS[section].forEach(d => presentDests.add(d));
+
+  if (data) {
+    for (const opKey in data) { for (const tUid in data[opKey].trains) {
+        const t = data[opKey].trains[tUid];
+        if (section === "all" || t.sourceName === section) if (t.dest && t.dest !== "終点" && t.dest !== "不明") presentDests.add(t.dest);
+    }}
+  }
+  let sortedDests = []; let seen = new Set();
+  if (section !== "all" && MASTER_LINE_ORDERS[section]) MASTER_LINE_ORDERS[section].forEach(d => { if (presentDests.has(d)) { sortedDests.push(d); seen.add(d); } });
+  Object.keys(MASTER_LINE_ORDERS).forEach(lk => { if (lk === section) return; MASTER_LINE_ORDERS[lk].forEach(d => { if (presentDests.has(d) && !seen.has(d)) { sortedDests.push(d); seen.add(d); } }); });
+  Array.from(presentDests).sort().forEach(d => { if (!seen.has(d)) sortedDests.push(d); });
+
+  destSelect.innerHTML = '<option value="all">すべての行先</option>';
+  sortedDests.forEach(d => destSelect.appendChild(new Option(d.endsWith("線") ? d + "直通" : d + "行", d)));
+  destSelect.value = seen.has(currentDest) || currentDest === "all" ? currentDest : "all";
+}
+
+function getActiveData() {
+  if (currentView === 'weekday' || currentView === 'holiday') return logs[currentView];
+  if (currentView === 'daily') { const sel = document.getElementById('dailyDateSelect'); return sel ? logs.daily[sel.value] : null; }
+  if (currentView.startsWith('import')) { return logs[currentView]; }
+  if (currentView.startsWith('custom_')) {
+    let idx = parseInt(currentView.split('_')[1]);
+    let cv = logs.customViews[idx];
+    if (!cv) return null;
+    let baseData = logs.daily[cv.date];
+    if (!baseData) return null;
+    
+    let filtered = {};
+    for (let opKey in baseData) {
+      if (cv.groups.includes(baseData[opKey].homeLine)) {
+        filtered[opKey] = baseData[opKey];
+      }
+    }
+    return filtered;
+  }
+  return null;
+}
+
+function updateContextUI() {
+  const ctx = document.getElementById("contextFilters");
+  if (!ctx) return;
+  ctx.innerHTML = "";
+
+  if (currentView === "daily") {
+    const label = document.createElement("span"); label.className = "filter-label"; label.textContent = "表示日:"; ctx.appendChild(label);
+    const select = document.createElement("select"); select.id = "dailyDateSelect"; select.className = "filter-select"; select.onchange = () => { updateFilters(); render(); };
+    const keys = Object.keys(logs.daily || {}).sort().reverse();
+    if (keys.length === 0) select.appendChild(new Option("記録なし", getDailyKey()));
+    else keys.forEach(k => select.appendChild(new Option(k, k)));
+    ctx.appendChild(select);
+    // ★ 表示日削除ボタンは削除済み
+
+  } else if (currentView.startsWith("import")) {
+    if (logs[currentView]) {
+      const clearBtn = document.createElement("button");
+      clearBtn.className = "btn-reset"; clearBtn.style.marginLeft = "10px"; clearBtn.style.padding = "5px 10px";
+      clearBtn.textContent = "✖ 読込を破棄";
+      clearBtn.onclick = async () => {
+        if(confirm(`読み込んだデータを破棄してよろしいですか？`)) {
+            logs[currentView] = null; await saveLogs(); changeTab('daily');
+        }
+      };
+      ctx.appendChild(clearBtn);
+    }
+  } else if (currentView.startsWith("custom_")) {
+     const label = document.createElement("span"); label.className = "filter-label"; 
+     let idx = parseInt(currentView.split('_')[1]);
+     label.textContent = "対象記録日: " + (logs.customViews[idx].date || "不明");
+     ctx.appendChild(label);
+  }
+}
+
+function updateTabs() {
+  document.querySelectorAll('.tab-custom').forEach(el => el.remove());
+  const tabArea = document.getElementById('tabArea');
+  if (logs.customViews) {
+    logs.customViews.forEach((cv, i) => {
+      if (cv.active && cv.title) {
+        let btn = document.createElement('button');
+        btn.id = `tabC${i}`;
+        btn.className = `tab tab-custom`;
+        if (currentView === `custom_${i}`) btn.classList.add('active');
+        btn.onclick = () => changeTab(`custom_${i}`);
+        btn.textContent = cv.title;
+        tabArea.appendChild(btn);
+      }
+    });
+  }
+}
+
+function changeTab(tabId) { 
+  currentView = tabId; 
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById(tabId === 'weekday' ? 'tabW' : tabId === 'holiday' ? 'tabH' : tabId === 'daily' ? 'tabD' : tabId === 'import1' ? 'tabI1' : tabId === 'import2' ? 'tabI2' : tabId === 'import3' ? 'tabI3' : tabId.startsWith('custom') ? `tabC${tabId.split('_')[1]}` : null);
+  if(target) target.classList.add('active');
+  lastActiveKeys.clear(); 
+  updateContextUI(); updateFilters(); render(); 
+}
+
+function formatExportData(dayLogs) {
+  if (!dayLogs) return {};
+  const f = {};
+  const gName = { toyoko: "東横線", meguro: "目黒線", dento: "田園都市線", oimachi: "大井町線", extra_tymg: "東横・目黒系統 非定期・臨時等", extra_dtom: "田都・大井町系統 非定期・臨時等" };
+  for (const ok in dayLogs) {
+    const op = dayLogs[ok]; 
+    const prefix = gName[op.homeLine] || op.homeLine;
+    const opName = `${prefix} ${op.label}`; 
+    f[opName] = [];
+    for (const tUid in op.trains) {
+      const t = op.trains[tUid];
+      f[opName].push({ 
+        "列車番号": `${t.trainNo.substring(0,3)}-${t.trainNo.substring(3)}`, 
+        "種別": t.kind, "行先": t.dest, "走行区間": t.sourceName, 
+        "履歴": t.history.map(h => `${h.t} ${h.st}${h.delay > 0 ? ' (遅れ補正)' : ''}`) 
+      });
+    }
+  } 
+  return f;
+}
+
+function exportData() {
+  const data = getActiveData();
+  if (!data || Object.keys(data).length === 0) return alert("保存するデータがありません。");
+  
+  let dKey = currentView;
+  if(currentView === 'daily') dKey = document.getElementById("dailyDateSelect").value;
+  if(currentView.startsWith('custom_')) dKey = logs.customViews[parseInt(currentView.split('_')[1])].title;
+  
+  const exportObj = { "生成日時": new Date().toLocaleString("ja-JP"), "記録日": dKey, "出力ダイヤ": formatExportData(data) };
+  const a = document.createElement('a'); 
+  a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2)); 
+  a.download = `tokyu_data_${Date.now()}.json`; 
+  a.click();
+}
+
+function importJSONData(file, targetTab) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const json = JSON.parse(e.target.result);
+      let jpKeyToUse = Object.keys(json).find(k => k.includes("ダイヤ"));
+      
+      const processKey = (jpKey) => {
+        const result = {};
+        if (!json[jpKey]) return result;
+        for (const opName in json[jpKey]) {
+          let hl = "extra_tymg"; 
+          const firstPart = opName.split(" ")[0]; 
+          let label = opName.split(" ").slice(1).join(" ") || opName;
+
+          if (firstPart === "toyoko" || firstPart === "東横線") hl = "toyoko";
+          else if (firstPart === "meguro" || firstPart === "目黒線") hl = "meguro";
+          else if (firstPart === "dento" || firstPart === "田園都市線") hl = "dento";
+          else if (firstPart === "oimachi" || firstPart === "大井町線") hl = "oimachi";
+          else if (firstPart === "shinyokohama" || firstPart === "新横浜線") hl = "shinyokohama";
+          else if (firstPart === "extra_tymg" || opName.startsWith("東横・目黒系統")) { hl = "extra_tymg"; label = opName.replace("東横・目黒系統 非定期・臨時等 ", ""); }
+          else if (firstPart === "extra_dtom" || opName.startsWith("田都・大井町系統")) { hl = "extra_dtom"; label = opName.replace("田都・大井町系統 非定期・臨時等 ", ""); }
+          else if (firstPart === "extra" || opName.startsWith("非定期")) { hl = "extra_tymg"; label = opName.replace("非定期運用・臨時等 ", ""); }
+
+          const opKey = `${hl}_${label}`;
+          result[opKey] = { label, homeLine: hl, trains: {} };
+
+          json[jpKey][opName].forEach((t, i) => {
+            const rawNo = t["列車番号"].replace(/-/g, ""); const kind = t["種別"]; const dest = t["行先"]; const sourceName = t["走行区間"] || (hl.startsWith("extra") ? "不明" : opName.split(" ")[0]);
+            let internalKind = kind;
+            if (kind === "Fライナー" || kind === "Fラ") internalKind = "F";
+            if (kind === "B各停") internalKind = "B";
+            if (kind === "G各停") internalKind = "G";
+            if (kind === "S") internalKind = "Sトレイン";
+
+            const date = t["初回記録日"] || null;
+            const finalUid = date ? `${rawNo}_${internalKind}_${date}_${i}` : `${rawNo}_${internalKind}_${i}`;
+
+            const history = t["履歴"].map(hStr => {
+              const match = hStr.match(/^(\d{2}:\d{2})\s+(.*?)(?:\s+\(遅れ補正\))?$/);
+              if (match) return { t: match[1], st: match[2], delay: hStr.includes("(遅れ補正)") ? 1 : 0 };
+              return null;
+            }).filter(Boolean);
+
+            result[opKey].trains[finalUid] = { trainNo: rawNo, kind: internalKind, dest, sourceName, date, history };
+          });
+        }
+        return result;
+      };
+
+      logs[targetTab] = processKey(jpKeyToUse || "出力ダイヤ"); 
+      await saveLogs(); changeTab(targetTab);
+    } catch (err) { alert("読み込みに失敗しました。"); }
+  };
+  reader.readAsText(file);
+}
+
+function render() {
+  const container = document.getElementById("container");
+  
+  if (currentView.startsWith("import") && (!logs[currentView] || Object.keys(logs[currentView]).length === 0)) {
+    container.innerHTML = `
+      <div class="import-container">
+        <p>過去に保存したJSONファイルを読み込んで表示します。</p>
+        <input type="file" id="jsonUpload_${currentView}" accept=".json" style="margin-bottom: 10px;">
+        <br>
+        <button class="btn-export" onclick="importJSONData(document.getElementById('jsonUpload_${currentView}').files[0], '${currentView}')">ファイルを読み込む</button>
+      </div>`;
+    return;
+  }
+
+  const data = getActiveData();
+  if (!data || Object.keys(data).length === 0) { container.innerHTML = "<div style='padding:20px;text-align:center;'>データがありません</div>"; return; }
+
+  const secF = document.getElementById("sectionFilter").value;
+  const opF = document.getElementById("opFilter").value;
+  const kindF = document.getElementById("kindFilter").value;
+  const destF = document.getElementById("destFilter").value;
+
+  let html = "";
+  // ★ 定期運用の文字を削除
+  const groups = [
+    { id: 'toyoko', name: '東横線', cl: 'bg-toyoko' }, { id: 'meguro', name: '目黒線', cl: 'bg-meguro' },
+    { id: 'dento', name: '田園都市線', cl: 'bg-dento' }, { id: 'oimachi', name: '大井町線', cl: 'bg-oimachi' },
+    { id: 'extra_tymg', name: '東横・目黒系統 非定期・臨時等', cl: 'bg-extra' }, { id: 'extra_dtom', name: '田都・大井町系統 非定期・臨時等', cl: 'bg-extra' }
+  ];
+
+  groups.forEach(g => {
+    if (opF !== "all" && opF !== g.id) return;
+    const opKeys = Object.keys(data).filter(k => data[k].homeLine === g.id).sort((a, b) => {
+      const getRank = s => { if(s.includes('K')) return 1; if(s.includes('S')) return 2; if(s.includes('T')) return 3; return 4; };
+      return getRank(a) - getRank(b) || a.localeCompare(b);
+    });
+    if(opKeys.length === 0) return;
+
+    let groupHtml = `<div class="line-section"><div class="line-header ${g.cl}">${g.name}</div><div class="line-body">`;
+    let hasContent = false;
+
+    opKeys.forEach(ok => {
+      const u = data[ok]; let tHtml = "";
+      Object.keys(u.trains).sort((a,b) => {
+        const hA = u.trains[a].history, hB = u.trains[b].history;
+        const adj = t => { let [h, m] = t.split(':').map(Number); if (h < 4) h += 24; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; };
+        const tA = hA && hA.length>0 ? adj(hA[0].t) : "99:99", tB = hB && hB.length>0 ? adj(hB[0].t) : "99:99";
+        return tA.localeCompare(tB);
+      }).forEach(tUid => {
+        const t = u.trains[tUid]; if(!t.history || t.history.length===0) return;
+        if(secF !== "all" && t.sourceName !== secF) return;
+        let dKind = t.kind === "通勤特急" ? "通特" : t.kind;
+        if(kindF !== "all" && dKind !== kindF && !(kindF==='特急_all' && (dKind==='特急'||dKind==='F'))) return;
+        if(destF !== "all" && t.dest !== destF) return;
+
+        hasContent = true; 
+        const last = t.history[t.history.length-1];
+        const isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey());
+        const isActive = (currentView === 'weekday' || currentView === 'holiday' || isTodayDaily) && lastActiveKeys.has(`${ok}_${tUid}`);
+
+        let hHtml = `<div class="hist-scroll">`;
+        t.history.forEach((h, i) => {
+          const lColor = ST_COLOR_MAP[h.st] || `var(--${g.id.replace('extra_tymg','extra').replace('extra_dtom','extra')})`;
+          const isEkikan = h.st.includes("駅間");
+          const style = !isEkikan ? `border-bottom:3px solid ${lColor};` : ``;
+          const cls = `hist-item ${isEkikan ? 'is-ekikan' : 'current-stop'}`;
+          
+          // ★ 遅れは表示・印(赤)のみで時刻は実際の時刻のまま（マスターで記録済み）
+          hHtml += `<span class="${cls}" style="${style}"><strong>${h.t}${h.delay>0?'<sup class="tentative-mark">*</sup>':''}</strong> ${h.st}</span>`;
+          if(i < t.history.length-1) hHtml += `<span class="hist-arrow">▶</span>`;
+        });
+        hHtml += `</div>`;
+
+        const dispTrainNo = `${t.trainNo.substring(0,3)}-${t.trainNo.substring(3)}`;
+        let badgeText = dKind;
+        if (dKind === "F") badgeText = "Fラ"; else if (dKind === "B") badgeText = "B各停"; else if (dKind === "G") badgeText = "G各停"; else if (dKind === "Sトレイン") badgeText = "S";
+        let dateTag = ""; if (g.id.startsWith('extra') && t.date) dateTag = `<br><span style="font-size:10px; color:#666;">(${t.date})</span>`;
+
+        tHtml += `<div class="train-row ${isActive?'row-active':''}">
+          <div class="t-basic">
+            <div class="t-col t-tr" style="line-height:1.2;">${dispTrainNo}${dateTag}</div>
+            <div class="t-col t-dest-container">
+              <div class="dest-row"><span class="kind-badge kind-${dKind}">${badgeText}</span> ${t.dest}${t.dest.endsWith('線')?'直通':'行'}</div>
+              ${last.delay>0?`<div class="delay-row"><span class="delay">${last.delay}分遅れ</span></div>`:''}
+            </div>
+            <div class="t-col t-pos">${isActive && !last.st.includes("駅間") ? `<strong>${last.t}</strong> ${last.st}` : ''}</div>
+          </div>
+          <div class="t-col t-hist">${hHtml}</div>
+        </div>`;
+      });
+      // ★ 運行番号部分の「定期運用」の文字は表示しない
+      if(tHtml) groupHtml += `<div class="op-box"><div class="op-left"><div class="op-no">${u.label}</div>${g.id.startsWith('extra')?`<div class="src-tag">from<br>${Object.values(u.trains)[0]?.sourceName||'不明'}</div>`:''}</div><div class="op-right">${tHtml}</div></div>`;
+    });
+    if(hasContent) html += groupHtml + "</div></div>";
+  });
+  container.innerHTML = html || "<div style='padding:30px; text-align:center;'>指定した条件に一致する列車はありません。</div>";
+}
+
+async function forceLoad() {
+  if(!CLOUD_BIN_ID || !CLOUD_API_KEY) return;
+  document.getElementById("cloudStatus").textContent = "☁️ 読込中...";
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest`, { headers: { "X-Master-Key": CLOUD_API_KEY } });
+    if (!res.ok) throw new Error("Load Error");
+    const data = await res.json();
+    if (data.record) {
+      if (data.record.weekday) logs.weekday = data.record.weekday;
+      if (data.record.holiday) logs.holiday = data.record.holiday;
+      if (data.record.daily) logs.daily = data.record.daily;
+      if (data.record.customViews) logs.customViews = data.record.customViews;
+      
+      await saveLogs(); 
+      updateTabs();
+      if (!currentView.startsWith("import")) {
+        updateContextUI(); updateFilters(); render();
+      }
+      document.getElementById("cloudStatus").textContent = `☁️ 最新受信 (${new Date().toLocaleTimeString()})`;
+    }
+  } catch (err) { document.getElementById("cloudStatus").textContent = "☁️ 受信失敗"; }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  document.getElementById("sectionFilter").value = "all";
+  document.getElementById("opFilter").value = "all";
+  
+  const saved = await loadLogs(); if (saved) logs = saved; 
+  changeTab(new Date().getDay() % 6 === 0 ? 'holiday' : 'weekday');
+  
+  forceLoad(); setInterval(forceLoad, 15000); 
+});
+</script>
+</body>
+</html>
