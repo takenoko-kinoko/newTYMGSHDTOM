@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <title>東急線 運用ビューワー（完全版）</title>
+  <style>
+    :root { 
+      --toyoko: #d90240; --meguro: #009cd3; --dento: #01aa8f; 
+      --oimachi: #f08d41; --shinyoko: #890d84; --extra: #607d8b; 
+    }
+    body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background: #eef1f5; font-size: 13px; color: #333; -webkit-text-size-adjust: 100%; }
+    
+    #sticky-header {
+      position: sticky; top: 0; z-index: 1000; background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-top: 4px solid #1976d2;
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; }
+    h1 { margin: 0; font-size: 16px; color: #222; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    
+    .btn-action { background: #333; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; text-decoration: none; }
+    .btn-export { background: #1976d2; }
+    #cloudStatus { font-family: monospace; font-size: 11px; color: #01aa8f; font-weight: bold; background: #e8f5e9; padding: 4px 6px; border-radius: 4px; }
+
+    .tab-area { 
+      display: flex; gap: 6px; overflow-x: auto; padding: 0 15px 10px 15px; 
+      -webkit-overflow-scrolling: touch; scrollbar-width: none; 
+    }
+    .tab-area::-webkit-scrollbar { display: none; }
+    .tab { 
+      flex: 0 0 auto; padding: 8px 16px; cursor: pointer; border: 1px solid #ccc; 
+      background: #f5f5f5; border-radius: 6px; font-size: 13px; font-weight: bold; transition: 0.2s; 
+    }
+    .tab.active { background: #333; color: #fff; border-color: #333; }
+    .tab-daily { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; }
+    .tab-import { background: #fff3e0; border-color: #ffcc80; color: #ef6c00; }
+    .tab-custom { background: #e1bee7; border-color: #f48fb1; color: #880e4f; }
+    .tab-custom.active, .tab-daily.active, .tab-import.active { background: #333; color: #fff; border-color: #333; }
+
+    .filter-bar { 
+      background: #fafafa; border-top: 1px solid #eee; padding: 8px 15px; 
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; 
+    }
+    .filter-item { display: flex; align-items: center; gap: 4px; }
+    .filter-label { font-weight: bold; color: #555; font-size: 12px; }
+    .filter-select { padding: 6px 8px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; font-weight: bold; max-width: 150px; }
+
+    #container { padding: 15px; max-width: 1200px; margin: 0 auto; }
+    .line-section { margin-bottom: 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; }
+    .line-header { padding: 12px 15px; font-size: 16px; font-weight: bold; color: #fff; }
+    .line-body { padding: 10px; }
+    
+    .bg-toyoko { background: var(--toyoko); } .bg-meguro { background: var(--meguro); } .bg-dento { background: var(--dento); }
+    .bg-oimachi { background: var(--oimachi); } .bg-shinyoko { background: var(--shinyoko); } .bg-extra { background: var(--extra); }
+
+    .op-box { display: flex; align-items: stretch; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
+    .op-left { width: 80px; background: #f8f9fa; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; flex-shrink: 0; }
+    .op-no { font-weight: bold; font-family: monospace; font-size: 18px; color: #d32f2f; text-align: center; }
+    .src-tag { font-size: 10px; background: #ddd; padding: 2px 4px; border-radius: 4px; color: #555; margin-top: 4px; text-align: center; }
+    
+    .op-right { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .train-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; width: 100%; box-sizing: border-box; }
+    .train-row:last-child { border-bottom: none; }
+    .row-active { background: #fffde7; }
+
+    .t-basic { display: flex; align-items: center; flex-shrink: 0; width: 260px; }
+    .t-tr { width: 60px; font-family: monospace; color: #1976d2; font-weight: bold; font-size: 13px; }
+    .t-dest { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .t-dest-text { font-size: 13px; font-weight: bold; color: #444; }
+    .t-delay { color: #d90240; font-size: 10px; font-weight: bold; background: #ffebee; padding: 1px 4px; border-radius: 4px; display: inline-block; width: max-content; border: 1px solid #ffcdd2; }
+    
+    .t-pos { width: 140px; font-size: 13px; color: #222; flex-shrink: 0; padding-right: 10px; }
+    .t-hist { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; display: flex; align-items: center; gap: 4px; }
+    .t-hist::-webkit-scrollbar { display: none; }
+    
+    .hist-item { background: #f0f0f0; padding: 3px 6px; border-radius: 4px; font-size: 11px; white-space: nowrap; border-bottom: 2px solid #ccc; }
+    .hist-item.is-ekikan { background: transparent; border: none; color: #888; font-size: 10px; }
+    .hist-item strong { color: #555; margin-right: 3px; }
+
+    .kind-badge { display: inline-block; padding: 2px 4px; border-radius: 3px; font-size: 11px; font-weight: bold; color: #fff; margin-right: 4px; text-align: center; min-width: 28px; }
+    .kind-各停 { background: #1976d2; } .kind-B { background: #1976d2; } .kind-G { background: #4caf50; } .kind-準急 { background: #4caf50; } .kind-急行 { background: #d90240; }
+    .kind-特急, .kind-F { background: #ff9800; } .kind-通特 { background: #ff9800; border: 1px solid #d90240; color: #d90240; } .kind-S { background: #009688; } .kind-回送 { background: #9e9e9e; }
+
+    @media (max-width: 768px) {
+      .train-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .t-basic { width: 100%; flex-wrap: wrap; }
+      .t-pos { width: 100%; margin-top: 4px; font-size: 12px; color: #d32f2f; }
+      .op-box { flex-direction: column; }
+      .op-left { width: 100%; flex-direction: row; justify-content: space-between; border-right: none; border-bottom: 1px solid #e0e0e0; padding: 8px 15px; box-sizing: border-box; }
+      .src-tag { margin-top: 0; }
+      .t-hist { width: 100%; padding-bottom: 4px; }
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+<div id="sticky-header">
+  <div class="header-top">
+    <h1>東急線 運用ビューワー</h1>
+    <div class="header-right">
+      <button class="btn-action" onclick="location.href='index.html'+location.search">路線図</button>
+      <button class="btn-action btn-export" onclick="exportData()">💾 保存</button>
+      <div id="cloudStatus">☁️ 待機中</div>
+    </div>
+  </div>
+
+  <div class="tab-area" id="tabArea">
+    <button id="tab_weekday" class="tab" onclick="changeTab('weekday')">平日累計</button>
+    <button id="tab_holiday" class="tab" onclick="changeTab('holiday')">土休累計</button>
+    <button id="tab_daily" class="tab tab-daily" onclick="changeTab('daily')">毎日記録</button>
+    <button id="tab_import1" class="tab tab-import" onclick="changeTab('import1')">読込1</button>
+    <button id="tab_import2" class="tab tab-import" onclick="changeTab('import2')">読込2</button>
+    <button id="tab_import3" class="tab tab-import" onclick="changeTab('import3')">読込3</button>
+  </div>
+
+  <div class="filter-bar">
+    <div id="contextFilters" style="display:flex; align-items:center; gap:8px; margin-right: 10px;"></div>
+    
+    <div class="filter-item">
+      <span class="filter-label">運用:</span>
+      <select id="opFilter" class="filter-select" onchange="render();">
+        <option value="all">すべての路線</option>
+        <option value="toyoko">東横線</option><option value="meguro">目黒線</option>
+        <option value="dento">田園都市線</option><option value="oimachi">大井町線</option>
+        <option value="extra_tymg">東横・目黒系 非定期</option><option value="extra_dtom">田都・大井町系 非定期</option>
+      </select>
+    </div>
+    
+    <div class="filter-item">
+      <span class="filter-label">所属/番台:</span>
+      <select id="companyFilter" class="filter-select" onchange="render()">
+        <option value="all">すべて</option>
+        <option value="K">東急車 (K)</option>
+        <option value="S">メトロ車 (S)</option>
+        <option value="T">都営/東武車 (T)</option>
+        <option value="M">西武/埼玉高速車 (M)</option>
+        <option value="G">相鉄車 (G)</option>
+        <option value="O100">大井町 100〜129番台</option>
+        <option value="O130">大井町 130番台〜</option>
+      </select>
+    </div>
+
+    <div class="filter-item">
+      <span class="filter-label">種別:</span>
+      <select id="kindFilter" class="filter-select" onchange="render()">
+        <option value="all">すべて</option>
+        <option value="各停">各停</option><option value="B">B各停</option><option value="G">G各停</option>
+        <option value="準急">準急</option><option value="急行">急行</option><option value="通特">通特</option>
+        <option value="特急_all">Fラ/特急</option><option value="特急">特急</option><option value="F">Fラ</option>
+        <option value="Sトレイン">Sトレイン</option><option value="回送">回送</option>
+      </select>
+    </div>
+
+    <div class="filter-item">
+      <span class="filter-label">行先:</span>
+      <select id="destFilter" class="filter-select" onchange="render()"></select>
+    </div>
+  </div>
+</div>
+
+<div id="container"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBdA7xnFKGJxTk6tMf-KOE5bdlWqN_GevA",
+  authDomain: "toukyu-moniter.firebaseapp.com",
+  databaseURL: "https://toukyu-moniter-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "toukyu-moniter",
+  storageBucket: "toukyu-moniter.firebasestorage.app",
+  messagingSenderId: "744758661424",
+  appId: "1:744758661424:web:689d79e93510d0e3e338f5"
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let logs = { weekday: {}, holiday: {}, daily: {}, customViews: [], import1: null, import2: null, import3: null };
+let currentView = "weekday"; 
+
+const DB_NAME = 'TokyuDB_v43_viewer'; 
+const STORE_NAME = 'logsStore';
+const RECORD_KEY = 'logs_data'; 
+
+// ★ 安全な時間計算関数
+function getTv(tStr) {
+  if(!tStr) return -1;
+  let [h, m] = tStr.split(':').map(Number);
+  if(isNaN(h) || isNaN(m)) return -1;
+  if(h < 4) h += 24;
+  return h * 60 + m;
+}
+
+function openDB() {
+  return new Promise((resolve) => {
+    try {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME); };
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror = () => resolve(null);
+    } catch(e) { resolve(null); }
+  });
+}
+async function loadLogs() {
+  const localDb = await openDB(); if(!localDb) return null;
+  return new Promise(resolve => {
+    try { localDb.transaction([STORE_NAME], 'readonly').objectStore(STORE_NAME).get(RECORD_KEY).onsuccess = e => resolve(e.target.result || null); } catch(e) { resolve(null); }
+  });
+}
+async function saveLogs() {
+  const localDb = await openDB(); if(!localDb) return;
+  try { localDb.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME).put(logs, RECORD_KEY); } catch(e) {}
+}
+
+const MASTER_LINE_ORDERS = { 
+  "東横線": ["副都心線", "渋谷", "中目黒", "自由が丘", "武蔵小杉", "元住吉", "日吉", "菊名", "横浜", "元町・中華街", "新横浜", "相鉄線"], 
+  "目黒線": ["三田線", "南北線", "目黒", "武蔵小山", "大岡山", "奥沢", "武蔵小杉", "元住吉", "日吉", "新横浜", "相鉄線"], 
+  "新横浜線": ["副都心線", "三田線", "南北線", "渋谷", "目黒", "日吉", "新横浜", "相鉄線"], 
+  "田園都市線": ["半蔵門線", "渋谷", "用賀", "二子玉川", "溝の口", "梶が谷", "鷺沼", "あざみ野", "長津田", "中央林間", "大井町", "大岡山", "恩田", "こどもの国"], 
+  "大井町線": ["大井町", "大岡山", "自由が丘", "二子玉川", "溝の口", "鷺沼", "長津田", "恩田", "中央林間"] 
+};
+
+const ST_COLOR_MAP = { "代官山":"var(--toyoko)","中目黒":"var(--toyoko)","祐天寺":"var(--toyoko)","学芸大学":"var(--toyoko)","都立大学":"var(--toyoko)","綱島":"var(--toyoko)","大倉山":"var(--toyoko)","菊名":"var(--toyoko)","妙蓮寺":"var(--toyoko)","白楽":"var(--toyoko)","東白楽":"var(--toyoko)","反町":"var(--toyoko)","横浜":"var(--toyoko)","目黒":"var(--meguro)","不動前":"var(--meguro)","武蔵小山":"var(--meguro)","西小山":"var(--meguro)","洗足":"var(--meguro)","奥沢":"var(--meguro)","池尻大橋":"var(--dento)","三軒茶屋":"var(--dento)","駒沢大学":"var(--dento)","桜新町":"var(--dento)","用賀":"var(--dento)","梶が谷":"var(--dento)","宮崎台":"var(--dento)","宮前平":"var(--dento)","鷺沼":"var(--dento)","たまプラーザ":"var(--dento)","あざみ野":"var(--dento)","江田":"var(--dento)","市が尾":"var(--dento)","藤が丘":"var(--dento)","青葉台":"var(--dento)","田奈":"var(--dento)","長津田":"var(--dento)","つくし野":"var(--dento)","すずかけ台":"var(--dento)","南町田":"var(--dento)","つきみ野":"var(--dento)","中央林間":"var(--dento)","恩田":"var(--dento)","こどもの国":"var(--dento)","大井町":"var(--oimachi)","下神明":"var(--oimachi)","戸越公園":"var(--oimachi)","中延":"var(--oimachi)","荏原町":"var(--oimachi)","旗の台":"var(--oimachi)","北千束":"var(--oimachi)","緑が丘":"var(--oimachi)","九品仏":"var(--oimachi)","尾山台":"var(--oimachi)","等々力":"var(--oimachi)","上野毛":"var(--oimachi)","新綱島":"var(--shinyoko)","新横浜":"var(--shinyoko)" };
+
+function getDailyKey(d = new Date()) { const dt = new Date(d.getTime() - 4 * 60 * 60 * 1000); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; }
+
+function updateFilters() {
+  const destSelect = document.getElementById("destFilter");
+  const currentDest = destSelect.value || "all";
+  
+  const data = getActiveData(); 
+  const presentDests = new Set();
+  
+  if (data) {
+    for (const opKey in data) { 
+      for (const tUid in data[opKey].trains) {
+        const t = data[opKey].trains[tUid];
+        if (t.dest && t.dest !== "終点" && t.dest !== "不明") presentDests.add(t.dest);
+      }
+    }
+  }
+  
+  let sortedDests = []; let seen = new Set();
+  Object.keys(MASTER_LINE_ORDERS).forEach(lk => { 
+    MASTER_LINE_ORDERS[lk].forEach(d => { 
+      if (presentDests.has(d) && !seen.has(d)) { sortedDests.push(d); seen.add(d); } 
+    }); 
+  });
+  Array.from(presentDests).sort().forEach(d => { if (!seen.has(d)) sortedDests.push(d); });
+
+  destSelect.innerHTML = '<option value="all">すべての行先</option>';
+  sortedDests.forEach(d => destSelect.appendChild(new Option(d.endsWith("線") ? d + "直通" : d + "行", d)));
+  destSelect.value = seen.has(currentDest) || currentDest === "all" ? currentDest : "all";
+}
+
+function getActiveData() {
+  if (currentView === 'weekday' || currentView === 'holiday') return logs[currentView];
+  if (currentView === 'daily') { const sel = document.getElementById('dailyDateSelect'); return sel ? logs.daily[sel.value] : null; }
+  if (currentView.startsWith('import')) return logs[currentView];
+  if (currentView.startsWith('custom_')) {
+    let idx = parseInt(currentView.split('_')[1]);
+    let cv = logs.customViews[idx];
+    if (!cv) return null;
+    if (cv.type === 'upload' && cv.uploadData) return cv.uploadData;
+    let baseData = logs.daily[cv.date];
+    if (!baseData) return null;
+    let filtered = {};
+    for (let opKey in baseData) {
+      if (cv.groups.includes(baseData[opKey].homeLine)) filtered[opKey] = baseData[opKey];
+    }
+    return filtered;
+  }
+  return null;
+}
+
+function updateContextUI(preservedDailyDate = null) {
+  const ctx = document.getElementById("contextFilters");
+  if (!ctx) return;
+  ctx.innerHTML = "";
+
+  if (currentView === "daily") {
+    const select = document.createElement("select"); 
+    select.id = "dailyDateSelect"; 
+    select.className = "filter-select"; 
+    select.style.maxWidth = "110px";
+    select.onchange = () => { updateFilters(); render(); };
+    
+    const keys = Object.keys(logs.daily || {}).sort().reverse();
+    if (keys.length === 0) select.appendChild(new Option("記録なし", getDailyKey()));
+    else keys.forEach(k => select.appendChild(new Option(k, k)));
+    
+    if (preservedDailyDate && Array.from(select.options).some(o => o.value === preservedDailyDate)) {
+       select.value = preservedDailyDate;
+    }
+    ctx.appendChild(select);
+
+  } else if (currentView.startsWith("import") && logs[currentView]) {
+    const clearBtn = document.createElement("button");
+    clearBtn.className = "btn-reset";
+    clearBtn.textContent = "✖ 破棄";
+    clearBtn.onclick = async () => {
+      if(confirm(`読み込んだデータを破棄しますか？`)) { logs[currentView] = null; await saveLogs(); changeTab('daily'); }
+    };
+    ctx.appendChild(clearBtn);
+  }
+}
+
+function updateTabs() {
+  document.querySelectorAll('.tab-custom').forEach(el => el.remove());
+  const tabArea = document.getElementById('tabArea');
+  if (logs.customViews) {
+    logs.customViews.forEach((cv, i) => {
+      if (cv.active && cv.title) {
+        let btn = document.createElement('button');
+        btn.id = `tab_custom_${i}`;
+        btn.className = `tab tab-custom ${currentView === `custom_${i}` ? 'active' : ''}`;
+        btn.onclick = () => changeTab(`custom_${i}`);
+        btn.textContent = cv.title;
+        tabArea.appendChild(btn);
+      }
+    });
+  }
+}
+
+function changeTab(tabId) { 
+  currentView = tabId; 
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('tab_' + tabId);
+  if(target) target.classList.add('active');
+  
+  updateContextUI(); 
+  updateFilters(); 
+  render(); 
+}
+
+function render() {
+  const container = document.getElementById("container");
+  
+  if (currentView.startsWith("import") && (!logs[currentView] || Object.keys(logs[currentView]).length === 0)) {
+    container.innerHTML = `<div style="text-align:center; padding:40px; background:#fff; border-radius:8px;">
+        <p>JSONファイルを読み込んで表示します。</p>
+        <input type="file" id="jsonUpload_${currentView}" accept=".json" style="margin-bottom: 10px;"><br>
+        <button class="btn-action btn-export" style="margin:0 auto;" onclick="importJSONData(document.getElementById('jsonUpload_${currentView}').files[0], '${currentView}')">読み込む</button>
+      </div>`;
+    return;
+  }
+
+  const data = getActiveData();
+  if (!data || Object.keys(data).length === 0) { container.innerHTML = "<div style='padding:30px;text-align:center;color:#666;'>データがありません</div>"; return; }
+
+  const secF = document.getElementById("sectionFilter").value;
+  const opF = document.getElementById("opFilter").value;
+  const kindF = document.getElementById("kindFilter").value;
+  const destF = document.getElementById("destFilter").value;
+  const compF = document.getElementById("companyFilter").value;
+
+  let html = "";
+  const groups = [
+    { id: 'toyoko', name: '東横線', cl: 'bg-toyoko' }, { id: 'meguro', name: '目黒線', cl: 'bg-meguro' },
+    { id: 'dento', name: '田園都市線', cl: 'bg-dento' }, { id: 'oimachi', name: '大井町線', cl: 'bg-oimachi' },
+    { id: 'extra_tymg', name: '東横・目黒系統 非定期・臨時等', cl: 'bg-extra' }, { id: 'extra_dtom', name: '田都・大井町系統 非定期・臨時等', cl: 'bg-extra' }
+  ];
+
+  groups.forEach(g => {
+    if (opF !== "all" && opF !== g.id) return;
+    const opKeys = Object.keys(data).filter(k => data[k].homeLine === g.id).sort((a, b) => {
+      const getRank = s => { if(s.includes('K')) return 1; if(s.includes('S')) return 2; if(s.includes('T')) return 3; return 4; };
+      return getRank(a) - getRank(b) || a.localeCompare(b);
+    });
+    if(opKeys.length === 0) return;
+
+    let groupHtml = `<div class="line-section"><div class="line-header ${g.cl}">${g.name}</div><div class="line-body">`;
+    let hasContent = false;
+
+    opKeys.forEach(ok => {
+      const u = data[ok]; 
+      
+      if (compF !== "all") {
+          let lbl = u.label || "";
+          let isMatch = false;
+          if (compF === "K" && lbl.includes("K")) isMatch = true;
+          if (compF === "S" && lbl.includes("S")) isMatch = true;
+          if (compF === "T" && lbl.includes("T")) isMatch = true;
+          if (compF === "M" && lbl.includes("M")) isMatch = true;
+          if (compF === "G" && lbl.includes("G")) isMatch = true;
+          if (lbl.match(/^\d+$/)) {
+              let num = parseInt(lbl, 10);
+              if (compF === "O100" && num >= 100 && num <= 129) isMatch = true;
+              if (compF === "O130" && num >= 130) isMatch = true;
+          }
+          if (!isMatch) return; 
+      }
+
+      let tHtml = "";
+      let activeUid = null;
+      let maxTime = -1;
+      
+      Object.keys(u.trains).forEach(uid => {
+        const h = u.trains[uid].history;
+        if(h && h.length > 0) {
+          const lastH = h[h.length-1];
+          if(lastH && lastH.t) {
+            let tv = getTv(lastH.t);
+            if(tv > maxTime) { maxTime = tv; activeUid = uid; }
+          }
+        }
+      });
+
+      Object.keys(u.trains).sort((a,b) => {
+        const hA = u.trains[a].history, hB = u.trains[b].history;
+        const tA = (hA && hA.length>0 && hA[0] && hA[0].t) ? getTv(hA[0].t) : 9999;
+        const tB = (hB && hB.length>0 && hB[0] && hB[0].t) ? getTv(hB[0].t) : 9999;
+        if (tA !== tB) return tA - tB;
+        const dA = u.trains[a].date || "";
+        const dB = u.trains[b].date || "";
+        return dA.localeCompare(dB);
+      }).forEach(tUid => {
+        const t = u.trains[tUid]; if(!t.history || t.history.length===0) return;
+        let dKind = t.kind === "通勤特急" ? "通特" : t.kind;
+        if(kindF !== "all" && dKind !== kindF && !(kindF==='特急_all' && (dKind==='特急'||dKind==='F'))) return;
+        if(destF !== "all" && t.dest !== destF) return;
+
+        hasContent = true; 
+        const last = t.history[t.history.length-1];
+        const isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
+        const isActive = (currentView === 'weekday' || currentView === 'holiday' || isTodayDaily) && (tUid === activeUid);
+
+        let hHtml = `<div class="t-hist">`;
+        t.history.forEach((h, i) => {
+          const lColor = ST_COLOR_MAP[h.st] || `var(--${g.id.replace('extra_tymg','extra').replace('extra_dtom','extra')})`;
+          const isEkikan = h.st.includes("駅間");
+          const style = !isEkikan ? `border-color:${lColor};` : ``;
+          const cls = `hist-item ${isEkikan ? 'is-ekikan' : ''}`;
+          
+          hHtml += `<span class="${cls}" style="${style}"><strong>${h.t}${h.delay>0?'<sup class="tentative-mark">*</sup>':''}</strong> ${h.st}</span>`;
+          if(i < t.history.length-1) hHtml += `<span class="hist-arrow">▶</span>`;
+        });
+        hHtml += `</div>`;
+
+        const dispTrainNo = `${t.trainNo.substring(0,3)}-${t.trainNo.substring(3)}`;
+        let badgeText = dKind;
+        if (dKind === "F") badgeText = "Fラ"; else if (dKind === "B") badgeText = "B各停"; else if (dKind === "G") badgeText = "G各停"; else if (dKind === "Sトレイン") badgeText = "S";
+        let dateTag = ""; if (g.id.startsWith('extra') && t.date) dateTag = `<span style="font-size:10px; color:#666; display:block;">(${t.date})</span>`;
+
+        let posText = isActive ? `<strong>${last.t}</strong> ${last.st}` : '';
+
+        tHtml += `<div class="train-row ${isActive?'row-active':''}">
+          <div class="t-basic">
+            <div class="t-tr">${dispTrainNo}${dateTag}</div>
+            <div class="t-dest">
+              <div class="t-dest-text"><span class="kind-badge kind-${dKind}">${badgeText}</span>${t.dest}${t.dest.endsWith('線')?'直通':'行'}</div>
+              ${last.delay>0?`<div class="t-delay">${last.delay}分遅れ</div>`:''}
+            </div>
+          </div>
+          <div class="t-pos">${posText}</div>
+          ${hHtml}
+        </div>`;
+      });
+      
+      if(tHtml) groupHtml += `<div class="op-box">
+        <div class="op-left">
+          <div class="op-no">${u.label}</div>
+          ${g.id.startsWith('extra')?`<div class="src-tag">from ${Object.values(u.trains)[0]?.sourceName||'不明'}</div>`:''}
+        </div>
+        <div class="op-right">${tHtml}</div>
+      </div>`;
+    });
+    if(hasContent) html += groupHtml + "</div></div>";
+  });
+  container.innerHTML = html || "<div style='padding:30px; text-align:center; color:#666;'>指定した条件に一致する列車はありません。</div>";
+}
+
+function initFirebaseListener() {
+  document.getElementById("cloudStatus").textContent = "☁️ 接続中...";
+  db.ref('logs').on('value', async (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      let selectedDaily = null;
+      const dailySel = document.getElementById("dailyDateSelect");
+      if(dailySel && currentView === 'daily') selectedDaily = dailySel.value;
+      
+      logs = data;
+      if(!logs.weekday) logs.weekday = {};
+      if(!logs.holiday) logs.holiday = {};
+      if(!logs.daily) logs.daily = {};
+      if(!logs.customViews) logs.customViews = [];
+      
+      await saveLogs(); 
+      updateTabs();
+      
+      if (!currentView.startsWith("import")) {
+        updateContextUI(selectedDaily); 
+        updateFilters(); 
+        render();
+      }
+      document.getElementById("cloudStatus").textContent = `☁️ リアルタイム同期中 (${new Date().toLocaleTimeString()})`;
+    }
+  }, () => {
+    document.getElementById("cloudStatus").textContent = "☁️ 接続エラー";
+  });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const saved = await loadLogs(); 
+  if (saved) logs = saved; 
+  
+  // ★ 古い「/」付きデータをブラウザから完全に修復（変換）する処理
+  let didPurge = false;
+  ['weekday', 'holiday', 'daily'].forEach(type => {
+      if(logs[type]) {
+          for(let key in logs[type]) {
+              if(key.includes('/')) { 
+                  let newK = key.replace(/\//g, '-');
+                  if (!logs[type][newK]) logs[type][newK] = logs[type][key];
+                  else Object.assign(logs[type][newK], logs[type][key]);
+                  delete logs[type][key]; 
+                  didPurge = true; 
+              }
+              else if (type !== 'daily' && logs[type][key].trains) {
+                  for(let uid in logs[type][key].trains) {
+                      let tr = logs[type][key].trains[uid];
+                      let needsUpdate = false;
+                      let newUid = uid;
+                      if(uid.includes('/')) { newUid = uid.replace(/\//g, '-'); needsUpdate = true; }
+                      if(tr.date && tr.date.includes('/')) { tr.date = tr.date.replace(/\//g, '-'); needsUpdate = true; }
+                      if (needsUpdate) {
+                          logs[type][key].trains[newUid] = tr;
+                          if (newUid !== uid) delete logs[type][key].trains[uid];
+                          didPurge = true;
+                      }
+                  }
+              }
+          }
+      }
+  });
+  if (didPurge) await saveLogs();
+  
+  changeTab(new Date().getDay() % 6 === 0 ? 'holiday' : 'weekday');
+  initFirebaseListener(); 
+});
+
+function exportData() {
+  const data = getActiveData();
+  if (!data || Object.keys(data).length === 0) return alert("保存するデータがありません。");
+  let dKey = currentView;
+  if(currentView === 'daily') dKey = document.getElementById("dailyDateSelect").value;
+  if(currentView.startsWith('custom_')) dKey = logs.customViews[parseInt(currentView.split('_')[1])].title;
+  
+  const f = {};
+  for (const ok in data) {
+    const opName = `${data[ok].homeLine} ${data[ok].label}`; f[opName] = [];
+    for (const tUid in data[ok].trains) {
+      const t = data[ok].trains[tUid];
+      f[opName].push({ 
+        "列車番号": `${t.trainNo.substring(0,3)}-${t.trainNo.substring(3)}`, 
+        "種別": t.kind, "行先": t.dest, "走行区間": t.sourceName, "初回記録日": t.date,
+        "履歴": t.history.map(h => `${h.t} ${h.st}${h.delay > 0 ? ' (遅れ補正)' : ''}`) 
+      });
+    }
+  }
+  const a = document.createElement('a'); 
+  a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ "生成日時": new Date().toLocaleString("ja-JP"), "記録日": dKey, "出力ダイヤ": f }, null, 2)); 
+  a.download = `tokyu_data_${dKey.replace(/-/g, "")}_${Date.now()}.json`; a.click();
+}
+
+function importJSONData(file, targetTab) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const json = JSON.parse(e.target.result);
+      let jpKeyToUse = Object.keys(json).find(k => k.includes("ダイヤ")) || Object.keys(json)[0];
+      const result = {};
+      if (json[jpKeyToUse]) {
+        for (const opName in json[jpKeyToUse]) {
+          let hl = "extra_tymg"; const firstPart = opName.split(" ")[0]; let label = opName.split(" ").slice(1).join(" ") || opName;
+          if (firstPart.includes("東横")) hl = "toyoko"; else if (firstPart.includes("目黒")) hl = "meguro";
+          else if (firstPart.includes("田園")) hl = "dento"; else if (firstPart.includes("大井町")) hl = "oimachi"; else if (firstPart.includes("新横浜")) hl = "shinyokohama";
+          const opKey = `${hl}_${label}`; result[opKey] = { label, homeLine: hl, trains: {} };
+          json[jpKeyToUse][opName].forEach((t, i) => {
+            let internalKind = t["種別"];
+            if (internalKind === "Fライナー" || internalKind === "Fラ") internalKind = "F"; else if (internalKind === "B各停") internalKind = "B"; else if (internalKind === "G各停") internalKind = "G"; else if (internalKind === "S") internalKind = "Sトレイン";
+            
+            // ★ インポート時もスラッシュをハイフンに安全に置換
+            const dateStr = t["初回記録日"] ? t["初回記録日"].replace(/\//g, '-') : null;
+            const finalUid = dateStr ? `${t["列車番号"].replace(/-/g, "")}_${internalKind}_${dateStr}_${i}` : `${t["列車番号"].replace(/-/g, "")}_${internalKind}_${i}`;
+            
+            result[opKey].trains[finalUid] = { trainNo: t["列車番号"].replace(/-/g, ""), kind: internalKind, dest: t["行先"], sourceName: t["走行区間"] || firstPart, date: dateStr, history: t["履歴"].map(hStr => { const match = hStr.match(/^(\d{2}:\d{2})\s+(.*?)(?:\s+\(遅れ補正\))?$/); return match ? { t: match[1], st: match[2], delay: hStr.includes("(遅れ補正)") ? 1 : 0 } : null; }).filter(Boolean) };
+          });
+        }
+      }
+      logs[targetTab] = result; await saveLogs(); changeTab(targetTab);
+    } catch (err) { alert("読み込みに失敗しました。"); }
+  };
+  reader.readAsText(file);
+}
+</script>
+</body>
+</html>
