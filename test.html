@@ -1,0 +1,1135 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <title>東急線 記録マスター（クラウド専用版）</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background: #eef2f5; font-size: 13px; color: #333; overflow-x: hidden; }
+    header { background: #fff; padding: 10px 15px; display: flex; flex-direction: column; gap: 8px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-top: 4px solid #d32f2f; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px; flex-wrap: wrap; }
+    h1 { margin: 0; font-size: 16px; color: #d32f2f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 150px; }
+    .header-right { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; padding: 15px; max-width: 1200px; margin: 0 auto; }
+    .card { background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .card h3 { margin-top: 0; font-size: 16px; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; margin-bottom: 12px; color: #333; }
+    .status-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 14px; }
+    .btn-action { padding: 8px 12px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; font-weight: bold; color: #333; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .btn-action:hover { background: #e0e0e0; }
+    .btn-primary { background: #d32f2f; color: #fff; border: none; }
+    .btn-blue { background: #1976d2; color: #fff; border: none; }
+    .btn-green { background: #01aa8f; color: #fff; border: none; }
+    .btn-danger { background: #c62828; color: #fff; border: none; }
+    .btn-warn { background: #ff9800; color: #fff; border: none; }
+    select.form-sel, input.form-sel { padding: 8px 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; width: 100%; margin-bottom:10px; box-sizing: border-box; }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; padding:10px; }
+    .modal-box { background:#fff; padding:15px; border-radius:8px; width:100%; max-width:700px; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
+    .modal-box h3 { margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; font-size:16px; flex-shrink:0; }
+    .modal-content { flex:1; overflow-y:auto; margin:10px 0; padding:5px; }
+    .modal-footer { display:flex; justify-content:space-between; margin-top:10px; gap: 10px; flex-shrink:0; flex-wrap:wrap; }
+    .del-group-box { margin-bottom: 12px; border: 1px solid #ccc; border-radius: 6px; padding: 10px; background: #fff; }
+    .del-group-head { font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #1976d2; }
+    .cv-box { border:1px solid #ccc; padding:12px; margin-bottom:12px; border-radius:8px; background:#fbfbfb; }
+    .stop-control { background:#fff3e0; border:1px solid #ffcc80; padding:10px; border-radius:6px; margin-bottom:10px; }
+    .stop-control h4 { margin:0 0 5px 0; color:#e65100; font-size:13px; }
+    .config-panel { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .config-box { flex: 1; min-width: 130px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; padding: 10px; }
+    .config-box h4 { margin: 0 0 8px 0; font-size: 13px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+    .config-lbl { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; font-size: 12px; cursor: pointer; color: #444; font-weight: bold; }
+    
+    /* ★ スクロール不要のコンパクトテーブル */
+    .table-wrapper { width: 100%; overflow-x: hidden; }
+    .compact-table { width:100%; text-align:left; font-size:12px; border-collapse: collapse; margin-top: 5px; }
+    .compact-table th { padding: 4px; border-bottom: 1px solid #ffb74d; color: #e65100; white-space: nowrap; }
+    .compact-table td { padding: 4px; border-bottom: 1px dashed #ffe0b2; white-space: nowrap; }
+    .compact-table input[type="checkbox"] { margin: 0; transform: scale(1.1); vertical-align: middle; }
+
+    .acc-content { display: none; padding: 8px; background: #fff; border-top: 1px solid #eee; }
+
+    @media (max-width: 600px) { .header-top { padding: 6px 0; } h1 { font-size: 15px; } .btn-action { padding: 6px 10px; font-size: 12px; } .modal-box { padding: 12px; } }
+  </style>
+</head>
+<body>
+
+<datalist id="kindOptions"><option value="各停"></option><option value="B各停"></option><option value="G各停"></option><option value="準急"></option><option value="急行"></option><option value="通特"></option><option value="特急"></option><option value="Fラ"></option><option value="Sトレイン"></option><option value="回送"></option></datalist>
+<datalist id="destOptions"></datalist>
+
+<header>
+  <div class="header-top">
+    <h1>🔴 記録マスター機</h1>
+    <div class="header-right">
+      <button class="btn-action btn-blue" onclick="exportRawData()">💾 全出力</button>
+      <button class="btn-action btn-green" onclick="syncToCloud(true)">☁️ 強制送信</button>
+    </div>
+  </div>
+</header>
+
+<div class="dashboard">
+  <div class="card">
+    <h3>📡 稼働ステータス・制御</h3>
+    <div class="status-row"><span>API 記録</span><span id="apiStatus" style="color:#777;">準備中...</span></div>
+    <div class="status-row"><span>クラウド</span><span id="cloudStatus" style="color:#d32f2f;">待機中...</span></div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px;">
+       <span style="font-size:13px; font-weight:bold; color:#555;">自動送信:</span>
+       <select id="syncIntervalSelect" class="form-sel" style="margin-bottom:0; flex:1;">
+         <option value="0">即時 (0秒)</option><option value="15">15秒</option><option value="30">30秒</option><option value="45">45秒</option><option value="60">60秒</option>
+       </select>
+       <button class="btn-action btn-blue" style="margin:0;" onclick="applySyncInterval(true)">決定</button>
+    </div>
+
+    <div class="stop-control">
+      <h4>📝 API記録の停止</h4>
+      <div style="display:flex; gap:5px; margin-bottom:5px;">
+        <select id="recStopType" class="form-sel" style="margin-bottom:0; flex:1;" onchange="toggleCustom('rec')">
+          <option value="3am">午前3時まで</option><option value="indefinite">無期限</option><option value="custom">日時指定...</option>
+        </select>
+        <button id="btnRecStop" class="btn-action btn-warn" style="margin:0; width:60px;" onclick="toggleRecordStop()">実行</button>
+      </div>
+      <div id="recCustomDateArea" style="display:none; padding:8px; background:#fff; border:1px solid #ccc; border-radius:4px;">
+         <label style="font-size:11px; font-weight:bold;">開始 (空で今すぐ):</label><input type="datetime-local" id="recStopStartDate" class="form-sel" style="margin-bottom:5px;">
+         <label style="font-size:11px; font-weight:bold;">終了:</label><input type="datetime-local" id="recStopEndDate" class="form-sel" style="margin-bottom:0;">
+      </div>
+    </div>
+    <div class="stop-control" style="margin-bottom:0;">
+      <h4>☁️ 配信(送信)の停止</h4>
+      <div style="display:flex; gap:5px; margin-bottom:5px;">
+        <select id="syncStopType" class="form-sel" style="margin-bottom:0; flex:1;" onchange="toggleCustom('sync')">
+          <option value="3am">午前3時まで</option><option value="indefinite">無期限</option><option value="custom">日時指定...</option>
+        </select>
+        <button id="btnSyncStop" class="btn-action btn-warn" style="margin:0; width:60px;" onclick="toggleSyncStop()">実行</button>
+      </div>
+      <div id="syncCustomDateArea" style="display:none; padding:8px; background:#fff; border:1px solid #ccc; border-radius:4px;">
+         <label style="font-size:11px; font-weight:bold;">開始 (空で今すぐ):</label><input type="datetime-local" id="syncStopStartDate" class="form-sel" style="margin-bottom:5px;">
+         <label style="font-size:11px; font-weight:bold;">終了:</label><input type="datetime-local" id="syncStopEndDate" class="form-sel" style="margin-bottom:0;">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ 記録・配信設定</h3>
+    <div class="config-panel">
+      <div class="config-box"><h4 style="color:#1976d2;">📝 記録対象</h4><label class="config-lbl"><input type="checkbox" id="cfgRecW">平日</label><label class="config-lbl"><input type="checkbox" id="cfgRecH">土休</label><label class="config-lbl"><input type="checkbox" id="cfgRecD">毎日</label></div>
+      <div class="config-box"><h4 style="color:#01aa8f;">📡 タブ表示</h4><label class="config-lbl"><input type="checkbox" id="cfgDispW">平日</label><label class="config-lbl"><input type="checkbox" id="cfgDispH">土休</label><label class="config-lbl"><input type="checkbox" id="cfgDispD">毎日</label></div>
+    </div>
+    
+    <div class="config-box" style="margin-top:10px; width: 100%; border-color:#ffcc80; background:#fff8e1; padding: 10px;">
+      <h4 style="color:#e65100; margin-bottom: 5px;">🚃 運用ごとの記録(記)・配信(配)</h4>
+      <div class="table-wrapper">
+        <table class="compact-table">
+          <tr><th>運用名</th><th style="text-align:center;">記録</th><th style="text-align:center;">配信</th></tr>
+          <tr><td style="font-weight:bold;">東横線</td><td style="text-align:center;"><input type="checkbox" id="cfgRec_toyoko"></td><td style="text-align:center;"><input type="checkbox" id="cfgDisp_toyoko"></td></tr>
+          <tr><td style="font-weight:bold;">目黒線</td><td style="text-align:center;"><input type="checkbox" id="cfgRec_meguro"></td><td style="text-align:center;"><input type="checkbox" id="cfgDisp_meguro"></td></tr>
+          <tr><td style="font-weight:bold;">新横浜線</td><td style="text-align:center;"><input type="checkbox" id="cfgRec_shinyokohama"></td><td style="text-align:center;"><input type="checkbox" id="cfgDisp_shinyokohama"></td></tr>
+          <tr><td style="font-weight:bold;">田園都市線</td><td style="text-align:center;"><input type="checkbox" id="cfgRec_dento"></td><td style="text-align:center;"><input type="checkbox" id="cfgDisp_dento"></td></tr>
+          <tr><td style="font-weight:bold;">大井町線</td><td style="text-align:center;"><input type="checkbox" id="cfgRec_oimachi"></td><td style="text-align:center;"><input type="checkbox" id="cfgDisp_oimachi"></td></tr>
+          <tr><td style="color:#555;">TY・MG 非定期</td><td style="text-align:center;"><input type="checkbox" id="cfgRec_extra_tymg"></td><td style="text-align:center;"><input type="checkbox" id="cfgDisp_extra_tymg"></td></tr>
+          <tr style="border-bottom:none;"><td style="color:#555;">DT・OM 非定期</td><td style="text-align:center;"><input type="checkbox" id="cfgRec_extra_dtom"></td><td style="text-align:center;"><input type="checkbox" id="cfgDisp_extra_dtom"></td></tr>
+        </table>
+      </div>
+    </div>
+    
+    <div class="config-box" style="margin-top:10px; width: 100%; border-color:#f48fb1; background:#fce4ec; padding: 10px;">
+      <h4 style="margin:0 0 5px; color:#c2185b;">📢 テロップ</h4>
+      <input type="text" id="cfgNotice" class="form-sel" placeholder="空欄で非表示" style="margin-bottom:0; font-weight:normal;">
+    </div>
+    <button class="btn-action btn-green" style="margin-top:15px; width:100%; padding:10px; font-size:14px;" onclick="saveAppConfig()">✅ 設定を保存</button>
+  </div>
+
+  <div class="card" style="border: 2px solid #1976d2; background: #f0f7ff;">
+    <h3 style="color: #1565c0; font-size: 16px; border-bottom: 2px solid #bbdefb;">📝 列車編集ツール</h3>
+    <p style="font-size:12px; color:#555; margin-top:0; margin-bottom:12px;">列車の種別・行先・編成・備考の編集や、履歴の分割・統合・一括削除を行います。</p>
+    <button class="btn-action btn-blue" style="width:100%; padding:15px; font-size:15px;" onclick="openEditModal()">📝 列車編集ツールを開く</button>
+  </div>
+
+  <div class="card">
+    <h3>💾 管理・復元・削除</h3>
+    <div style="background:#e3f2fd; padding:10px; border-radius:6px; border:1px solid #bbdefb; margin-bottom: 15px;">
+      <h4 style="margin:0 0 8px 0; color:#1565c0; font-size:13px;">📥 データを復元・統合</h4>
+      <input type="file" id="importRawFile" accept=".json" class="form-sel" style="margin-bottom:8px; background:#fff; padding:6px;">
+      <button class="btn-action btn-blue" style="width:100%; margin:0; padding:8px;" onclick="importRawData()">統合して復元</button>
+    </div>
+    
+    <button class="btn-action" style="width:100%; margin-bottom:10px; padding:10px; font-size:13px;" onclick="toggleModal('bulkDeleteModal', true); document.getElementById('bulkDelDate').value=getDailyKey(); buildBulkDeleteList();">📅 日付と路線で一括削除</button>
+    <button class="btn-action btn-warn" style="width:100%; margin-bottom:10px; padding:10px; background:#ff9800; color:#fff;" onclick="toggleModal('timeDeleteModal', true); document.getElementById('timeDelDate').value=getDailyKey();">⏳ 時間帯を指定して削除</button>
+    <button class="btn-action btn-primary" style="width:100%; margin-bottom:15px; padding:10px; font-size:13px;" onclick="openDeleteModal()">🗑 運用・駅の個別削除</button>
+    
+    <button class="btn-danger btn-action" style="padding:10px; font-size:13px;" onclick="resetAllData()">🔥 全データを初期化</button>
+  </div>
+
+  <div class="card">
+    <h3>🗓 1週間のダイヤ設定</h3>
+    <div id="scheduleSettingsArea" style="margin-bottom:10px;">読込中...</div>
+    <button class="btn-action btn-green" style="width:100%; padding:10px; font-size:14px;" onclick="saveScheduleSettings()">✅ 保存</button>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:5px;">📺 特別配信タブ設定</h3>
+    <p style="font-size:12px; color:#666; margin-top:0; margin-bottom:10px;">独自のタブを追加し、特定のデータやJSONを配信します。</p>
+    <button class="btn-action btn-green" style="width:100%; padding:10px; font-size:14px;" onclick="openCustomTabModal()">📡 設定画面を開く</button>
+  </div>
+</div>
+
+<div id="bulkDeleteModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>📅 日付・路線で一括削除</h3>
+    <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:140px;">
+        <label style="font-size:12px; font-weight:bold; color:#1976d2; display:block; margin-bottom:4px;">対象データ</label>
+        <select id="bulkDelType" class="form-sel" onchange="buildBulkDeleteList()" style="margin-bottom:0;"><option value="weekday">平日</option><option value="holiday">土休</option><option value="daily" selected>毎日</option></select>
+      </div>
+      <div style="flex:1; min-width:140px;">
+        <label style="font-size:12px; font-weight:bold; color:#e65100; display:block; margin-bottom:4px;">日付 (YYYY-MM-DD)</label>
+        <input type="text" id="bulkDelDate" class="form-sel" placeholder="例: 2026-04-10" style="margin-bottom:0;" oninput="buildBulkDeleteList()">
+      </div>
+    </div>
+    <div id="bulkDelList" class="modal-content" style="border:1px solid #eee; border-radius:6px; background:#fafafa; padding:10px;"></div>
+    <div class="modal-footer">
+      <button class="btn-action" style="flex:1; padding:10px;" onclick="toggleModal('bulkDeleteModal', false)">キャンセル</button>
+      <button class="btn-action btn-danger" style="flex:1; margin-top:0; padding:10px;" onclick="executeBulkDelete()">一括削除を実行</button>
+    </div>
+  </div>
+</div>
+
+<div id="timeDeleteModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>⏳ 時間帯を指定して削除</h3>
+    <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:140px;"><select id="timeDelType" class="form-sel" style="margin-bottom:0;"><option value="weekday">平日</option><option value="holiday">土休</option><option value="daily" selected>毎日</option></select></div>
+      <div style="flex:1; min-width:140px;"><input type="text" id="timeDelDate" class="form-sel" placeholder="YYYY-MM-DD" style="margin-bottom:0;"></div>
+    </div>
+    <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+      <div style="flex:1;"><label style="font-size:12px; color:#d32f2f; font-weight:bold;">開始時刻</label><input type="time" id="timeDelStart" class="form-sel" style="margin-bottom:0;"></div>
+      <span style="font-weight:bold; padding-top:15px;">〜</span>
+      <div style="flex:1;"><label style="font-size:12px; color:#d32f2f; font-weight:bold;">終了時刻</label><input type="time" id="timeDelEnd" class="form-sel" style="margin-bottom:0;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-action" style="flex:1; padding:10px;" onclick="toggleModal('timeDeleteModal', false)">キャンセル</button>
+      <button class="btn-action btn-danger" style="flex:1; margin-top:0; padding:10px;" onclick="executeTimeDelete()">時間帯削除を実行</button>
+    </div>
+  </div>
+</div>
+
+<div id="deleteModal" class="modal-overlay">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:10px; flex-shrink:0;">
+      <h3 style="margin:0; border:none; padding:0;">🗑 個別削除・一括削除</h3>
+    </div>
+    <div style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+        <select id="delDayType" class="form-sel" onchange="buildDeleteList()" style="flex-shrink:0;"><option value="weekday">平日</option><option value="holiday">土休</option><optgroup label="毎日" id="delDailyGroup"></optgroup></select>
+        <input type="text" id="delSpecificDate" class="form-sel" placeholder="日付で絞り込み (YYYY-MM-DD)" style="flex-shrink:0; margin-bottom:10px; font-weight:normal;" oninput="buildDeleteList()">
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; flex-wrap:wrap; gap:5px;">
+           <button type="button" class="btn-action btn-danger" style="margin:0; padding:8px 12px; font-size:13px; width:auto;" onclick="executeBatchDelete()">☑ 選択した項目を削除</button>
+           <div style="display:flex; gap:5px;">
+              <button type="button" class="btn-action" style="padding:6px 12px;" onclick="toggleAllAccs('delList', 'block')">全て展開</button>
+              <button type="button" class="btn-action" style="padding:6px 12px;" onclick="toggleAllAccs('delList', 'none')">全て閉じる</button>
+           </div>
+        </div>
+        <div id="delList" class="modal-content" style="border:1px solid #eee; border-radius:6px; background:#fafafa; padding:10px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-action" style="flex:1; padding:10px;" onclick="toggleModal('deleteModal', false)">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<div id="editModal" class="modal-overlay">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:10px; flex-shrink:0;">
+      <h3 style="margin:0; border:none; padding:0;">📝 列車編集 (備考/分割/統合/削除)</h3>
+    </div>
+    <div id="editViewSelect" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+      <select id="editDayType" class="form-sel" onchange="buildEditList()" style="flex-shrink:0;"><option value="weekday">平日</option><option value="holiday">土休</option><optgroup label="毎日" id="editDailyGroup"></optgroup></select>
+      <input type="text" id="editSpecificDate" class="form-sel" placeholder="日付で絞り込み (YYYY-MM-DD)" style="flex-shrink:0; margin-bottom:10px; font-weight:normal;" oninput="buildEditList()">
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; flex-wrap:wrap; gap:5px;">
+         <button type="button" class="btn-action btn-danger" style="margin:0; padding:8px 12px; font-size:13px; width:auto;" onclick="executeEditBatchDelete()">☑ 選択した列車を削除</button>
+         <div style="display:flex; gap:5px;">
+            <button type="button" class="btn-action" style="padding:6px 12px;" onclick="toggleAllAccs('editList', 'block')">全て展開</button>
+            <button type="button" class="btn-action" style="padding:6px 12px;" onclick="toggleAllAccs('editList', 'none')">全て閉じる</button>
+         </div>
+      </div>
+      <div id="editList" class="modal-content" style="border:1px solid #eee; border-radius:6px; background:#fafafa; padding:10px;"></div>
+    </div>
+    
+    <div id="editViewDetail" style="display:none; flex:1; overflow-y:auto; padding:5px;"></div>
+    <div class="modal-footer" id="editFooterMain">
+      <button class="btn-action" style="flex:1; padding:10px;" onclick="toggleModal('editModal', false)">閉じる</button>
+    </div>
+    <div class="modal-footer" id="editFooterDetail" style="display:none;">
+      <button class="btn-action" style="flex:1; padding:10px;" onclick="backToEditList()">戻る</button>
+      <button class="btn-action btn-green" style="flex:1; padding:10px;" onclick="saveTrainEdit()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<div id="customTabModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>📡 特別配信タブ設定</h3>
+    <div id="customTabForms" class="modal-content" style="background:#fff; border:none; padding:0;"></div>
+    <div class="modal-footer">
+      <button class="btn-action" style="flex:1; padding:10px;" onclick="toggleModal('customTabModal', false)">キャンセル</button>
+      <button class="btn-action btn-green" style="flex:1; padding:10px;" onclick="saveCustomTabs()">設定を保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =========================================
+// グローバル変数・基盤
+// =========================================
+const GAS_URL = "https://script.google.com/macros/s/AKfycbz2kiJGu75UH_dfN_3qZ3VEzgUacc7dwPM6FJE-ab-V-sR1W74QE96zhi8KPF6gh0Qo/exec";
+let logs = { weekday: {}, holiday: {}, daily: {}, customViews: [], appConfig: { recW: true, recH: true, recD: true, dispW: true, dispH: true, dispD: true, lines: {}, noticeText: "" } };
+let scheduleSettings = JSON.parse(localStorage.getItem('tokyu_schedule_settings')) || {};
+let lastSyncedDataString = ""; let tempUploadData = [null, null, null]; let publicHolidays = {}; 
+let syncTimer = null; let retryTimer = null; 
+let stopRecStart = parseInt(localStorage.getItem('tokyu_stop_rec_start')) || 0; let stopRecEnd = parseInt(localStorage.getItem('tokyu_stop_rec_end')) || 0;
+let stopSyncStart = parseInt(localStorage.getItem('tokyu_stop_sync_start')) || 0; let stopSyncEnd = parseInt(localStorage.getItem('tokyu_stop_sync_end')) || 0;
+let isSyncing = false; let isFetchingApi = false; let isCloudLoaded = false; let currentEditCtx = null;
+
+const LINE_OPS = ['toyoko', 'meguro', 'shinyokohama', 'dento', 'oimachi', 'extra_tymg', 'extra_dtom'];
+const DEST_MAP_TYMG = { 0:"", 33:"副都心線", 54:"三田線", 67:"南北線", 71:"目黒", 73:"武蔵小山", 76:"大岡山", 77:"奥沢", 78:"渋谷", 84:"自由が丘", 88:"武蔵小杉", 89:"元住吉", 90:"日吉", 93:"菊名", 98:"横浜", 103:"元町・中華街", 108:"新横浜", 111:"相鉄線" };
+const DEST_MAP_DTOM = { 0:"", 45:"半蔵門線", 51:"大井町", 58:"大岡山", 60:"自由が丘", 65:"渋谷", 69:"用賀", 71:"二子玉川", 74:"溝の口", 75:"梶が谷", 78:"鷺沼", 80:"あざみ野", 86:"長津田", 91:"中央林間", 95:"恩田", 96:"こどもの国", 137:"元住吉" };
+const API_ENDPOINTS = [{id:'toyoko',url:"https://w-tid.jp/tokyu/toyoko.json"},{id:'meguro',url:"https://w-tid.jp/tokyu/meguro.json"},{id:'shinyokohama',url:"https://w-tid.jp/tokyu/shinyokohama.json"},{id:'dento',url:"https://w-tid.jp/tokyu/dento.json"},{id:'oimachi',url:"https://w-tid.jp/tokyu/oimachi.json"}];
+const OP_SETS = { weekday:{ toyoko:{K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65], S:[1,2,3,4,5,7,9,11,13,15,17,19,23,25,29,31,33,41,45,47,53,63,67,71,75,77,79,81,85,87,89,91], M:[2,4,6,10,14,18,20,22,24,28,30,34], T:[3,5,13,19,21,23], G:[91,92,93,94,95]}, meguro:{K:[1,2,4,5,7,8,9,10,11,12,13,14,15,16,17,18,20,21,22,23,25,26,27,29,30,31,33,34,36,38,40,41,43,46,47,48], S:[30,32,34,36,38,40,42,44,46,50,52,54,56,60,62,64,66,68,70], T:[21,23,25,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85,87,89], M:[80,82,84,86,88,90,92,94,96], G:[31,32,33,35,37,38,39,42,43,44]}, dento:{K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44], S:[51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85,87,89,91,93], T:[50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82], N:[181,182,183]}, oimachi:{O:[101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,131,132,133,134,135,136,137]} }, holiday:{ toyoko:{K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,51,52,53,54,55,56,57,58,59,60,61,62,63,64], S:[1,2,3,4,5,7,9,11,13,17,19,23,25,29,31,33,39,43,45,47,49,53,55,57,61,67,73,75,85,87,89,91], M:[2,6,8,10,12,14,24,28,30,71,72,73,74,75], T:[3,5,11,13,17,19], G:[91,92,94]}, meguro:{K:[1,2,3,6,7,8,9,10,11,12,13,14,15,16,18,20,22,23,24,25,26,27,29,30,31,32,33,35,37,40,42,44], S:[30,32,34,36,38,40,42,44,46,48,50,52,56,60,64,66,68,70], T:[21,23,25,31,33,35,37,39,41,43,45,47,49,53,55,57,59,61,63,65,67], M:[80,82,84,86,88,90,92,94,96], G:[31,32,34,35,37,38,39,41,43,44]}, dento:{K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], S:[51,53,55,57,59,61,63,65,67,69,71,73,75,77], T:[50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82], N:[181,182,183]}, oimachi:{O:[101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,131,132,133,134,135,136]} } };
+const STATION_MAP = { 26:"渋谷", 908:"代官山", 909:"中目黒", 910:"祐天寺", 911:"学芸大学", 912:"都立大学", 913:"自由が丘", 914:"田園調布", 915:"多摩川", 916:"新丸子", 57:"武蔵小杉", 918:"元住吉", 919:"日吉", 920:"綱島", 921:"大倉山", 108:"菊名", 923:"妙蓮寺", 924:"白楽", 925:"東白楽", 926:"反町", 5:"横浜", 24:"目黒", 929:"不動前", 930:"武蔵小山", 931:"西小山", 932:"洗足", 933:"大岡山", 934:"奥沢", 942:"池尻大橋", 943:"三軒茶屋", 944:"駒沢大学", 945:"桜新町", 946:"用賀", 947:"二子玉川", 948:"二子新地", 949:"高津", 950:"溝の口", 951:"梶が谷", 952:"宮崎台", 953:"宮前平", 954:"鷺沼", 955:"たまプラーザ", 956:"あざみ野", 957:"江田", 958:"市が尾", 959:"藤が丘", 960:"青葉台", 961:"田奈", 114:"長津田", 963:"つくし野", 964:"すずかけ台", 965:"南町田", 966:"つきみ野", 967:"中央林間", 494:"大井町", 969:"下神明", 970:"戸越公園", 971:"中延", 972:"荏原町", 973:"旗の台", 974:"北千束", 976:"緑が丘", 978:"九品仏", 979:"尾山台", 980:"等々力", 981:"上野毛", 982:"新綱島", 983:"新横浜" };
+
+function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
+function toggleElement(id) { let el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'none') ? 'block' : 'none'; }
+function toggleAllAccs(parentId, displayStyle) { document.querySelectorAll(`#${parentId} .acc-content`).forEach(el => el.style.display = displayStyle); }
+function confirmTriple(msg1, msg2, msg3) { return confirm(msg1) && confirm(msg2) && confirm(msg3); }
+function getTv(tStr) { if(!tStr) return -1; let [h, m] = tStr.split(':').map(Number); if(isNaN(h) || isNaN(m)) return -1; if(h < 4) h += 24; return h * 60 + m; }
+function getDailyKey(d = new Date()) { const dt = new Date(d.getTime() - 4 * 60 * 60 * 1000); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; }
+function toggleCustom(type) { let sel = document.getElementById(type + 'StopType'); let area = document.getElementById(type + 'CustomDateArea'); area.style.display = (sel.value === 'custom') ? 'block' : 'none'; }
+
+function getAutoDayType(targetDate) {
+  const dKey = `${targetDate.getFullYear()}-${String(targetDate.getMonth()+1).padStart(2,'0')}-${String(targetDate.getDate()).padStart(2,'0')}`;
+  const isWeekend = targetDate.getDay() === 0 || targetDate.getDay() === 6;
+  if (publicHolidays[dKey]) return { type: 'holiday', reason: publicHolidays[dKey] };
+  if (isWeekend) return { type: 'holiday', reason: '土日' }; return { type: 'weekday', reason: '平日' };
+}
+
+function getDispKind(rawKind, groupId) {
+  if (!rawKind) return "各停"; rawKind = String(rawKind); 
+  if (rawKind === "B" || (groupId === 'oimachi' && (rawKind === "普" || rawKind === "普通" || rawKind === "各" || rawKind === "各停"))) return "B";
+  if (rawKind === "普" || rawKind === "普通" || rawKind === "各" || rawKind === "各停") return "各停";
+  if (rawKind.includes("通勤特急") || rawKind.includes("通特") || rawKind === "通") return "通特";
+  if (rawKind.includes("F") || rawKind.includes("Ｆ")) return "F"; 
+  if (rawKind.includes("特急") || rawKind === "特") return "特急";
+  if (rawKind.includes("急行") || rawKind === "急") return "急行";
+  if (rawKind.includes("準急") || rawKind === "準") return "準急";
+  if (rawKind.includes("回送") || rawKind === "回") return "回送";
+  if (rawKind === "G" || rawKind === "Ｇ") return "G";
+  if (rawKind.includes("S") || rawKind.includes("Ｓ") || rawKind.includes("Sトレイン") || rawKind.includes("Ｓトレイン")) return "Sトレイン";
+  return rawKind;
+}
+
+function getUnyoInfoStr(opNo, lineKey, dayType) {
+  const opRaw = parseInt(opNo, 10); if (opRaw === 0 || isNaN(opRaw)) return null;
+  const H = opNo.charAt(0); const XX_str = opNo.substring(1); const XX = parseInt(XX_str, 10);
+  let hl = "extra"; let label = String(opRaw); let detectedHl = "extra"; let detectedSys = "";
+  if (['toyoko', 'meguro', 'shinyokohama'].includes(lineKey)) {
+    if (H==='0') { detectedHl="toyoko"; detectedSys="K"; label=XX_str+"K"; } else if (H==='1') { detectedHl="toyoko"; detectedSys="M"; label=XX_str+"M"; }
+    else if (H==='7') { detectedHl="toyoko"; detectedSys="S"; label=XX_str+"S"; } else if (H==='8') { detectedHl="toyoko"; detectedSys="T"; label=XX_str+"T"; }
+    else if (H==='9') { detectedHl="toyoko"; detectedSys="G"; label=XX_str+"G"; } else if (H==='2') { detectedHl="meguro"; detectedSys="K"; label=XX_str+"K"; }
+    else if (H==='3') { detectedHl="meguro"; detectedSys="S"; label=XX_str+"S"; } else if (H==='4') { detectedHl="meguro"; detectedSys="T"; label=XX_str+"T"; }
+    else if (H==='5') { detectedHl="meguro"; detectedSys="M"; label=XX_str+"M"; } else if (H==='6') { detectedHl="meguro"; detectedSys="G"; label=XX_str+"G"; }
+  } else if (['dento', 'oimachi'].includes(lineKey)) {
+    if (opRaw>=101 && opRaw<=149) { detectedHl="oimachi"; detectedSys="O"; label=String(opRaw); } 
+    else if (opRaw>=181 && opRaw<=183) { detectedHl="dento"; detectedSys="N"; label=String(opRaw); } 
+    else if (opRaw>=1 && opRaw<=49) { detectedHl="dento"; detectedSys="K"; label=String(opRaw).padStart(2,'0')+"K"; } 
+    else if (opRaw>=50 && opRaw<=99) {
+      detectedHl="dento";
+      if ([90,92,94,96,98,99].includes(opRaw)) { detectedSys="K"; label=String(opRaw).padStart(2,'0')+"K"; } 
+      else { detectedSys=(opRaw%2===1?"S":"T"); label=String(opRaw).padStart(2,'0')+detectedSys; }
+    }
+  }
+  let checkVal = XX; if (detectedHl === 'oimachi' || detectedHl === 'dento') checkVal = opRaw;
+  const isReg = OP_SETS[dayType] && OP_SETS[dayType][detectedHl] && OP_SETS[dayType][detectedHl][detectedSys] && OP_SETS[dayType][detectedHl][detectedSys].includes(checkVal);
+  if (isReg) hl = detectedHl; else hl = ['toyoko', 'meguro', 'shinyokohama'].includes(lineKey) ? "extra_tymg" : "extra_dtom";
+  if (detectedHl === 'meguro' && MEGURO_PAIRS[dayType] && MEGURO_PAIRS[dayType][label]) label = MEGURO_PAIRS[dayType][label];
+  const sourceName = {toyoko:"東横線", meguro:"目黒線", shinyokohama:"新横浜線", dento:"田園都市線", oimachi:"大井町線"}[lineKey];
+  return { homeLine: hl, label: label, sourceName: sourceName };
+}
+function cleanDestName(rawDestCode, destMap) { return destMap[rawDestCode] || "不明"; }
+
+// =========================================
+// データ初期化・同期
+// =========================================
+function sanitizeLogs() {
+  ['weekday', 'holiday', 'daily'].forEach(type => {
+      if(logs[type]) {
+          for(let key in logs[type]) {
+              if(key.includes('/')) { 
+                  let newK = key.replace(/\//g, '-');
+                  if (!logs[type][newK]) logs[type][newK] = logs[type][key]; else Object.assign(logs[type][newK], logs[type][key]);
+                  delete logs[type][key]; 
+              }
+              else if (type !== 'daily' && logs[type][key] && logs[type][key].trains) {
+                  for(let uid in logs[type][key].trains) {
+                      let tr = logs[type][key].trains[uid]; if(!tr) continue;
+                      if(tr.deleted) { delete logs[type][key].trains[uid]; continue; }
+                      let needsUpdate = false; let newUid = uid;
+                      if(uid.includes('/')) { newUid = uid.replace(/\//g, '-'); needsUpdate = true; }
+                      if(tr.date && tr.date.includes('/')) { tr.date = tr.date.replace(/\//g, '-'); needsUpdate = true; }
+                      if (needsUpdate) { logs[type][key].trains[newUid] = tr; if (newUid !== uid) delete logs[type][key].trains[uid]; }
+                  }
+                  if(Object.keys(logs[type][key].trains).length === 0) { delete logs[type][key]; }
+              }
+          }
+      }
+  });
+}
+
+async function loadFromCloud() {
+  if (isSyncing) return;
+  try {
+    const res = await fetch(GAS_URL + "?t=" + Date.now()); if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json(); if (isSyncing) return;
+    if (data) {
+      logs.weekday = data.weekday || {}; logs.holiday = data.holiday || {}; logs.daily = data.daily || {};
+      logs.customViews = data.customViews || []; if(data.appConfig) logs.appConfig = data.appConfig;
+      sanitizeLogs(); loadAppConfigUI(); isCloudLoaded = true;
+    }
+  } catch (err) { console.error("Cloud load error:", err); isCloudLoaded = false; }
+}
+
+function loadAppConfigUI() {
+  let cfg = logs.appConfig || { recW: true, recH: true, recD: true, dispW: true, dispH: true, dispD: true, lines: {}, noticeText: "" };
+  document.getElementById('cfgRecW').checked = cfg.recW !== false; document.getElementById('cfgRecH').checked = cfg.recH !== false; document.getElementById('cfgRecD').checked = cfg.recD !== false;
+  document.getElementById('cfgDispW').checked = cfg.dispW !== false; document.getElementById('cfgDispH').checked = cfg.dispH !== false; document.getElementById('cfgDispD').checked = cfg.dispD !== false;
+  document.getElementById('cfgNotice').value = cfg.noticeText || "";
+  LINE_OPS.forEach(key => {
+    let lineCfg = cfg.lines && cfg.lines[key] ? cfg.lines[key] : { rec: true, disp: true };
+    if(document.getElementById(`cfgRec_${key}`)) document.getElementById(`cfgRec_${key}`).checked = lineCfg.rec !== false;
+    if(document.getElementById(`cfgDisp_${key}`)) document.getElementById(`cfgDisp_${key}`).checked = lineCfg.disp !== false;
+  });
+}
+
+function saveAppConfig() {
+  let linesCfg = {};
+  LINE_OPS.forEach(key => { linesCfg[key] = { rec: document.getElementById(`cfgRec_${key}`) ? document.getElementById(`cfgRec_${key}`).checked : true, disp: document.getElementById(`cfgDisp_${key}`) ? document.getElementById(`cfgDisp_${key}`).checked : true }; });
+  logs.appConfig = { recW: document.getElementById('cfgRecW').checked, recH: document.getElementById('cfgRecH').checked, recD: document.getElementById('cfgRecD').checked, dispW: document.getElementById('cfgDispW').checked, dispH: document.getElementById('cfgDispH').checked, dispD: document.getElementById('cfgDispD').checked, noticeText: document.getElementById('cfgNotice').value, lines: linesCfg };
+  syncToCloud(true); alert("設定を保存しました。");
+}
+
+async function loadHolidays() { try { const res = await fetch("https://holidays-jp.github.io/api/v1/date.json"); if (res.ok) publicHolidays = await res.json(); } catch(e) {} renderScheduleSettings(); }
+function renderScheduleSettings() {
+  let html = ""; let today = new Date(new Date().getTime() - 4 * 60 * 60 * 1000); 
+  for(let i=0; i<7; i++) {
+    let target = new Date(today.getTime() + i * 24 * 60 * 60 * 1000); let dKey = `${target.getFullYear()}-${String(target.getMonth()+1).padStart(2,'0')}-${String(target.getDate()).padStart(2,'0')}`;
+    let autoInfo = getAutoDayType(target); let autoText = autoInfo.type === 'holiday' ? `自動: 土休 (${autoInfo.reason})` : `自動: 平日`;
+    let currentSetting = scheduleSettings[dKey] || 'auto';
+    html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px dashed #eee; padding-bottom:5px;">
+      <div><span style="font-weight:bold; font-size:13px;">${target.getMonth()+1}/${target.getDate()} (${['日','月','火','水','木','金','土'][target.getDay()]})</span><br><span style="font-size:11px; color:#666;">${autoText}</span></div>
+      <select id="sched_${dKey.replace(/-/g, '')}" class="form-sel" style="width:120px; margin:0;"><option value="auto" ${currentSetting==='auto'?'selected':''}>カレンダー</option><option value="weekday" ${currentSetting==='weekday'?'selected':''}>強制: 平日</option><option value="holiday" ${currentSetting==='holiday'?'selected':''}>強制: 土休</option></select></div>`;
+  }
+  document.getElementById("scheduleSettingsArea").innerHTML = html;
+}
+
+function saveScheduleSettings() {
+  let today = new Date(new Date().getTime() - 4 * 60 * 60 * 1000);
+  for(let i=0; i<7; i++) {
+    let target = new Date(today.getTime() + i * 24 * 60 * 60 * 1000); let dKey = `${target.getFullYear()}-${String(target.getMonth()+1).padStart(2,'0')}-${String(target.getDate()).padStart(2,'0')}`;
+    let val = document.getElementById(`sched_${dKey.replace(/-/g, '')}`).value; if(val === 'auto') { delete scheduleSettings[dKey]; } else { scheduleSettings[dKey] = val; }
+  }
+  localStorage.setItem('tokyu_schedule_settings', JSON.stringify(scheduleSettings)); alert("ダイヤ設定を保存しました。");
+}
+
+function applySyncInterval(showMsg = false) {
+  if(syncTimer) clearInterval(syncTimer); let val = parseInt(document.getElementById('syncIntervalSelect').value); localStorage.setItem('tokyu_sync_interval', val);
+  if (val > 0) { syncTimer = setInterval(() => syncToCloud(false), val * 1000); } if (showMsg) alert(`自動送信頻度を更新しました。`);
+}
+
+function syncToCloud(isForce = false) {
+  if (!isCloudLoaded && !isForce) { document.getElementById("cloudStatus").textContent = "待機 (初期ロード未完了)"; return; }
+  const nowTime = Date.now(); let blockSync = false;
+  if (stopSyncEnd === -1) { if (stopSyncStart <= nowTime) blockSync = true; } else if (stopSyncEnd > 0) { if (nowTime >= stopSyncStart && nowTime < stopSyncEnd) blockSync = true; }
+  if (!isForce && blockSync) { document.getElementById("cloudStatus").textContent = "⏸ 送信停止中"; document.getElementById("cloudStatus").style.color = "#ff9800"; return; } 
+  else if (stopSyncEnd > 0 && nowTime >= stopSyncEnd) { stopSyncStart = 0; stopSyncEnd = 0; localStorage.setItem('tokyu_stop_sync_start', 0); localStorage.setItem('tokyu_stop_sync_end', 0); updateStopUI(); }
+
+  const liveData = { weekday: logs.weekday || {}, holiday: logs.holiday || {}, daily: logs.daily || {}, customViews: logs.customViews || [], appConfig: logs.appConfig || {} };
+  const currentDataString = JSON.stringify(liveData); if (!isForce && currentDataString === lastSyncedDataString) return; 
+
+  document.getElementById("cloudStatus").textContent = isForce ? "⚡ 強制送信中..." : "送信中...";
+  fetch(GAS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain" }, body: currentDataString }).then(() => {
+    lastSyncedDataString = currentDataString; document.getElementById("cloudStatus").textContent = `☁️ ${new Date().toLocaleTimeString()}`; document.getElementById("cloudStatus").style.color = "#01aa8f";
+    if (retryTimer) { clearInterval(retryTimer); retryTimer = null; }
+  }).catch(err => {
+    document.getElementById("cloudStatus").textContent = `☁️ 送信エラー (自動再送中...)`; document.getElementById("cloudStatus").style.color = "#d32f2f";
+    if (!retryTimer) { retryTimer = setInterval(() => syncToCloud(true), 180000); }
+  });
+}
+
+function updateStopUI() {
+  const btnRec = document.getElementById("btnRecStop"); const btnSync = document.getElementById("btnSyncStop"); const now = Date.now();
+  if (stopRecEnd === -1) { btnRec.innerHTML = (stopRecStart > now) ? "⏸ 待機" : "▶️ 再開"; btnRec.style.background = (stopRecStart > now) ? "#ff9800" : "#4caf50"; } 
+  else if (stopRecEnd > 0) {
+      if (now >= stopRecStart && now < stopRecEnd) { btnRec.innerHTML = "▶️ 再開"; btnRec.style.background = "#4caf50"; } 
+      else if (now < stopRecStart) { btnRec.innerHTML = "⏸ 待機"; btnRec.style.background = "#ff9800"; } 
+      else { stopRecStart = 0; stopRecEnd = 0; localStorage.setItem('tokyu_stop_rec_start', 0); localStorage.setItem('tokyu_stop_rec_end', 0); btnRec.innerHTML = "⏸ 停止"; btnRec.style.background = "#ff9800"; }
+  } else { btnRec.innerHTML = "⏸ 停止"; btnRec.style.background = "#ff9800"; }
+
+  if (stopSyncEnd === -1) { btnSync.innerHTML = (stopSyncStart > now) ? "⏸ 待機" : "▶️ 再開"; btnSync.style.background = (stopSyncStart > now) ? "#ff9800" : "#4caf50"; } 
+  else if (stopSyncEnd > 0) {
+      if (now >= stopSyncStart && now < stopSyncEnd) { btnSync.innerHTML = "▶️ 再開"; btnSync.style.background = "#4caf50"; } 
+      else if (now < stopSyncStart) { btnSync.innerHTML = "⏸ 待機"; btnSync.style.background = "#ff9800"; } 
+      else { stopSyncStart = 0; stopSyncEnd = 0; localStorage.setItem('tokyu_stop_sync_start', 0); localStorage.setItem('tokyu_stop_sync_end', 0); btnSync.innerHTML = "⏸ 停止"; btnSync.style.background = "#ff9800"; }
+  } else { btnSync.innerHTML = "⏸ 停止"; btnSync.style.background = "#ff9800"; }
+}
+function toggleRecordStop() {
+  const type = document.getElementById('recStopType').value; let start = 0; let end = 0;
+  if (stopRecEnd !== 0) { alert("API記録を再開します。"); } 
+  else {
+      if (type === 'indefinite') { end = -1; alert("API記録を無期限に停止します。"); } 
+      else if (type === 'custom') {
+          let startStr = document.getElementById('recStopStartDate').value; let endStr = document.getElementById('recStopEndDate').value;
+          if (!endStr) return alert("終了日時を指定してください。");
+          start = startStr ? new Date(startStr).getTime() : Date.now(); end = new Date(endStr).getTime(); alert("指定期間のAPI記録を停止します。");
+      } else { let d = new Date(); let next3AM = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 3, 0, 0, 0); if (d.getHours() >= 3) next3AM.setDate(next3AM.getDate() + 1); end = next3AM.getTime(); alert("午前3時までAPI記録を停止します。"); }
+  }
+  stopRecStart = start; stopRecEnd = end; localStorage.setItem('tokyu_stop_rec_start', start); localStorage.setItem('tokyu_stop_rec_end', end); updateStopUI();
+}
+function toggleSyncStop() {
+  const type = document.getElementById('syncStopType').value; let start = 0; let end = 0;
+  if (stopSyncEnd !== 0) { alert("クラウド送信を再開します。"); } 
+  else {
+      if (type === 'indefinite') { end = -1; alert("送信を無期限に停止します。"); } 
+      else if (type === 'custom') {
+          let startStr = document.getElementById('syncStopStartDate').value; let endStr = document.getElementById('syncStopEndDate').value;
+          if (!endStr) return alert("終了日時を指定してください。");
+          start = startStr ? new Date(startStr).getTime() : Date.now(); end = new Date(endStr).getTime(); alert("指定期間の送信を停止します。");
+      } else { let d = new Date(); let next3AM = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 3, 0, 0, 0); if (d.getHours() >= 3) next3AM.setDate(next3AM.getDate() + 1); end = next3AM.getTime(); alert("午前3時まで送信を停止します。"); }
+  }
+  stopSyncStart = start; stopSyncEnd = end; localStorage.setItem('tokyu_stop_sync_start', start); localStorage.setItem('tokyu_stop_sync_end', end); updateStopUI(); if (stopSyncEnd === 0) syncToCloud(false);
+}
+
+// =========================================
+// API取得
+// =========================================
+async function fetchData() {
+  if (isFetchingApi) return; const now = new Date(); updateStopUI(); const nowTime = now.getTime();
+  if (stopRecEnd === -1) { if (stopRecStart <= nowTime) { document.getElementById("apiStatus").textContent = "⏸ 記録停止中"; document.getElementById("apiStatus").style.color = "#ff9800"; return; } } 
+  else if (stopRecEnd > 0) { if (nowTime >= stopRecStart && nowTime < stopRecEnd) { document.getElementById("apiStatus").textContent = "⏸ 記録停止中"; document.getElementById("apiStatus").style.color = "#ff9800"; return; } }
+
+  const dKey = getDailyKey(now); if(!logs.daily[dKey]) logs.daily[dKey] = {};
+  let targetDateForCalc = new Date(now.getTime() - 4 * 60 * 60 * 1000); let autoInfo = getAutoDayType(targetDateForCalc); let dayType = autoInfo.type;
+  if (scheduleSettings[dKey]) { if (scheduleSettings[dKey] === 'weekday') dayType = 'weekday'; if (scheduleSettings[dKey] === 'holiday') dayType = 'holiday'; }
+  const cfg = logs.appConfig || {}; let targetObjects = [];
+  if (dayType === 'weekday' && cfg.recW !== false) targetObjects.push({ obj: logs.weekday, isDaily: false });
+  if (dayType === 'holiday' && cfg.recH !== false) targetObjects.push({ obj: logs.holiday, isDaily: false });
+  if (cfg.recD !== false) targetObjects.push({ obj: logs.daily[dKey], isDaily: true });
+  
+  let hasError = false; isFetchingApi = true;
+
+  try {
+      for(let api of API_ENDPOINTS) {
+        try {
+          const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 10000);
+          const res = await fetch(`${api.url}?t=${Date.now()}`, { cache: 'no-store', signal: controller.signal }); clearTimeout(timeoutId);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`); const data = await res.json(); if (!data || !data.trains) continue;
+          
+          data.trains.forEach(t => {
+            if (!t.train_number || t.train_number === "0") return;
+            let rawOp = String(t.operation_number || "0"); let rawTr = String(t.train_number || "0"); if (rawOp === "09999900" || rawTr === "09999900") return;
+            let tNo = ""; let opNo = "";
+            if (rawOp.length === 8 && rawOp !== "09999900") { tNo = rawOp.substring(1, 7); opNo = tNo.substring(0, 3); } 
+            else if (rawTr.length === 8 && rawTr !== "09999900") { tNo = rawTr.substring(1, 7); opNo = rawOp.padStart(3, '0'); } 
+            else { tNo = rawTr.padStart(6, '0'); opNo = rawOp.padStart(3, '0'); }
+
+            if (tNo === "999000" || tNo === "999900") return;
+            const stName = STATION_MAP[t.station_id] || (t.section_id ? `駅間(${t.section_id})` : "不明");
+            if (api.id === 'meguro' && tNo === "999090" && stName.includes("大岡山")) return;
+
+            const info = getUnyoInfoStr(opNo, api.id, dayType); if (!info) return;
+            if (cfg.lines && cfg.lines[info.homeLine] && cfg.lines[info.homeLine].rec === false) return;
+
+            const opKey = `${info.homeLine}_${info.label}`; const destMapToUse = ['toyoko', 'meguro', 'shinyokohama'].includes(api.id) ? DEST_MAP_TYMG : DEST_MAP_DTOM;
+            const destStr = cleanDestName(t.destination_station_code, destMapToUse); const dispKind = getDispKind(t.kind || "普", info.homeLine);
+            const delay = parseInt(t.delay_time, 10) || 0; const actualTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const adjDate = new Date(now.getTime() - delay * 60000); const adjTimeStr = `${String(adjDate.getHours()).padStart(2, '0')}:${String(adjDate.getMinutes()).padStart(2, '0')}`;
+            const affiliation = t.affiliation || ""; const orchestration = t.train_orchestration_number || "";
+
+            targetObjects.forEach(cfgObj => {
+              let target = cfgObj.obj; if (!target) return;
+              const timeStr = cfgObj.isDaily ? actualTimeStr : adjTimeStr;
+              if (!target[opKey]) target[opKey] = { label: info.label, homeLine: info.homeLine, trains: {} };
+              
+              const sameNoKeys = Object.keys(target[opKey].trains).filter(k => target[opKey].trains[k] && target[opKey].trains[k].trainNo === tNo && !target[opKey].trains[k].deleted);
+              let targetTrainUid = null;
+
+              if (sameNoKeys.length > 0) {
+                for (let k of sameNoKeys) {
+                    const tr = target[opKey].trains[k]; if (!tr || !tr.history) continue;
+                    if (tr.dest !== destStr) continue;
+                    if (cfgObj.isDaily && ['toyoko', 'meguro', 'shinyokohama', 'extra_tymg', 'extra_dtom'].includes(info.homeLine)) {
+                        if (tr.affiliation && affiliation && tr.affiliation !== affiliation) continue;
+                        if (tr.orchestration && orchestration && orchestration !== "00" && tr.orchestration !== orchestration) continue;
+                    }
+                    let isKindChanged = (tr.kind !== dispKind); let lastSt = tr.history.length > 0 && tr.history[tr.history.length - 1] ? tr.history[tr.history.length - 1].st : "";
+                    if (isKindChanged && !["渋谷", "目黒", "新横浜", "新綱島"].some(s => lastSt.includes(s) || stName.includes(s))) continue; 
+                    const existingRec = tr.history.find(h => h && h.st === stName);
+                    if (existingRec) { if (existingRec.t === timeStr || existingRec.delay > 0) { targetTrainUid = k; break; } else if (!info.homeLine.startsWith('extra')) { targetTrainUid = k; break; } }
+                }
+                if (!targetTrainUid) {
+                    let maxTime = -1; let latestKey = null;
+                    sameNoKeys.forEach(k => {
+                        const tr = target[opKey].trains[k]; if (!tr || !tr.history) return;
+                        if (tr.dest !== destStr) return;
+                        if (cfgObj.isDaily && ['toyoko', 'meguro', 'shinyokohama', 'extra_tymg', 'extra_dtom'].includes(info.homeLine)) {
+                            if (tr.affiliation && affiliation && tr.affiliation !== affiliation) return;
+                            if (tr.orchestration && orchestration && orchestration !== "00" && tr.orchestration !== orchestration) return;
+                        }
+                        let isKindChanged = (tr.kind !== dispKind); let lastSt = tr.history.length > 0 && tr.history[tr.history.length - 1] ? tr.history[tr.history.length - 1].st : "";
+                        if (isKindChanged && !["渋谷", "目黒", "新横浜", "新綱島"].some(s => lastSt.includes(s) || stName.includes(s))) return; 
+                        const h = tr.history; if (h && h.length > 0) { const lastH = h[h.length - 1]; if (lastH && lastH.t) { let tv = getTv(lastH.t); if (tv > maxTime) { maxTime = tv; latestKey = k; } } }
+                    });
+                    let currTv = adjDate.getHours() * 60 + adjDate.getMinutes(); if (adjDate.getHours() < 4) currTv += 24 * 60;
+                    if (latestKey) { if (currTv - maxTime > 240) targetTrainUid = `${tNo}_${dispKind}_${Date.now()}`; else targetTrainUid = latestKey; }
+                }
+              }
+              if (!targetTrainUid) targetTrainUid = (info.homeLine.startsWith('extra')) ? `${tNo}_${dispKind}_${dKey}_${Date.now()}` : `${tNo}_${dispKind}`;
+
+              let existingRemarks = "";
+              if (target[opKey].trains[targetTrainUid]) existingRemarks = target[opKey].trains[targetTrainUid].remarks || "";
+
+              if (!target[opKey].trains[targetTrainUid]) {
+                  target[opKey].trains[targetTrainUid] = { trainNo: tNo, kind: dispKind, dest: destStr, sourceName: {toyoko:"東横線", meguro:"目黒線", shinyokohama:"新横浜線", dento:"田園都市線", oimachi:"大井町線"}[api.id], date: dKey, history: [], lastSeen: Date.now(), remarks: existingRemarks };
+                  if (cfgObj.isDaily && ['toyoko', 'meguro', 'shinyokohama', 'extra_tymg', 'extra_dtom'].includes(info.homeLine)) { target[opKey].trains[targetTrainUid].affiliation = affiliation; target[opKey].trains[targetTrainUid].orchestration = orchestration; }
+              } else { 
+                  target[opKey].trains[targetTrainUid].dest = destStr; target[opKey].trains[targetTrainUid].sourceName = {toyoko:"東横線", meguro:"目黒線", shinyokohama:"新横浜線", dento:"田園都市線", oimachi:"大井町線"}[api.id]; target[opKey].trains[targetTrainUid].lastSeen = Date.now(); target[opKey].trains[targetTrainUid].remarks = existingRemarks;
+                  if (cfgObj.isDaily && ['toyoko', 'meguro', 'shinyokohama', 'extra_tymg', 'extra_dtom'].includes(info.homeLine)) { if (affiliation) target[opKey].trains[targetTrainUid].affiliation = affiliation; if (orchestration && orchestration !== "00") target[opKey].trains[targetTrainUid].orchestration = orchestration; }
+              }
+
+              const hist = target[opKey].trains[targetTrainUid].history; if (!hist) return;
+              if (hist.length === 0) {
+                const otherKeys = Object.keys(target[opKey].trains).filter(k => k !== targetTrainUid && !target[opKey].trains[k].deleted); let prevTrain = null; let pMaxTime = -1;
+                otherKeys.forEach(k => { const h = target[opKey].trains[k] ? target[opKey].trains[k].history : null; if (h && h.length > 0) { const lastH = h[h.length - 1]; if (lastH && lastH.t) { let tv = getTv(lastH.t); if (tv > pMaxTime) { pMaxTime = tv; prevTrain = target[opKey].trains[k]; } } } });
+                if (prevTrain && prevTrain.history && prevTrain.history.length > 0) {
+                  const pHist = prevTrain.history; const pLast = pHist[pHist.length - 1];
+                  if (pLast && pLast.st && pLast.st.includes("駅間")) {
+                    let currTv = adjDate.getHours() * 60 + adjDate.getMinutes(); if (adjDate.getHours() < 4) currTv += 24 * 60;
+                    let diffPrev = currTv - pMaxTime; if (diffPrev < 0) diffPrev += 24 * 60; if (diffPrev < 240) pHist.push({ t: timeStr, st: stName, delay: delay });
+                  }
+                }
+                hist.push({ t: timeStr, st: stName, delay: delay });
+              } else {
+                const lastHist = hist[hist.length - 1];
+                if (lastHist && lastHist.st !== stName) {
+                  let existingIdx = -1; if (!info.homeLine.startsWith('extra')) existingIdx = hist.findIndex(h => h && h.st === stName);
+                  if (existingIdx !== -1) { let ex = hist[existingIdx]; if (ex && ex.delay > 0 && delay === 0) { ex.t = timeStr; ex.delay = 0; } else if (ex && delay > 0 && delay < ex.delay) { ex.t = timeStr; ex.delay = delay; } } 
+                  else { hist.push({ t: timeStr, st: stName, delay: delay }); hist.sort((a, b) => { return getTv(a.t) - getTv(b.t); }); }
+                } else if (lastHist) {
+                  if (lastHist.delay > 0 && delay === 0) { lastHist.t = timeStr; lastHist.delay = 0; } else if (delay > 0 && delay < lastHist.delay) { lastHist.t = timeStr; lastHist.delay = delay; }
+                }
+              }
+            });
+          });
+        } catch(e) { hasError = true; }
+      }
+      
+      if (hasError) { document.getElementById("apiStatus").textContent = "API接続エラー (再試行中...)"; document.getElementById("apiStatus").style.color = "#d32f2f"; } 
+      else { document.getElementById("apiStatus").textContent = "正常 (" + now.toLocaleTimeString() + ")"; document.getElementById("apiStatus").style.color = "#01aa8f"; }
+      let val = parseInt(document.getElementById('syncIntervalSelect').value); if (val === 0) { syncToCloud(false); }
+  } finally { isFetchingApi = false; }
+}
+
+// =========================================
+// 削除系 UI
+// =========================================
+function openBulkDeleteModal() {
+  document.getElementById('bulkDelDate').value = getDailyKey(new Date()); document.getElementById('bulkDelType').value = 'weekday';
+  buildBulkDeleteList(); toggleDisplay('bulkDeleteModal', true);
+}
+function buildBulkDeleteList() {
+  let type = document.getElementById('bulkDelType').value; let targetDate = document.getElementById('bulkDelDate').value.trim();
+  if (!targetDate) { document.getElementById('bulkDelList').innerHTML = "<div style='text-align:center; padding:10px; color:#d32f2f;'>対象の日付を入力してください。</div>"; return; }
+  let data = (type === 'daily') ? (logs.daily[targetDate] || {}) : (logs[type] || {});
+  let grouped = { toyoko: [], meguro: [], dento: [], oimachi: [], extra_tymg: [], extra_dtom: [] };
+  Object.keys(data).forEach(k => {
+    let u = data[k]; let hasTargetDateTrain = false;
+    for (let tUid in u.trains) { if (!u.trains[tUid].deleted && u.trains[tUid].date === targetDate) { hasTargetDateTrain = true; break; } }
+    if (hasTargetDateTrain) { if(grouped[u.homeLine]) grouped[u.homeLine].push({k, u}); else grouped['extra_tymg'].push({k, u}); }
+  });
+  const gName = { toyoko: "東横線", meguro: "目黒線", dento: "田園都市線", oimachi: "大井町線", extra_tymg: "東横・目黒系 非定期", extra_dtom: "田都・大井町系 非定期" };
+  let html = "";
+  Object.keys(grouped).forEach(g => {
+    let items = grouped[g]; if(items.length === 0) return;
+    items.sort((a,b) => { const getRank = s => { if(s.includes('K')) return 1; if(s.includes('S')) return 2; if(s.includes('T')) return 3; return 4; }; return getRank(a.u.label) - getRank(b.u.label) || a.u.label.localeCompare(b.u.label); });
+    html += `<div class="del-group-box"><div class="del-group-head"><span>${gName[g]}</span><label style="cursor:pointer; font-size:11px;"><input type="checkbox" onchange="toggleBulkGroupAll(this, '${g}')" checked> 全選択</label></div><div style="display:flex; flex-wrap:wrap; gap:8px;">`;
+    items.forEach(item => { let opKey = item.k; html += `<label class="del-label"><input type="checkbox" class="bulk_del_chk bulk_grp_${g}" value="${opKey}" checked> ${item.u.label}</label>`; });
+    html += `</div></div>`;
+  });
+  document.getElementById('bulkDelList').innerHTML = html || `<div style='text-align:center; padding:10px; color:#666;'>${targetDate} の記録は見つかりませんでした。</div>`;
+}
+function toggleBulkGroupAll(cb, g) { document.querySelectorAll(`.bulk_grp_${g}`).forEach(chk => chk.checked = cb.checked); }
+function executeBulkDelete() {
+  let type = document.getElementById('bulkDelType').value; let targetDate = document.getElementById('bulkDelDate').value.trim();
+  if (!targetDate) return alert("日付を入力してください。");
+  let chks = document.querySelectorAll('.bulk_del_chk:checked'); if (chks.length === 0) return alert("削除する運用を選択してください。");
+  if (!confirmTriple(`【1/3】${targetDate} の記録を選択した運用から非表示にしますか？`, `【2/3】システムからは除外されます。`, `【3/3】最終確認：実行しますか？`)) return;
+  let targetLog = (type === 'daily') ? logs.daily[targetDate] : logs[type]; if (!targetLog) return;
+  chks.forEach(chk => {
+    let opKey = chk.value;
+    if (targetLog[opKey] && targetLog[opKey].trains) { for (let tUid in targetLog[opKey].trains) { if (targetLog[opKey].trains[tUid].date === targetDate) targetLog[opKey].trains[tUid].deleted = true; } }
+  });
+  syncToCloud(true); toggleDisplay('bulkDeleteModal', false); alert("一括削除（非表示）しました。");
+}
+
+function openTimeDeleteModal() { document.getElementById('timeDelDate').value = getDailyKey(new Date()); toggleDisplay('timeDeleteModal', true); }
+function executeTimeDelete() {
+  let type = document.getElementById('timeDelType').value; let targetDate = document.getElementById('timeDelDate').value.trim();
+  let startTimeStr = document.getElementById('timeDelStart').value; let endTimeStr = document.getElementById('timeDelEnd').value;
+  if (!targetDate || !startTimeStr || !endTimeStr) return alert("日付、開始時刻、終了時刻をすべて入力してください。");
+  let startTv = getTv(startTimeStr); let endTv = getTv(endTimeStr);
+  if (startTv > endTv) return alert("開始時刻は終了時刻より前に設定してください。");
+  if (!confirmTriple(`【1/3】${targetDate} の ${startTimeStr} ～ ${endTimeStr} に記録された履歴を削除しますか？`, `【2/3】この時間帯の駅記録がすべて非表示になります。`, `【3/3】最終確認：実行しますか？`)) return;
+  
+  let targetLog = (type === 'daily') ? logs.daily[targetDate] : logs[type]; if (!targetLog) return alert("指定されたデータの記録がありません。");
+  let deletedCount = 0;
+  Object.keys(targetLog).forEach(opKey => {
+      let u = targetLog[opKey];
+      if (u && u.trains) {
+          Object.keys(u.trains).forEach(tUid => {
+              let tr = u.trains[tUid];
+              if (tr && !tr.deleted && tr.history && tr.date === targetDate) {
+                  let originalLength = tr.history.length;
+                  tr.history = tr.history.filter(h => {
+                      if (!h || !h.t) return true; let hTv = getTv(h.t);
+                      if (hTv >= startTv && hTv <= endTv) { deletedCount++; return false; }
+                      return true;
+                  });
+                  if (originalLength > 0 && tr.history.length === 0) tr.deleted = true;
+              }
+          });
+      }
+  });
+  if (deletedCount === 0) { alert("指定された時間帯の記録は見つかりませんでした。"); } 
+  else { syncToCloud(true); toggleDisplay('timeDeleteModal', false); alert(`${deletedCount} 件の駅記録を削除しました。`); }
+}
+
+async function resetAllData() {
+  if (!confirmTriple("【1/3】すべてのデータを初期化しますか？", "【2/3】過去の累計や毎日記録がすべて消去されます。よろしいですか？", "【3/3】最終確認：全データを消去します。実行しますか？")) return;
+  logs = { weekday: {}, holiday: {}, daily: {}, customViews: [], appConfig: logs.appConfig }; syncToCloud(true); alert("全データを初期化しました。");
+}
+
+function openDeleteModal() { 
+  const group = document.getElementById('delDailyGroup'); group.innerHTML = '';
+  Object.keys(logs.daily || {}).sort().reverse().forEach(d => { let opt = document.createElement('option'); opt.value = 'daily_' + d; opt.textContent = `毎日記録 (${d})`; group.appendChild(opt); });
+  buildDeleteList(); toggleDisplay('deleteModal', true); 
+}
+function buildDeleteList() {
+  let val = document.getElementById('delDayType').value; let targetDate = document.getElementById('delSpecificDate').value.trim();
+  let data = {};
+  if (val.startsWith('daily_')) { data = logs.daily[val.split('_')[1]] || {}; document.getElementById('delDateFilterArea').style.display = 'none'; } 
+  else { data = logs[val] || {}; document.getElementById('delDateFilterArea').style.display = 'block'; }
+  let grouped = { toyoko: [], meguro: [], dento: [], oimachi: [], extra_tymg: [], extra_dtom: [] };
+  Object.keys(data).forEach(k => {
+    let u = data[k];
+    if (targetDate && !val.startsWith('daily_')) { let hasTargetDateTrain = false; for (let tUid in u.trains) { if (!u.trains[tUid].deleted && u.trains[tUid].date === targetDate) { hasTargetDateTrain = true; break; } } if (!hasTargetDateTrain) return; }
+    if(grouped[u.homeLine]) grouped[u.homeLine].push({k, u}); else grouped['extra_tymg'].push({k, u}); 
+  });
+  const gName = { toyoko: "東横線", meguro: "目黒線", dento: "田園都市線", oimachi: "大井町線", extra_tymg: "東横・目黒系 非定期", extra_dtom: "田都・大井町系 非定期" };
+  let html = "";
+  Object.keys(grouped).forEach(g => {
+    let items = grouped[g]; if(items.length === 0) return;
+    items.sort((a,b) => { const getRank = s => { if(s.includes('K')) return 1; if(s.includes('S')) return 2; if(s.includes('T')) return 3; return 4; }; return getRank(a.u.label) - getRank(b.u.label) || a.u.label.localeCompare(b.u.label); });
+    html += `<div class="del-group-box"><div class="del-group-head"><span>${gName[g]}</span><label style="cursor:pointer; font-size:11px;"><input type="checkbox" onchange="toggleGroupAll_del(this, '${g}')"> 路線全選択</label></div>`;
+    items.forEach(item => { 
+      let opKey = item.k; let safeOpKey = opKey.replace(/[^a-zA-Z0-9]/g, '_');
+      html += `<div style="margin-bottom:8px; border:1px solid #eee; border-radius:4px; padding:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#f9f9f9; padding:4px;">
+          <label style="font-weight:bold; cursor:pointer; flex:1;"><input type="checkbox" class="del_op_chk grp_op_del_${g}" value="${opKey}" onchange="toggleOpTrains_del(this, '${safeOpKey}')"> ${item.u.label}</label>
+          <button type="button" class="btn-action" style="padding:4px 8px; font-size:11px;" onclick="toggleAcc('del_trains_${safeOpKey}')">▼ 展開</button>
+        </div><div id="del_trains_${safeOpKey}" class="acc-content">`;
+      let trains = item.u.trains;
+      Object.keys(trains).forEach(tUid => {
+        let tr = trains[tUid];
+        if (tr.deleted) return; 
+        if (targetDate && !val.startsWith('daily_') && tr.date !== targetDate) return;
+        let tNo = tr.trainNo ? `${tr.trainNo.substring(0,3)}-${tr.trainNo.substring(3)}` : "不明";
+        let dateStr = tr.date ? `(${tr.date})` : ""; let formTag = (tr.affiliation || tr.orchestration) ? ` [${tr.affiliation||''}${tr.orchestration||''}]` : '';
+        let safeTuid = tUid.replace(/[^a-zA-Z0-9]/g, '_');
+        html += `<div style="margin-bottom:4px; border-bottom:1px dashed #eee; padding-bottom:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:4px; flex-wrap:wrap;">
+                <label style="font-size:11px; cursor:pointer; color:#444; flex:1; min-width:150px; word-break:break-all;">
+                    <input type="checkbox" class="del_tr_chk op_tr_del_${safeOpKey}" data-op="${opKey}" value="${tUid}" onchange="toggleTrainStations_del(this, '${safeTuid}')"> 
+                    [${tr.kind}] ${tNo} ${tr.dest}行 ${dateStr}${formTag}
+                </label><button type="button" class="btn-action" style="padding:2px 6px; font-size:10px;" onclick="toggleAcc('del_stations_${safeTuid}')">駅展開</button>
+            </div><div id="del_stations_${safeTuid}" class="acc-content" style="padding-left:15px; margin-top:4px; border-left:2px solid #ddd;">`;
+        tr.history.forEach((h, hIdx) => {
+            html += `<label style="display:block; font-size:10px; cursor:pointer; color:#666; margin-bottom:2px; word-break:break-all;">
+                <input type="checkbox" class="del_st_chk tr_st_del_${safeTuid} op_${safeOpKey}" data-op="${opKey}" data-tuid="${tUid}" data-hidx="${hIdx}"> ${h.t} ${h.st} ${h.delay > 0 ? '(遅れ)' : ''}</label>`;
+        });
+        html += `</div></div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('delList').innerHTML = html || "<div style='padding:10px; text-align:center;'>データなし</div>";
+}
+function toggleGroupAll_del(cb, g) { document.querySelectorAll(`.grp_op_del_${g}`).forEach(chk => { chk.checked = cb.checked; toggleOpTrains_del(chk, chk.value.replace(/[^a-zA-Z0-9]/g, '_')); }); }
+function toggleOpTrains_del(cb, safeOpKey) { document.querySelectorAll(`.op_tr_del_${safeOpKey}`).forEach(chk => { chk.checked = cb.checked; toggleTrainStations_del(chk, chk.value.replace(/[^a-zA-Z0-9]/g, '_')); }); }
+function toggleTrainStations_del(cb, safeTuid) { document.querySelectorAll(`.tr_st_del_${safeTuid}`).forEach(chk => chk.checked = cb.checked); }
+
+function executeBatchDelete() {
+  let val = document.getElementById('delDayType').value; let targetDate = document.getElementById('delSpecificDate').value.trim();
+  let targetLog = (val.startsWith('daily_')) ? logs.daily[val.split('_')[1]] : logs[val]; if (!targetLog) return;
+  let opChks = document.querySelectorAll('.del_op_chk:checked'); let trChks = document.querySelectorAll('.del_tr_chk:checked'); let stChks = document.querySelectorAll('.del_st_chk:checked');
+  if(opChks.length === 0 && trChks.length === 0 && stChks.length === 0) return;
+  let msg = targetDate ? `【1/3】表示中の項目から、${targetDate} の記録のみを削除しますか？` : `【1/3】選択した項目を完全に削除しますか？`;
+  if (!confirmTriple(msg, `【2/3】システムから除外されます。よろしいですか？`, `【3/3】最終確認：実行しますか？`)) return;
+
+  let opChksArr = Array.from(opChks); let trChksArr = Array.from(trChks); let stDeletions = {};
+  stChks.forEach(chk => {
+      let opKey = chk.getAttribute('data-op'); let tUid = chk.getAttribute('data-tuid'); let hIdx = parseInt(chk.getAttribute('data-hidx'));
+      if (trChksArr.find(c => c.value === tUid) || opChksArr.find(c => c.value === opKey)) return;
+      if (!stDeletions[opKey]) stDeletions[opKey] = {}; if (!stDeletions[opKey][tUid]) stDeletions[opKey][tUid] = [];
+      stDeletions[opKey][tUid].push(hIdx);
+  });
+  Object.keys(stDeletions).forEach(opKey => {
+      Object.keys(stDeletions[opKey]).forEach(tUid => {
+          if (targetLog[opKey] && targetLog[opKey].trains && targetLog[opKey].trains[tUid]) {
+              let tr = targetLog[opKey].trains[tUid]; let indices = stDeletions[opKey][tUid].sort((a,b) => b - a);
+              indices.forEach(idx => { tr.history.splice(idx, 1); });
+              if (tr.history.length === 0) targetLog[opKey].trains[tUid].deleted = true;
+          }
+      });
+  });
+  trChksArr.forEach(chk => {
+      let opKey = chk.getAttribute('data-op'); let tUid = chk.value;
+      if (opChksArr.find(c => c.value === opKey)) return;
+      if (targetLog[opKey] && targetLog[opKey].trains && targetLog[opKey].trains[tUid]) { targetLog[opKey].trains[tUid].deleted = true; }
+  });
+  opChksArr.forEach(chk => {
+      let opKey = chk.value;
+      if (targetLog[opKey]) {
+          if (targetDate && !val.startsWith('daily_')) {
+              for (let tUid in targetLog[opKey].trains) { if (targetLog[opKey].trains[tUid].date === targetDate) targetLog[opKey].trains[tUid].deleted = true; }
+          } else { 
+              for (let tUid in targetLog[opKey].trains) { targetLog[opKey].trains[tUid].deleted = true; }
+          }
+      }
+  });
+  syncToCloud(true); toggleDisplay('deleteModal', false); alert("削除しました。");
+}
+
+// =========================================
+// 編集・分割・統合 (備考・一括削除つき)
+// =========================================
+function openEditModal() { 
+  const group = document.getElementById('editDailyGroup'); group.innerHTML = '';
+  Object.keys(logs.daily || {}).sort().reverse().forEach(d => { let opt = document.createElement('option'); opt.value = 'daily_' + d; opt.textContent = `毎日記録 (${d})`; group.appendChild(opt); });
+  toggleDisplay('editViewSelect', true); toggleDisplay('editViewDetail', false);
+  toggleDisplay('editFooterMain', true); toggleDisplay('editFooterDetail', false);
+  buildDatalists(); buildEditList(); toggleDisplay('editModal', true); 
+}
+function buildDatalists() {
+  const destList = document.getElementById('destOptions'); if(!destList) return;
+  destList.innerHTML = ''; let dests = new Set();
+  Object.values(DEST_MAP_TYMG).forEach(d => { if(d) dests.add(d); }); Object.values(DEST_MAP_DTOM).forEach(d => { if(d) dests.add(d); });
+  dests.forEach(d => { let opt = document.createElement('option'); opt.value = d; destList.appendChild(opt); });
+}
+function backToEditList() {
+  toggleDisplay('editViewSelect', true); toggleDisplay('editViewDetail', false);
+  toggleDisplay('editFooterMain', true); toggleDisplay('editFooterDetail', false); buildEditList();
+}
+
+function buildEditList() {
+  let val = document.getElementById('editDayType').value; let targetDate = document.getElementById('editSpecificDate').value.trim();
+  let data = {};
+  if (val.startsWith('daily_')) { data = logs.daily[val.split('_')[1]] || {}; document.getElementById('editDateFilterArea').style.display = 'none'; } 
+  else { data = logs[val] || {}; document.getElementById('editDateFilterArea').style.display = 'block'; }
+  
+  let grouped = { toyoko: [], meguro: [], dento: [], oimachi: [], extra_tymg: [], extra_dtom: [] };
+  Object.keys(data).forEach(k => {
+    let u = data[k];
+    if (targetDate && !val.startsWith('daily_')) { let hasTargetDateTrain = false; for (let tUid in u.trains) { if (!u.trains[tUid].deleted && u.trains[tUid].date === targetDate) { hasTargetDateTrain = true; break; } } if (!hasTargetDateTrain) return; }
+    if(grouped[u.homeLine]) grouped[u.homeLine].push({k, u}); else grouped['extra_tymg'].push({k, u}); 
+  });
+  const gName = { toyoko: "東横線", meguro: "目黒線", dento: "田園都市線", oimachi: "大井町線", extra_tymg: "東横・目黒系 非定期", extra_dtom: "田都・大井町系 非定期" };
+  let html = "";
+  Object.keys(grouped).forEach(g => {
+    let items = grouped[g]; if(items.length === 0) return;
+    items.sort((a,b) => { const getRank = s => { if(s.includes('K')) return 1; if(s.includes('S')) return 2; if(s.includes('T')) return 3; return 4; }; return getRank(a.u.label) - getRank(b.u.label) || a.u.label.localeCompare(b.u.label); });
+    html += `<div class="del-group-box"><div class="del-group-head"><span>${gName[g]}</span></div>`;
+    items.forEach(item => { 
+      let opKey = item.k; let safeOpKey = opKey.replace(/[^a-zA-Z0-9]/g, '_');
+      html += `<div style="margin-bottom:8px; border:1px solid #eee; border-radius:4px; padding:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#f9f9f9; padding:4px;">
+          <span style="font-weight:bold; flex:1; font-size:13px;">${item.u.label}</span>
+          <button type="button" class="btn-action" style="padding:4px 8px; font-size:11px;" onclick="toggleAcc('ed_trains_${safeOpKey}')">▼ 展開</button>
+        </div><div id="ed_trains_${safeOpKey}" class="acc-content">`;
+      let trains = item.u.trains;
+      Object.keys(trains).forEach(tUid => {
+        let tr = trains[tUid];
+        if (tr.deleted) return; 
+        if (targetDate && !val.startsWith('daily_') && tr.date !== targetDate) return;
+        let tNo = tr.trainNo ? `${tr.trainNo.substring(0,3)}-${tr.trainNo.substring(3)}` : "不明";
+        let dateStr = tr.date ? `(${tr.date})` : ""; let formTag = (tr.affiliation || tr.orchestration) ? ` [${tr.affiliation||''}${tr.orchestration||''}]` : '';
+        html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px dashed #eee; padding-bottom:6px; flex-wrap:wrap; gap:6px;">
+            <label style="font-size:12px; cursor:pointer; color:#444; flex:1; min-width:150px; display:flex; align-items:center; gap:4px; word-break:break-all;">
+                <input type="checkbox" class="edit_del_chk" data-op="${opKey}" value="${tUid}">
+                <span>[${tr.kind}] ${tNo} ${tr.dest}行 ${dateStr}${formTag}</span>
+            </label>
+            <button type="button" class="btn-action btn-blue" style="padding:6px 12px; font-size:11px;" onclick="openTrainEdit('${val}', '${opKey}', '${tUid}')">編集/分割</button>
+        </div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('editList').innerHTML = html || "<div style='padding:10px; text-align:center;'>データなし</div>";
+}
+
+function executeEditBatchDelete() {
+  let val = document.getElementById('editDayType').value; let targetDate = document.getElementById('editSpecificDate').value.trim();
+  let targetLog = (val.startsWith('daily_')) ? logs.daily[val.split('_')[1]] : logs[val]; if (!targetLog) return;
+  let chks = document.querySelectorAll('.edit_del_chk:checked');
+  if(chks.length === 0) return alert("削除する列車にチェックを入れてください。");
+  if (!confirmTriple("【1/3】選択した列車をシステムから除外（非表示）しますか？", "【2/3】まとめて削除されます。", "【3/3】最終確認：実行しますか？")) return;
+
+  chks.forEach(chk => {
+      let opKey = chk.getAttribute('data-op'); let tUid = chk.value;
+      if (targetLog[opKey] && targetLog[opKey].trains && targetLog[opKey].trains[tUid]) {
+          if (targetDate && !val.startsWith('daily_')) {
+              if (targetLog[opKey].trains[tUid].date === targetDate) { targetLog[opKey].trains[tUid].deleted = true; }
+          } else { targetLog[opKey].trains[tUid].deleted = true; }
+      }
+  });
+  syncToCloud(true); alert("選択した列車を削除しました。"); buildEditList(); 
+}
+
+function openTrainEdit(dayType, opKey, tUid) {
+  let targetLog = dayType.startsWith('daily_') ? logs.daily[dayType.split('_')[1]] : logs[dayType];
+  if (!targetLog || !targetLog[opKey] || !targetLog[opKey].trains[tUid]) return alert("データが見つかりません");
+  let tr = targetLog[opKey].trains[tUid]; currentEditCtx = { dayType, opKey, tUid };
+
+  let mergeOptions = `<option value="">-- 統合する別の列車を選択 --</option>`;
+  Object.keys(targetLog[opKey].trains).forEach(otherUid => {
+    if (otherUid !== tUid && !targetLog[opKey].trains[otherUid].deleted) {
+      let otr = targetLog[opKey].trains[otherUid];
+      let oNo = otr.trainNo ? `${otr.trainNo.substring(0,3)}-${otr.trainNo.substring(3)}` : "不明";
+      let oDate = otr.date ? `(${otr.date})` : ""; let oForm = (otr.affiliation || otr.orchestration) ? ` [${otr.affiliation||''}${otr.orchestration||''}]` : '';
+      mergeOptions += `<option value="${otherUid}">[${otr.kind}] ${oNo} ${otr.dest}行 ${oDate}${oForm}</option>`;
+    }
+  });
+
+  const kindList = [{v:"各停", l:"各停"}, {v:"B", l:"B各停"}, {v:"G", l:"G各停"}, {v:"準急", l:"準急"}, {v:"急行", l:"急行"}, {v:"通特", l:"通特"}, {v:"特急", l:"特急"}, {v:"F", l:"Fラ"}, {v:"Sトレイン", l:"Sトレイン"}, {v:"回送", l:"回送"}];
+  let isKindManual = true; let kindOpts = "";
+  kindList.forEach(k => { let sel = (tr.kind === k.v) ? "selected" : ""; if (sel) isKindManual = false; kindOpts += `<option value="${k.v}" ${sel}>${k.l}</option>`; });
+  let kindHtml = `<select id="editTrKindSel" class="form-sel" style="padding:8px; margin-bottom:4px;" onchange="if(this.value==='_manual'){document.getElementById('editTrKind').style.display='block';document.getElementById('editTrKind').value='';}else{document.getElementById('editTrKind').style.display='none'; document.getElementById('editTrKind').value=this.value;}">${kindOpts}<option value="_manual" ${isKindManual ? "selected" : ""}>✍️ 手入力...</option></select>
+  <input type="text" id="editTrKind" value="${tr.kind || ''}" class="form-sel" style="padding:8px; margin-bottom:0; display:${isKindManual ? 'block' : 'none'};" placeholder="種別を手入力">`;
+
+  let allDests = []; Object.values(MASTER_LINE_ORDERS).forEach(list => { list.forEach(d => { if (!allDests.includes(d)) allDests.push(d); }); });
+  let isDestManual = true; let destOpts = "";
+  allDests.forEach(d => { let sel = (tr.dest === d) ? "selected" : ""; if (sel) isDestManual = false; destOpts += `<option value="${d}" ${sel}>${d}${d.endsWith("線") ? "直通" : "行"}</option>`; });
+  let destHtml = `<select id="editTrDestSel" class="form-sel" style="padding:8px; margin-bottom:4px;" onchange="if(this.value==='_manual'){document.getElementById('editTrDest').style.display='block';document.getElementById('editTrDest').value='';}else{document.getElementById('editTrDest').style.display='none'; document.getElementById('editTrDest').value=this.value;}">${destOpts}<option value="_manual" ${isDestManual ? "selected" : ""}>✍️ 手入力...</option></select>
+  <input type="text" id="editTrDest" value="${tr.dest || ''}" class="form-sel" style="padding:8px; margin-bottom:0; display:${isDestManual ? 'block' : 'none'};" placeholder="行先を手入力">`;
+
+  let html = `<div style="background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
+    <div style="margin-bottom:8px;"><label style="font-size:12px; font-weight:bold; color:#1976d2;">列車番号</label><input type="text" id="editTrNo" value="${tr.trainNo || ''}" class="form-sel" style="padding:8px; margin-bottom:0;"></div>
+    <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px;">
+      <div style="flex:1; min-width:120px;"><label style="font-size:12px; font-weight:bold; color:#1976d2;">種別</label>${kindHtml}</div>
+      <div style="flex:1; min-width:120px;"><label style="font-size:12px; font-weight:bold; color:#1976d2;">行先</label>${destHtml}</div>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+      <div style="flex:1; min-width:120px;"><label style="font-size:12px; font-weight:bold; color:#1976d2;">社局 (生データ)</label><input type="text" id="editTrAff" value="${tr.affiliation || ''}" class="form-sel" style="padding:8px; margin-bottom:0;" placeholder="例: 東, 急, 相, み"></div>
+      <div style="flex:1; min-width:120px;"><label style="font-size:12px; font-weight:bold; color:#1976d2;">番号 (生データ)</label><input type="text" id="editTrOrch" value="${tr.orchestration || ''}" class="form-sel" style="padding:8px; margin-bottom:0;" placeholder="例: 01, 85, 38"></div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:12px; font-weight:bold; color:#e65100;">備考（メモ）</label>
+      <input type="text" id="editTrRemarks" value="${tr.remarks || ''}" class="form-sel" style="padding:8px; margin-bottom:0;" placeholder="例: 代走, 車両変更など（空欄で非表示）">
+    </div>
+
+    <hr style="border:none; border-top:1px dashed #ccc; margin:15px 0;">
+    <h4 style="margin:0 0 5px 0; font-size:14px; color:#d32f2f;">🛤 履歴（ここで分離）</h4>
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:8px; max-height:300px; overflow-y:auto; -webkit-overflow-scrolling:touch;">`;
+
+  tr.history.forEach((h, idx) => {
+    let btnHtml = idx > 0 ? `<button class="btn-action btn-warn" style="margin:0; padding:6px 12px; font-size:11px; width:auto; border-radius:4px; white-space:nowrap; flex-shrink:0;" onclick="executeSplit(${idx})">✂️ 分離</button>` : `<span style="font-size:11px; color:#aaa; white-space:nowrap; flex-shrink:0; padding:6px 12px;">(始発)</span>`;
+    html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eee; gap:8px;">
+      <span style="font-size:13px; color:#333; line-height:1.4; word-break:break-all;"><strong>${h.t}</strong><br><span style="font-size:11px; color:#555;">${h.st}</span></span>${btnHtml}</div>`;
+  });
+  html += `</div>`;
+
+  if(Object.keys(targetLog[opKey].trains).length > 1) {
+      html += `<hr style="border:none; border-top:1px dashed #ccc; margin:15px 0;">
+        <h4 style="margin:0 0 5px 0; font-size:14px; color:#01aa8f;">🔄 他の列車と統合</h4>
+        <div style="display:flex; gap:5px; flex-wrap:wrap;">
+          <select id="editMergeTarget" class="form-sel" style="padding:8px; margin-bottom:0; flex:1; min-width:180px;">${mergeOptions}</select>
+          <button class="btn-action btn-blue" style="margin:0; width:auto; border-radius:4px; padding:8px 12px; font-size:12px; flex-shrink:0;" onclick="executeMerge()">🔄 統合</button>
+        </div>`;
+  }
+  html += `</div>`; 
+  document.getElementById('editViewDetail').innerHTML = html; toggleDisplay('editViewSelect', false); toggleDisplay('editViewDetail', true); toggleDisplay('editFooterMain', false); toggleDisplay('editFooterDetail', true);
+}
+
+function saveTrainEdit() {
+  if (!currentEditCtx) return;
+  let { dayType, opKey, tUid } = currentEditCtx; let targetLog = dayType.startsWith('daily_') ? logs.daily[dayType.split('_')[1]] : logs[dayType];
+  if (!targetLog || !targetLog[opKey] || !targetLog[opKey].trains[tUid]) return;
+
+  let tr = targetLog[opKey].trains[tUid];
+  tr.trainNo = document.getElementById('editTrNo').value.trim();
+  let kindSel = document.getElementById('editTrKindSel').value; tr.kind = (kindSel === '_manual') ? document.getElementById('editTrKind').value.trim() : kindSel;
+  let destSel = document.getElementById('editTrDestSel').value; tr.dest = (destSel === '_manual') ? document.getElementById('editTrDest').value.trim() : destSel;
+  tr.affiliation = document.getElementById('editTrAff').value.trim(); tr.orchestration = document.getElementById('editTrOrch').value.trim();
+  tr.remarks = document.getElementById('editTrRemarks').value.trim(); 
+
+  syncToCloud(true); alert("列車情報を更新しました。"); backToEditList();
+}
+
+function executeSplit(splitIdx) {
+  if (!currentEditCtx) return;
+  if (!confirmTriple("【1/3】この駅から先の履歴を別の列車として分離しますか？", "【2/3】分離後、新しい列車の情報を編集できます。", "【3/3】最終確認：実行しますか？")) return;
+  let { dayType, opKey, tUid } = currentEditCtx; let targetLog = dayType.startsWith('daily_') ? logs.daily[dayType.split('_')[1]] : logs[dayType];
+  let originalTr = targetLog[opKey].trains[tUid]; let newTr = JSON.parse(JSON.stringify(originalTr));
+  newTr.history = originalTr.history.slice(splitIdx); originalTr.history = originalTr.history.slice(0, splitIdx);
+  let newUid = tUid + "_s" + Date.now(); targetLog[opKey].trains[newUid] = newTr;
+  syncToCloud(true); alert("履歴を分離しました。"); backToEditList();
+}
+
+function executeMerge() {
+  if (!currentEditCtx) return;
+  let { dayType, opKey, tUid } = currentEditCtx; let targetUid = document.getElementById('editMergeTarget').value;
+  if (!targetUid) return alert("統合する別の列車を選択してください。");
+  if (!confirmTriple("【1/3】選択した列車の履歴を現在編集中の列車に統合しますか？", "【2/3】元の列車は非表示になります。", "【3/3】最終確認：実行しますか？")) return;
+
+  let targetLog = dayType.startsWith('daily_') ? logs.daily[dayType.split('_')[1]] : logs[dayType];
+  let baseTr = targetLog[opKey].trains[tUid]; let mergeTr = targetLog[opKey].trains[targetUid];
+  mergeTr.history.forEach(h => { if (!baseTr.history.find(bh => bh.t === h.t && bh.st === h.st)) { baseTr.history.push(h); } });
+  baseTr.history.sort((a, b) => getTv(a.t) - getTv(b.t)); targetLog[opKey].trains[targetUid].deleted = true; 
+  syncToCloud(true); alert("列車を統合しました。"); openTrainEdit(dayType, opKey, tUid);
+}
+
+function toggleDisplay(id, forceState) { 
+  let el = document.getElementById(id); 
+  if(el) { if (forceState !== undefined) { el.style.display = forceState ? 'flex' : 'none'; } else { el.style.display = (el.style.display === 'none') ? 'block' : 'none'; } }
+}
+
+// =========================================
+// カスタムタブ・ファイルI/O
+// =========================================
+function openCustomTabModal() {
+  if(!logs.customViews) logs.customViews = [{}, {}, {}]; let html = "";
+  for(let i=0; i<3; i++) {
+    let cv = logs.customViews[i] || {}; let isUpload = cv.type === 'upload'; tempUploadData[i] = cv.uploadData || null; 
+    html += `<div class="cv-box">
+      <h4 style="margin:0 0 10px 0; color:#d32f2f; display:flex; justify-content:space-between; align-items:center;">
+        <span>タブ ${i+1}</span><label style="font-size:13px; color:#333; cursor:pointer;"><input type="checkbox" id="cv_active_${i}" ${cv.active ? 'checked' : ''}> オンにする</label>
+      </h4>
+      <div style="margin-bottom:10px;"><span style="font-size:12px; font-weight:bold; display:inline-block; width:80px;">タイトル:</span><input type="text" id="cv_title_${i}" value="${cv.title || ''}" placeholder="例: 4-10 雪ダイヤ" class="form-sel" style="width:calc(100% - 85px); margin:0;"></div>
+      <div style="margin-bottom:10px; font-size:13px; font-weight:bold;">
+        <label style="cursor:pointer;"><input type="radio" name="cv_type_${i}" value="filter" ${!isUpload ? 'checked' : ''} onchange="toggleCvType(${i})"> 抽出</label>
+        <label style="margin-left:15px; cursor:pointer;"><input type="radio" name="cv_type_${i}" value="upload" ${isUpload ? 'checked' : ''} onchange="toggleCvType(${i})"> JSON読込</label>
+      </div>
+      <div id="cv_filter_area_${i}" style="display:${!isUpload ? 'block' : 'none'}; padding:10px; background:#fff; border:1px solid #ddd; border-radius:6px;">
+        <span style="font-size:12px; font-weight:bold; display:inline-block; width:80px;">対象日付:</span><input type="text" id="cv_date_${i}" value="${cv.date || ''}" placeholder="例: 2026-04-10" class="form-sel" style="width:calc(100% - 85px); margin:0;"><br>
+        <div style="margin-top:10px; font-size:12px; font-weight:bold;">対象路線: <br><div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:5px;">`;
+        LINE_OPS.forEach(g => { let checked = (cv.groups && cv.groups.includes(g)) ? 'checked' : ''; html += `<label class="cv-group-label" style="background:#f0f0f0; padding:6px; border-radius:4px;"><input type="checkbox" class="cv_group_${i}" value="${g}" ${checked}> ${g}</label>`; });
+    html += `</div></div></div>
+      <div id="cv_upload_area_${i}" style="display:${isUpload ? 'block' : 'none'}; padding:10px; background:#fff3e0; border:1px solid #ffcc80; border-radius:6px; font-size:13px; font-weight:bold;">
+        JSONを選択: <input type="file" accept=".json" onchange="handleCvUpload(this, ${i})" style="width:100%; margin-top:5px;">
+        <div id="cv_upload_status_${i}" style="margin-top:8px; color:${tempUploadData[i] ? 'green' : '#d32f2f'};">${tempUploadData[i] ? '✅ セット済み' : '⚠️ データなし'}</div>
+      </div></div>`;
+  }
+  document.getElementById('customTabForms').innerHTML = html; toggleDisplay('customTabModal', true);
+}
+
+function toggleCvType(i) {
+  let isUpload = document.querySelector(`input[name="cv_type_${i}"]:checked`).value === 'upload';
+  document.getElementById(`cv_filter_area_${i}`).style.display = isUpload ? 'none' : 'block'; document.getElementById(`cv_upload_area_${i}`).style.display = isUpload ? 'block' : 'none';
+}
+
+function handleCvUpload(input, i) {
+  let file = input.files[0]; if(!file) return; const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const json = JSON.parse(e.target.result); let sourceLogs = null;
+      if (json._isRawBackup && json.logs) { sourceLogs = json.logs; } else if (json.weekday || json.holiday || json.daily) { sourceLogs = json; } else { throw new Error("フォーマット違い"); }
+      tempUploadData[i] = sourceLogs; document.getElementById(`cv_upload_status_${i}`).innerHTML = '✅ 読み込み成功'; document.getElementById(`cv_upload_status_${i}`).style.color = 'green';
+    } catch(err) {
+      alert("読み込み失敗"); input.value = ""; tempUploadData[i] = null; document.getElementById(`cv_upload_status_${i}`).innerHTML = '⚠️ エラー'; document.getElementById(`cv_upload_status_${i}`).style.color = '#d32f2f';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function saveCustomTabs() {
+  let arr = [];
+  for(let i=0; i<3; i++) {
+    let active = document.getElementById(`cv_active_${i}`).checked; let title = document.getElementById(`cv_title_${i}`).value;
+    let type = document.querySelector(`input[name="cv_type_${i}"]:checked`).value; let date = document.getElementById(`cv_date_${i}`).value;
+    let groups = []; document.querySelectorAll(`.cv_group_${i}:checked`).forEach(el => groups.push(el.value));
+    if(type === 'upload' && active && !tempUploadData[i]) { alert(`タブ${i+1} はファイルがありません。`); return; }
+    arr.push({ active, title, type, date, groups, uploadData: type === 'upload' ? tempUploadData[i] : null });
+  }
+  logs.customViews = arr; syncToCloud(true); toggleDisplay('customTabModal', false); alert("設定を保存しました。");
+}
+
+function exportRawData() {
+  if (!logs || Object.keys(logs).length === 0) return alert("データがありません。");
+  const exportObj = { _isRawBackup: true, timestamp: new Date().toISOString(), logs: logs };
+  const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+  a.download = `tokyu_master_raw_backup_${Date.now()}.json`; a.click();
+}
+
+function importRawData() {
+  const fileInput = document.getElementById('importRawFile'); const file = fileInput.files[0];
+  if (!file) return alert("ファイルを選択してください。"); const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const json = JSON.parse(e.target.result); let sourceLogs = null;
+      if (json._isRawBackup && json.logs) { sourceLogs = json.logs; } else if (json.weekday || json.holiday || json.daily) { sourceLogs = json; } else { throw new Error("形式が違います。"); }
+      if (!confirmTriple("【1/3】バックアップを現在の記録に統合しますか？", "【2/3】同じ列車は統合されます。", "【3/3】実行しますか？")) return;
+      mergeData(logs, sourceLogs); sanitizeLogs(); document.getElementById("cloudStatus").textContent = "マージ中...";
+      await syncToCloud(true); alert("統合完了しました。"); fileInput.value = ""; 
+    } catch(err) { alert("エラー: " + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+function mergeData(target, source) {
+  ['weekday', 'holiday', 'daily'].forEach(type => {
+    if (source[type]) {
+      if (!target[type]) target[type] = {};
+      if (type === 'daily') { for (let d in source.daily) { if (!target.daily[d]) target.daily[d] = {}; mergeOpData(target.daily[d], source.daily[d]); } } 
+      else { mergeOpData(target[type], source[type]); }
+    }
+  });
+}
+
+function mergeOpData(targetObj, sourceObj) {
+  for (let opKey in sourceObj) {
+    if (!targetObj[opKey]) { targetObj[opKey] = sourceObj[opKey]; } 
+    else {
+      let tTrains = targetObj[opKey].trains; let sTrains = sourceObj[opKey].trains;
+      for (let tUid in sTrains) {
+        if (!tTrains[tUid]) { tTrains[tUid] = sTrains[tUid]; } 
+        else {
+          let tHist = tTrains[tUid].history || []; let sHist = sTrains[tUid].history || [];
+          sHist.forEach(sh => { if (sh && sh.t && sh.st && !tHist.find(th => th && th.t === sh.t && th.st === sh.st)) { tHist.push(sh); } });
+          tHist.sort((a,b) => getTv(a.t) - getTv(b.t)); tTrains[tUid].history = tHist;
+          if (sTrains[tUid].remarks) tTrains[tUid].remarks = sTrains[tUid].remarks;
+        }
+      }
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadHolidays();
+  let savedInterval = localStorage.getItem('tokyu_sync_interval');
+  if(savedInterval !== null) { document.getElementById('syncIntervalSelect').value = savedInterval; } 
+  else { document.getElementById('syncIntervalSelect').value = "0"; }
+  
+  document.getElementById("apiStatus").textContent = "クラウドからデータ取得中...";
+  await loadFromCloud(); applySyncInterval(false); updateStopUI(); fetchData(); setInterval(fetchData, 10000); 
+});
+</script>
+</body>
+</html>
