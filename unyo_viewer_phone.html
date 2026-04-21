@@ -717,6 +717,34 @@ async function fetchLiveApiData() {
 }
 
 // =========================================
+// UI更新関数（日付選択プルダウンの修正）
+// =========================================
+function updateContextUI(preservedDailyDate = null) {
+  const ctx = document.getElementById("contextFilters"); if (!ctx) return; ctx.innerHTML = "";
+  if (currentView === "daily") {
+    const label = document.createElement("span"); label.className = "filter-label"; label.textContent = "表示日:"; ctx.appendChild(label);
+    const select = document.createElement("select"); select.id = "dailyDateSelect"; select.className = "filter-select";
+    select.onchange = () => { 
+        updateDestDropdown(); render(); 
+        document.getElementById("cloudStatus").textContent = "☁️ 読込中...";
+        fetchFromCloud(); 
+    };
+    
+    // ★ 修正：中身が空（メモリ解放済み）の日付もすべて選択肢として表示する
+    const keys = Object.keys(logs.daily || {}).sort().reverse();
+    
+    if (keys.length === 0) select.appendChild(new Option("記録なし", getDailyKey()));
+    else keys.forEach(k => select.appendChild(new Option(k, k)));
+    
+    if (preservedDailyDate && !Array.from(select.options).some(o => o.value === preservedDailyDate)) {
+        select.appendChild(new Option(preservedDailyDate, preservedDailyDate));
+    }
+    if (preservedDailyDate) select.value = preservedDailyDate;
+    ctx.appendChild(select);
+  }
+}
+
+// =========================================
 // クラウド取得処理
 // =========================================
 async function fetchFromCloud() {
