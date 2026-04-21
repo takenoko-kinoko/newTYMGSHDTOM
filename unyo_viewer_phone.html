@@ -12,13 +12,13 @@
     *, *::before, *::after { box-sizing: border-box; }
     body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background: #eef2f5; font-size: 14px; color: #333; overflow-x: hidden; }
     
-    /* 📱 ヘッダー（PC版と同じ赤系・白背景） */
+    /* 📱 ヘッダー */
     #sticky-header { background: #fff; border-top: 4px solid #d32f2f; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; width: 100%; }
     .header-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; flex-wrap: wrap; gap: 8px; }
     h1 { margin: 0; font-size: 17px; color: #d32f2f; font-weight: bold; flex: 1; min-width: 100%; text-align: center; }
     .header-right { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 6px; }
     
-    .btn-sync { background: #ff9800; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .btn-sync { background: #ff9800; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.2); cursor: pointer; }
     #cloudStatus { font-family: monospace; font-size: 11px; color: #01aa8f; font-weight: bold; background: #e8f5e9; padding: 6px 10px; border-radius: 4px; text-align: center; flex: 1; }
 
     #noticeBar { background: #ffebee; color: #d32f2f; padding: 10px; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ffcdd2; display: none; text-align: center; }
@@ -30,9 +30,9 @@
     .tab.active { background: #333; color: #fff; border-color: #333; }
     .tab-daily.active { background: #2e7d32; color: #fff; border-color: #2e7d32; }
 
-    /* 📱 フィルター（折りたたみ式・6グリッド分割） */
+    /* 📱 フィルター（折りたたみ式） */
     details.filter-accordion { background: #fafafa; border-bottom: 1px solid #ddd; }
-    details.filter-accordion summary { padding: 10px 15px; font-weight: bold; font-size: 13px; color: #333; cursor: pointer; list-style: none; display: flex; justify-content: center; background: #eee; }
+    details.filter-accordion summary { padding: 12px 15px; font-weight: bold; font-size: 14px; color: #1565c0; cursor: pointer; list-style: none; display: flex; justify-content: center; background: #e3f2fd; }
     details.filter-accordion summary::-webkit-details-marker { display: none; }
     
     .filter-bar { padding: 12px 15px; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -44,22 +44,23 @@
     .running-toggle { flex: 1; display:flex; justify-content:center; align-items:center; gap:4px; background:#fff; padding:8px; border-radius:4px; border:1px solid #ccc; font-size:12px; font-weight:bold; color:#555; cursor:pointer; }
     .running-toggle input { margin:0; transform:scale(1.2); }
 
-    /* 📱 メインコンテンツ（PC版デザイン準拠） */
+    /* 📱 メインコンテンツ */
     #container { padding: 15px; max-width: 800px; margin: 0 auto; width: 100%; }
     
-    .line-section { margin-bottom: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #ddd; }
-    .line-header { padding: 8px 15px; font-size: 14px; font-weight: bold; color: #fff; letter-spacing: 1px; }
+    .line-section { margin-bottom: 25px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #ddd; }
+    .line-header { padding: 10px 15px; font-size: 15px; font-weight: bold; color: #fff; letter-spacing: 1px; }
     
     .bg-toyoko { background: var(--toyoko); } .bg-meguro { background: var(--meguro); } .bg-dento { background: var(--dento); }
     .bg-oimachi { background: var(--oimachi); } .bg-shinyoko { background: var(--shinyoko); } .bg-extra { background: var(--extra); }
 
-    .op-box { display: flex; flex-direction: column; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
-    .op-left { width: 100%; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; }
-    .op-no { font-weight: bold; font-family: monospace; font-size: 16px; color: #d32f2f; }
-    .src-tag { font-size: 11px; background: #ddd; padding: 3px 6px; border-radius: 4px; color: #555; }
+    /* ★ 運用のまとまりを強調するデザイン */
+    .op-box { display: flex; flex-direction: column; border: 2px solid #90a4ae; border-radius: 8px; margin: 12px 10px; overflow: hidden; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.08); }
+    .op-left { width: 100%; display: flex; justify-content: space-between; align-items: center; background: #eceff1; padding: 10px 15px; border-bottom: 2px solid #90a4ae; }
+    .op-no { font-weight: bold; font-family: monospace; font-size: 20px; color: #1e3a8a; letter-spacing: 1px; }
+    .src-tag { font-size: 11px; background: #cfd8dc; padding: 4px 8px; border-radius: 4px; color: #37474f; font-weight: bold; }
     
     .op-right { flex: 1; display: flex; flex-direction: column; background: #fff; }
-    .train-row { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 6px; }
+    .train-row { padding: 12px 15px; border-bottom: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 6px; }
     .train-row:last-child { border-bottom: none; }
     .row-active { background: #fffde7; }
     .row-sync-wait { background: #f5f5f5; opacity: 0.8; }
@@ -121,26 +122,42 @@
       <div id="contextFilters" class="filter-item full-width" style="margin-bottom:2px;"></div>
       
       <div class="filter-item">
-        <span class="filter-label">系統・路線</span>
-        <select id="opFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render();">
+        <span class="filter-label">路線 (所属グループ)</span>
+        <select id="lineFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render();">
+          <option value="all">すべての路線</option>
+          <option value="toyoko">東横線</option>
+          <option value="meguro">目黒線</option>
+          <option value="shinyokohama">新横浜線</option>
+          <option value="dento">田園都市線</option>
+          <option value="oimachi">大井町線</option>
+          <option value="extra_tymg">TY/MG 非定期</option>
+          <option value="extra_dtom">DT/OM 非定期</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">系統・走行区間</span>
+        <select id="sectionFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateDestDropdown(); updateFormDropdown(); render();">
           <option value="all">すべて</option>
           <optgroup label="系統別">
             <option value="system_tymg">東横・目黒線系統</option>
             <option value="system_dtom">田都・大井町線系統</option>
           </optgroup>
-          <optgroup label="路線別">
-            <option value="toyoko">東横線</option>
-            <option value="meguro">目黒線</option>
-            <option value="shinyokohama">新横浜線</option>
-            <option value="dento">田園都市線</option>
-            <option value="oimachi">大井町線</option>
-            <option value="extra_tymg">TY/MG 非定期</option>
-            <option value="extra_dtom">DT/OM 非定期</option>
+          <optgroup label="区間別">
+            <option value="東横線">東横線</option>
+            <option value="目黒線">目黒線</option>
+            <option value="新横浜線">新横浜線</option>
+            <option value="田園都市線">田園都市線</option>
+            <option value="大井町線">大井町線</option>
           </optgroup>
         </select>
       </div>
+      
       <div class="filter-item">
-        <span class="filter-label">運用 (所属)</span>
+        <span class="filter-label">運行番号検索</span>
+        <input type="text" id="opNumSearch" autocomplete="off" data-lpignore="true" class="filter-select" placeholder="例: 01K, 51" oninput="render()">
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">運用 (所属記号)</span>
         <select id="companyFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render();">
           <option value="all">すべての運用</option>
           <option value="K">K運用 (東急)</option>
@@ -152,17 +169,7 @@
           <option value="O130">大井町 130番台〜</option>
         </select>
       </div>
-      <div class="filter-item">
-        <span class="filter-label">走行区間</span>
-        <select id="sectionFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateDestDropdown(); render();">
-          <option value="all">すべての区間</option>
-          <option value="東横線">東横線</option>
-          <option value="目黒線">目黒線</option>
-          <option value="田園都市線">田園都市線</option>
-          <option value="大井町線">大井町線</option>
-          <option value="新横浜線">新横浜線</option>
-        </select>
-      </div>
+      
       <div class="filter-item">
         <span class="filter-label">種別</span>
         <select id="kindFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render()"><option value="all">すべて表示</option><option value="各停">各停</option><option value="B">B各停</option><option value="G">G各停</option><option value="準急">準急</option><option value="急行">急行</option><option value="通特">通特</option><option value="特急_all">Fラ/特急</option><option value="特急">特急</option><option value="F">Fラ</option><option value="Sトレイン">Sトレイン</option><option value="回送">回送</option></select>
@@ -171,7 +178,7 @@
         <span class="filter-label">行先</span>
         <select id="destFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render()"></select>
       </div>
-      <div class="filter-item">
+      <div class="filter-item full-width">
         <span class="filter-label">編成</span>
         <select id="formFilterSel" autocomplete="off" data-lpignore="true" class="filter-select" onchange="render()">
           <option value="all">すべての編成</option>
@@ -201,7 +208,6 @@ const MASTER_LINE_ORDERS = { "東横線": ["副都心線", "渋谷", "中目黒"
 const SECTION_KIND_MAP = { "all": ["all", "各停", "B", "G", "準急", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "東横線": ["all", "各停", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "目黒線": ["all", "各停", "急行", "回送"], "田園都市線": ["all", "各停", "準急", "急行", "回送"], "大井町線": ["all", "各停", "B", "G", "急行", "回送"], "新横浜線": ["all", "各停", "急行", "特急_all", "特急", "F", "回送"] };
 const STATION_MAP = { 26:"渋谷", 908:"代官山", 909:"中目黒", 910:"祐天寺", 911:"学芸大学", 912:"都立大学", 913:"自由が丘", 914:"田園調布", 915:"多摩川", 916:"新丸子", 57:"武蔵小杉", 918:"元住吉", 919:"日吉", 920:"綱島", 921:"大倉山", 108:"菊名", 923:"妙蓮寺", 924:"白楽", 925:"東白楽", 926:"反町", 5:"横浜", 24:"目黒", 929:"不動前", 930:"武蔵小山", 931:"西小山", 932:"洗足", 933:"大岡山", 934:"奥沢", 942:"池尻大橋", 943:"三軒茶屋", 944:"駒沢大学", 945:"桜新町", 946:"用賀", 947:"二子玉川", 948:"二子新地", 949:"高津", 950:"溝の口", 951:"梶が谷", 952:"宮崎台", 953:"宮前平", 954:"鷺沼", 955:"たまプラーザ", 956:"あざみ野", 957:"江田", 958:"市が尾", 959:"藤が丘", 960:"青葉台", 961:"田奈", 114:"長津田", 963:"つくし野", 964:"すずかけ台", 965:"南町田", 966:"つきみ野", 967:"中央林間", 494:"大井町", 969:"下神明", 970:"戸越公園", 971:"中延", 972:"荏原町", 973:"旗の台", 974:"北千束", 976:"緑が丘", 978:"九品仏", 979:"尾山台", 980:"等々力", 981:"上野毛", 982:"新綱島", 983:"新横浜" };
 const ST_COLOR_MAP = { "代官山":"var(--toyoko)","中目黒":"var(--toyoko)","祐天寺":"var(--toyoko)","学芸大学":"var(--toyoko)","都立大学":"var(--toyoko)","綱島":"var(--toyoko)","大倉山":"var(--toyoko)","菊名":"var(--toyoko)","妙蓮寺":"var(--toyoko)","白楽":"var(--toyoko)","東白楽":"var(--toyoko)","反町":"var(--toyoko)","横浜":"var(--toyoko)","目黒":"var(--meguro)","不動前":"var(--meguro)","武蔵小山":"var(--meguro)","西小山":"var(--meguro)","洗足":"var(--meguro)","奥沢":"var(--meguro)","池尻大橋":"var(--dento)","三軒茶屋":"var(--dento)","駒沢大学":"var(--dento)","桜新町":"var(--dento)","用賀":"var(--dento)","梶が谷":"var(--dento)","宮崎台":"var(--dento)","宮前平":"var(--dento)","鷺沼":"var(--dento)","たまプラーザ":"var(--dento)","あざみ野":"var(--dento)","江田":"var(--dento)","市が尾":"var(--dento)","藤が丘":"var(--dento)","青葉台":"var(--dento)","田奈":"var(--dento)","長津田":"var(--dento)","つくし野":"var(--dento)","すずかけ台":"var(--dento)","南町田":"var(--dento)","つきみ野":"var(--dento)","中央林間":"var(--dento)","恩田":"var(--dento)","こどもの国":"var(--dento)","大井町":"var(--oimachi)","下神明":"var(--oimachi)","戸越公園":"var(--oimachi)","中延":"var(--oimachi)","荏原町":"var(--oimachi)","旗の台":"var(--oimachi)","北千束":"var(--oimachi)","緑が丘":"var(--oimachi)","九品仏":"var(--oimachi)","尾山台":"var(--oimachi)","等々力":"var(--oimachi)","上野毛":"var(--oimachi)","新綱島":"var(--shinyoko)","新横浜":"var(--shinyoko)" };
-const KIND_OPTIONS = [ { value: "all", label: "すべて表示" }, { value: "各停", label: "各停" }, { value: "B", label: "B各停" }, { value: "G", label: "G各停" }, { value: "準急", label: "準急" }, { value: "急行", label: "急行" }, { value: "通特", label: "通特" }, { value: "特急_all", label: "Fラ/特急" }, { value: "特急", label: "特急" }, { value: "F", label: "Fラ" }, { value: "Sトレイン", label: "S" }, { value: "回送", label: "回送" } ];
 
 const OP_SETS = { 
   weekday: { 
@@ -370,8 +376,10 @@ function updateFormDropdown() {
   const currentForm = formSel.value || "all"; let forms = new Set();
   const useFmt = document.getElementById("formatFilter")?.checked;
   const data = getActiveData(); 
-  const opF = document.getElementById("opFilter").value;
-  const compF = document.getElementById("companyFilter") ? document.getElementById("companyFilter").value : "all";
+  const lineF = document.getElementById("lineFilter").value;
+  const compF = document.getElementById("companyFilter").value;
+  const secF = document.getElementById("sectionFilter").value;
+  const opSearch = document.getElementById("opNumSearch") ? document.getElementById("opNumSearch").value.trim().toUpperCase() : "";
 
   const addForm = (hl, aff, orch) => {
       if (!aff && (!orch || orch === "00")) return;
@@ -398,14 +406,23 @@ function updateFormDropdown() {
   if (data) {
     for (const opKey in data) {
       let hl = data[opKey].homeLine;
-      let matchGroup = (opF === "all") || (opF === "system_tymg" && ['toyoko', 'meguro', 'shinyokohama', 'extra_tymg'].includes(hl)) || (opF === "system_dtom" && ['dento', 'oimachi', 'extra_dtom'].includes(hl)) || (opF === hl);
-      if (!matchGroup) continue;
-      if (!checkComp(data[opKey].label)) continue;
+      if (lineF !== "all" && lineF !== hl) continue;
+      
+      let label = data[opKey].label;
+      if (opSearch && !label.toUpperCase().includes(opSearch)) continue;
+      if (!checkComp(label)) continue;
       
       if (data[opKey].trains) {
         for (const tUid in data[opKey].trains) {
           const t = data[opKey].trains[tUid];
-          if (t && !t.deleted) addForm(hl, t.affiliation, t.orchestration);
+          if (t && !t.deleted) {
+              let srcMatch = false;
+              if (secF === "all") srcMatch = true;
+              else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(t.sourceName)) srcMatch = true;
+              else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(t.sourceName)) srcMatch = true;
+              else if (t.sourceName === secF) srcMatch = true;
+              if (srcMatch) addForm(hl, t.affiliation, t.orchestration);
+          }
         }
       }
     }
@@ -414,13 +431,22 @@ function updateFormDropdown() {
   if (!hasReceivedCloudData || (currentView === 'daily' && document.getElementById("dailyDateSelect")?.value === getDailyKey(new Date()))) {
       for (const opKey in apiLiveCache) {
           let hl = opKey.split('_')[0]; if (opKey.startsWith("extra_")) hl = opKey.split('_').slice(0,2).join('_');
+          if (lineF !== "all" && lineF !== hl) continue;
+          
           let label = opKey.split('_')[1];
-          let matchGroup = (opF === "all") || (opF === "system_tymg" && ['toyoko', 'meguro', 'shinyokohama', 'extra_tymg'].includes(hl)) || (opF === "system_dtom" && ['dento', 'oimachi', 'extra_dtom'].includes(hl)) || (opF === hl);
-          if (!matchGroup) continue;
+          if (opSearch && !label.toUpperCase().includes(opSearch)) continue;
           if (!checkComp(label)) continue;
           
           let trains = apiLiveCache[opKey];
-          for (let tNo in trains) { addForm(hl, trains[tNo].affiliation, trains[tNo].orchestration); }
+          for (let tNo in trains) { 
+              let t = trains[tNo];
+              let srcMatch = false;
+              if (secF === "all") srcMatch = true;
+              else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(t.sourceName)) srcMatch = true;
+              else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(t.sourceName)) srcMatch = true;
+              else if (t.sourceName === secF) srcMatch = true;
+              if (srcMatch) addForm(hl, t.affiliation, t.orchestration);
+          }
       }
   }
 
@@ -442,6 +468,7 @@ function getActiveData() {
   return null;
 }
 
+// ★ 日付の「記録なし」バグの完全修正
 function updateContextUI(preservedDailyDate = null) {
   const ctx = document.getElementById("contextFilters"); if (!ctx) return; ctx.innerHTML = "";
   if (currentView === "daily") {
@@ -453,7 +480,7 @@ function updateContextUI(preservedDailyDate = null) {
         fetchFromCloud(); 
     };
     
-    const keys = Object.keys(logs.daily || {}).filter(k => !logs.daily[k]._empty).sort().reverse();
+    const keys = Object.keys(logs.daily || {}).sort().reverse();
     if (keys.length === 0) select.appendChild(new Option("記録なし", getDailyKey()));
     else keys.forEach(k => select.appendChild(new Option(k, k)));
     
@@ -508,12 +535,15 @@ function render() {
   const container = document.getElementById("container");
   const data = getActiveData();
   const cfg = logs.appConfig || { lines: {} };
+  
+  const lineF = document.getElementById("lineFilter") ? document.getElementById("lineFilter").value : "all";
   const secF = document.getElementById("sectionFilter") ? document.getElementById("sectionFilter").value : "all";
-  const opF = document.getElementById("opFilter") ? document.getElementById("opFilter").value : "all";
   const compF = document.getElementById("companyFilter") ? document.getElementById("companyFilter").value : "all";
   const kindF = document.getElementById("kindFilter") ? document.getElementById("kindFilter").value : "all";
   const destF = document.getElementById("destFilter") ? document.getElementById("destFilter").value : "all";
   const formF = document.getElementById("formFilterSel") ? document.getElementById("formFilterSel").value : "all";
+  const opSearch = document.getElementById("opNumSearch") ? document.getElementById("opNumSearch").value.trim().toUpperCase() : "";
+  
   const showRunningOnly = document.getElementById("runningFilter")?.checked;
   const useFmt = document.getElementById("formatFilter")?.checked; 
   const daisoF = document.getElementById("daisoFilter") ? document.getElementById("daisoFilter").checked : false;
@@ -528,13 +558,7 @@ function render() {
 
   groups.forEach(g => {
     if (cfg.lines && cfg.lines[g.id] && cfg.lines[g.id].disp === false) return;
-    
-    let matchGroup = false;
-    if (opF === "all") matchGroup = true;
-    else if (opF === "system_tymg" && ['toyoko', 'meguro', 'shinyokohama', 'extra_tymg'].includes(g.id)) matchGroup = true;
-    else if (opF === "system_dtom" && ['dento', 'oimachi', 'extra_dtom'].includes(g.id)) matchGroup = true;
-    else if (opF === g.id) matchGroup = true;
-    if (!matchGroup) return;
+    if (lineF !== "all" && lineF !== g.id) return;
     
     let opKeys = new Set();
     if (data) { Object.keys(data).forEach(k => { if (data[k] && data[k].homeLine === g.id) opKeys.add(k); }); }
@@ -559,10 +583,13 @@ function render() {
       if (!u && Object.keys(liveTrainsForOp).length === 0) return;
       
       const label = u ? u.label : ok.split('_')[1];
+      
+      // ★ 運行番号検索フィルター
+      if (opSearch && !label.toUpperCase().includes(opSearch)) return;
+
       const firstTrain = u ? Object.values(u.trains)[0] : null;
       const srcName = (u && u.sourceName) ? u.sourceName : ((firstTrain && firstTrain.sourceName) ? firstTrain.sourceName : (Object.values(liveTrainsForOp)[0]?.sourceName || "不明"));
 
-      // ★ 所属（運用）フィルターの適用
       if (compF !== "all") {
           let isMatch = false;
           if (compF === "K" && label.includes("K")) isMatch = true;
@@ -586,7 +613,13 @@ function render() {
             const t = u.trains[tUid]; if(!t || t.deleted || !t.history || t.history.length===0) return; 
             let dKind = t.kind === "通勤特急" ? "通特" : t.kind;
             
-            if(secF !== "all" && t.sourceName !== secF) return;
+            let srcMatch = false;
+            if (secF === "all") srcMatch = true;
+            else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(t.sourceName)) srcMatch = true;
+            else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(t.sourceName)) srcMatch = true;
+            else if (t.sourceName === secF) srcMatch = true;
+            if (!srcMatch) return;
+
             if(kindF !== "all" && dKind !== kindF && !(kindF==='特急_all' && (dKind==='特急'||dKind==='F'))) return;
             if(destF !== "all" && t.dest !== destF) return;
 
@@ -681,11 +714,17 @@ function render() {
           });
       }
 
-      // 未保存のライブ列車を表示
       Object.keys(liveTrainsForOp).forEach(tNo => {
           if (!processedLiveTnos.has(tNo)) {
               const liveInfo = liveTrainsForOp[tNo];
-              if(secF !== "all" && liveInfo.sourceName !== secF) return;
+              
+              let srcMatch = false;
+              if (secF === "all") srcMatch = true;
+              else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(liveInfo.sourceName)) srcMatch = true;
+              else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(liveInfo.sourceName)) srcMatch = true;
+              else if (liveInfo.sourceName === secF) srcMatch = true;
+              if (!srcMatch) return;
+
               if(kindF !== "all" && liveInfo.kind !== kindF && !(kindF==='特急_all' && (liveInfo.kind==='特急'||liveInfo.kind==='F'))) return;
               if(destF !== "all" && liveInfo.dest !== destF) return;
               
