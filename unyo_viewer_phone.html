@@ -23,14 +23,14 @@
 
     #noticeBar { background: #ffebee; color: #d32f2f; padding: 10px; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ffcdd2; display: none; text-align: center; }
 
-    /* 📱 タブ（PC版に合わせたグレー基調） */
+    /* 📱 タブ */
     .tab-area { display: flex; gap: 8px; overflow-x: auto; padding: 8px 15px; background: #fff; border-bottom: 1px solid #ddd; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .tab-area::-webkit-scrollbar { display: none; }
     .tab { flex: 0 0 auto; padding: 6px 14px; cursor: pointer; border: 1px solid #ccc; background: #f5f5f5; border-radius: 20px; font-size: 13px; font-weight: bold; color: #333; }
     .tab.active { background: #333; color: #fff; border-color: #333; }
     .tab-daily.active { background: #2e7d32; color: #fff; border-color: #2e7d32; }
 
-    /* 📱 フィルター（折りたたみ式） */
+    /* 📱 フィルター（折りたたみ式・6グリッド分割） */
     details.filter-accordion { background: #fafafa; border-bottom: 1px solid #ddd; }
     details.filter-accordion summary { padding: 10px 15px; font-weight: bold; font-size: 13px; color: #333; cursor: pointer; list-style: none; display: flex; justify-content: center; background: #eee; }
     details.filter-accordion summary::-webkit-details-marker { display: none; }
@@ -49,7 +49,6 @@
     
     .line-section { margin-bottom: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #ddd; }
     .line-header { padding: 8px 15px; font-size: 14px; font-weight: bold; color: #fff; letter-spacing: 1px; }
-    .line-body { padding: 8px; }
     
     .bg-toyoko { background: var(--toyoko); } .bg-meguro { background: var(--meguro); } .bg-dento { background: var(--dento); }
     .bg-oimachi { background: var(--oimachi); } .bg-shinyoko { background: var(--shinyoko); } .bg-extra { background: var(--extra); }
@@ -122,7 +121,7 @@
       <div id="contextFilters" class="filter-item full-width" style="margin-bottom:2px;"></div>
       
       <div class="filter-item">
-        <span class="filter-label">路線・系統</span>
+        <span class="filter-label">系統・路線</span>
         <select id="opFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render();">
           <option value="all">すべて</option>
           <optgroup label="系統別">
@@ -141,14 +140,36 @@
         </select>
       </div>
       <div class="filter-item">
-        <span class="filter-label">種別</span>
-        <select id="kindFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render();">
-          <option value="all">すべて表示</option><option value="各停">各停</option><option value="B">B各停</option><option value="G">G各停</option><option value="準急">準急</option><option value="急行">急行</option><option value="通特">通特</option><option value="特急_all">Fラ/特急</option><option value="特急">特急</option><option value="F">Fラ</option><option value="Sトレイン">Sトレイン</option><option value="回送">回送</option>
+        <span class="filter-label">運用 (所属)</span>
+        <select id="companyFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render();">
+          <option value="all">すべての運用</option>
+          <option value="K">K運用 (東急)</option>
+          <option value="S">S運用 (メトロ)</option>
+          <option value="T">T運用 (都営/東武)</option>
+          <option value="M">M運用 (西武/埼玉)</option>
+          <option value="G">G運用 (相鉄)</option>
+          <option value="O100">大井町 100番台</option>
+          <option value="O130">大井町 130番台〜</option>
         </select>
       </div>
       <div class="filter-item">
+        <span class="filter-label">走行区間</span>
+        <select id="sectionFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateDestDropdown(); render();">
+          <option value="all">すべての区間</option>
+          <option value="東横線">東横線</option>
+          <option value="目黒線">目黒線</option>
+          <option value="田園都市線">田園都市線</option>
+          <option value="大井町線">大井町線</option>
+          <option value="新横浜線">新横浜線</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">種別</span>
+        <select id="kindFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render()"><option value="all">すべて表示</option><option value="各停">各停</option><option value="B">B各停</option><option value="G">G各停</option><option value="準急">準急</option><option value="急行">急行</option><option value="通特">通特</option><option value="特急_all">Fラ/特急</option><option value="特急">特急</option><option value="F">Fラ</option><option value="Sトレイン">Sトレイン</option><option value="回送">回送</option></select>
+      </div>
+      <div class="filter-item">
         <span class="filter-label">行先</span>
-        <select id="destFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render();"></select>
+        <select id="destFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render()"></select>
       </div>
       <div class="filter-item">
         <span class="filter-label">編成</span>
@@ -160,7 +181,7 @@
       <div class="filter-item full-width">
         <label class="running-toggle"><input type="checkbox" id="daisoFilter" autocomplete="off" data-lpignore="true" onchange="updateFormDropdown(); render();"> 代走のみ</label>
         <label class="running-toggle" style="color:#1976d2;"><input type="checkbox" id="runningFilter" autocomplete="off" data-lpignore="true" onchange="updateFormDropdown(); render();" checked> 走行中のみ</label>
-        <label class="running-toggle"><input type="checkbox" id="formatFilter" autocomplete="off" data-lpignore="true" onchange="updateFormDropdown(); render();"> 編成表示切替</label>
+        <label class="running-toggle"><input type="checkbox" id="formatFilter" autocomplete="off" data-lpignore="true" onchange="updateFormDropdown(); render();"> 編成表示</label>
       </div>
     </div>
   </details>
@@ -180,6 +201,7 @@ const MASTER_LINE_ORDERS = { "東横線": ["副都心線", "渋谷", "中目黒"
 const SECTION_KIND_MAP = { "all": ["all", "各停", "B", "G", "準急", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "東横線": ["all", "各停", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "目黒線": ["all", "各停", "急行", "回送"], "田園都市線": ["all", "各停", "準急", "急行", "回送"], "大井町線": ["all", "各停", "B", "G", "急行", "回送"], "新横浜線": ["all", "各停", "急行", "特急_all", "特急", "F", "回送"] };
 const STATION_MAP = { 26:"渋谷", 908:"代官山", 909:"中目黒", 910:"祐天寺", 911:"学芸大学", 912:"都立大学", 913:"自由が丘", 914:"田園調布", 915:"多摩川", 916:"新丸子", 57:"武蔵小杉", 918:"元住吉", 919:"日吉", 920:"綱島", 921:"大倉山", 108:"菊名", 923:"妙蓮寺", 924:"白楽", 925:"東白楽", 926:"反町", 5:"横浜", 24:"目黒", 929:"不動前", 930:"武蔵小山", 931:"西小山", 932:"洗足", 933:"大岡山", 934:"奥沢", 942:"池尻大橋", 943:"三軒茶屋", 944:"駒沢大学", 945:"桜新町", 946:"用賀", 947:"二子玉川", 948:"二子新地", 949:"高津", 950:"溝の口", 951:"梶が谷", 952:"宮崎台", 953:"宮前平", 954:"鷺沼", 955:"たまプラーザ", 956:"あざみ野", 957:"江田", 958:"市が尾", 959:"藤が丘", 960:"青葉台", 961:"田奈", 114:"長津田", 963:"つくし野", 964:"すずかけ台", 965:"南町田", 966:"つきみ野", 967:"中央林間", 494:"大井町", 969:"下神明", 970:"戸越公園", 971:"中延", 972:"荏原町", 973:"旗の台", 974:"北千束", 976:"緑が丘", 978:"九品仏", 979:"尾山台", 980:"等々力", 981:"上野毛", 982:"新綱島", 983:"新横浜" };
 const ST_COLOR_MAP = { "代官山":"var(--toyoko)","中目黒":"var(--toyoko)","祐天寺":"var(--toyoko)","学芸大学":"var(--toyoko)","都立大学":"var(--toyoko)","綱島":"var(--toyoko)","大倉山":"var(--toyoko)","菊名":"var(--toyoko)","妙蓮寺":"var(--toyoko)","白楽":"var(--toyoko)","東白楽":"var(--toyoko)","反町":"var(--toyoko)","横浜":"var(--toyoko)","目黒":"var(--meguro)","不動前":"var(--meguro)","武蔵小山":"var(--meguro)","西小山":"var(--meguro)","洗足":"var(--meguro)","奥沢":"var(--meguro)","池尻大橋":"var(--dento)","三軒茶屋":"var(--dento)","駒沢大学":"var(--dento)","桜新町":"var(--dento)","用賀":"var(--dento)","梶が谷":"var(--dento)","宮崎台":"var(--dento)","宮前平":"var(--dento)","鷺沼":"var(--dento)","たまプラーザ":"var(--dento)","あざみ野":"var(--dento)","江田":"var(--dento)","市が尾":"var(--dento)","藤が丘":"var(--dento)","青葉台":"var(--dento)","田奈":"var(--dento)","長津田":"var(--dento)","つくし野":"var(--dento)","すずかけ台":"var(--dento)","南町田":"var(--dento)","つきみ野":"var(--dento)","中央林間":"var(--dento)","恩田":"var(--dento)","こどもの国":"var(--dento)","大井町":"var(--oimachi)","下神明":"var(--oimachi)","戸越公園":"var(--oimachi)","中延":"var(--oimachi)","荏原町":"var(--oimachi)","旗の台":"var(--oimachi)","北千束":"var(--oimachi)","緑が丘":"var(--oimachi)","九品仏":"var(--oimachi)","尾山台":"var(--oimachi)","等々力":"var(--oimachi)","上野毛":"var(--oimachi)","新綱島":"var(--shinyoko)","新横浜":"var(--shinyoko)" };
+const KIND_OPTIONS = [ { value: "all", label: "すべて表示" }, { value: "各停", label: "各停" }, { value: "B", label: "B各停" }, { value: "G", label: "G各停" }, { value: "準急", label: "準急" }, { value: "急行", label: "急行" }, { value: "通特", label: "通特" }, { value: "特急_all", label: "Fラ/特急" }, { value: "特急", label: "特急" }, { value: "F", label: "Fラ" }, { value: "Sトレイン", label: "S" }, { value: "回送", label: "回送" } ];
 
 const OP_SETS = { 
   weekday: { 
@@ -347,7 +369,9 @@ function updateFormDropdown() {
   const formSel = document.getElementById("formFilterSel"); if (!formSel) return;
   const currentForm = formSel.value || "all"; let forms = new Set();
   const useFmt = document.getElementById("formatFilter")?.checked;
-  const data = getActiveData(); const opF = document.getElementById("opFilter").value;
+  const data = getActiveData(); 
+  const opF = document.getElementById("opFilter").value;
+  const compF = document.getElementById("companyFilter") ? document.getElementById("companyFilter").value : "all";
 
   const addForm = (hl, aff, orch) => {
       if (!aff && (!orch || orch === "00")) return;
@@ -359,11 +383,25 @@ function updateFormDropdown() {
       }
   };
 
+  const checkComp = (label) => {
+      if (compF === "all") return true;
+      if (!label) return false;
+      if (compF === "K" && label.includes("K")) return true;
+      if (compF === "S" && label.includes("S")) return true;
+      if (compF === "T" && label.includes("T")) return true;
+      if (compF === "M" && label.includes("M")) return true;
+      if (compF === "G" && label.includes("G")) return true;
+      if (label.match(/^\d+$/)) { let num = parseInt(label, 10); if (compF === "O100" && num >= 100 && num <= 129) return true; if (compF === "O130" && num >= 130) return true; }
+      return false;
+  };
+
   if (data) {
     for (const opKey in data) {
       let hl = data[opKey].homeLine;
       let matchGroup = (opF === "all") || (opF === "system_tymg" && ['toyoko', 'meguro', 'shinyokohama', 'extra_tymg'].includes(hl)) || (opF === "system_dtom" && ['dento', 'oimachi', 'extra_dtom'].includes(hl)) || (opF === hl);
       if (!matchGroup) continue;
+      if (!checkComp(data[opKey].label)) continue;
+      
       if (data[opKey].trains) {
         for (const tUid in data[opKey].trains) {
           const t = data[opKey].trains[tUid];
@@ -376,8 +414,11 @@ function updateFormDropdown() {
   if (!hasReceivedCloudData || (currentView === 'daily' && document.getElementById("dailyDateSelect")?.value === getDailyKey(new Date()))) {
       for (const opKey in apiLiveCache) {
           let hl = opKey.split('_')[0]; if (opKey.startsWith("extra_")) hl = opKey.split('_').slice(0,2).join('_');
+          let label = opKey.split('_')[1];
           let matchGroup = (opF === "all") || (opF === "system_tymg" && ['toyoko', 'meguro', 'shinyokohama', 'extra_tymg'].includes(hl)) || (opF === "system_dtom" && ['dento', 'oimachi', 'extra_dtom'].includes(hl)) || (opF === hl);
           if (!matchGroup) continue;
+          if (!checkComp(label)) continue;
+          
           let trains = apiLiveCache[opKey];
           for (let tNo in trains) { addForm(hl, trains[tNo].affiliation, trains[tNo].orchestration); }
       }
@@ -391,6 +432,13 @@ function updateFormDropdown() {
 function getActiveData() {
   if (currentView === 'weekday' || currentView === 'holiday') return logs[currentView];
   if (currentView === 'daily') { const sel = document.getElementById('dailyDateSelect'); return sel ? logs.daily[sel.value] : null; }
+  if (currentView.startsWith('custom_')) {
+    let idx = parseInt(currentView.split('_')[1]); let cv = logs.customViews[idx];
+    if (!cv) return null; if (cv.type === 'upload' && cv.uploadData) return cv.uploadData;
+    let baseData = logs.daily[cv.date]; if (!baseData) return null;
+    let filtered = {}; for (let opKey in baseData) { if (cv.groups.includes(baseData[opKey].homeLine)) filtered[opKey] = baseData[opKey]; }
+    return filtered;
+  }
   return null;
 }
 
@@ -404,6 +452,7 @@ function updateContextUI(preservedDailyDate = null) {
         document.getElementById("cloudStatus").textContent = "☁️ 読込中...";
         fetchFromCloud(); 
     };
+    
     const keys = Object.keys(logs.daily || {}).filter(k => !logs.daily[k]._empty).sort().reverse();
     if (keys.length === 0) select.appendChild(new Option("記録なし", getDailyKey()));
     else keys.forEach(k => select.appendChild(new Option(k, k)));
@@ -432,6 +481,17 @@ function updateTabs() {
       if (cfg.dispW !== false) changeTab('weekday'); else if (cfg.dispH !== false) changeTab('holiday');
       else if (cfg.dispD !== false) changeTab('daily'); 
   }
+
+  document.querySelectorAll('.tab-custom').forEach(el => el.remove());
+  const tabArea = document.getElementById('tabArea');
+  if (logs.customViews) {
+    logs.customViews.forEach((cv, i) => {
+      if (cv.active && cv.title) {
+        let btn = document.createElement('button'); btn.id = `tab_custom_${i}`; btn.className = `tab tab-custom ${currentView === `custom_${i}` ? 'active' : ''}`;
+        btn.onclick = () => changeTab(`custom_${i}`); btn.textContent = cv.title; tabArea.appendChild(btn);
+      }
+    });
+  }
 }
 
 function changeTab(tabId) { 
@@ -450,6 +510,7 @@ function render() {
   const cfg = logs.appConfig || { lines: {} };
   const secF = document.getElementById("sectionFilter") ? document.getElementById("sectionFilter").value : "all";
   const opF = document.getElementById("opFilter") ? document.getElementById("opFilter").value : "all";
+  const compF = document.getElementById("companyFilter") ? document.getElementById("companyFilter").value : "all";
   const kindF = document.getElementById("kindFilter") ? document.getElementById("kindFilter").value : "all";
   const destF = document.getElementById("destFilter") ? document.getElementById("destFilter").value : "all";
   const formF = document.getElementById("formFilterSel") ? document.getElementById("formFilterSel").value : "all";
@@ -500,6 +561,18 @@ function render() {
       const label = u ? u.label : ok.split('_')[1];
       const firstTrain = u ? Object.values(u.trains)[0] : null;
       const srcName = (u && u.sourceName) ? u.sourceName : ((firstTrain && firstTrain.sourceName) ? firstTrain.sourceName : (Object.values(liveTrainsForOp)[0]?.sourceName || "不明"));
+
+      // ★ 所属（運用）フィルターの適用
+      if (compF !== "all") {
+          let isMatch = false;
+          if (compF === "K" && label.includes("K")) isMatch = true;
+          if (compF === "S" && label.includes("S")) isMatch = true;
+          if (compF === "T" && label.includes("T")) isMatch = true;
+          if (compF === "M" && label.includes("M")) isMatch = true;
+          if (compF === "G" && label.includes("G")) isMatch = true;
+          if (label.match(/^\d+$/)) { let num = parseInt(label, 10); if (compF === "O100" && num >= 100 && num <= 129) isMatch = true; if (compF === "O130" && num >= 130) isMatch = true; }
+          if (!isMatch) return; 
+      }
 
       let tHtmlArr = [];
       let processedLiveTnos = new Set();
@@ -753,33 +826,6 @@ async function fetchLiveApiData() {
   } finally {
       isFetchingApi = false;
       newLiveCache = null; 
-  }
-}
-
-// =========================================
-// UI更新関数（日付選択プルダウンの修正）
-// =========================================
-function updateContextUI(preservedDailyDate = null) {
-  const ctx = document.getElementById("contextFilters"); if (!ctx) return; ctx.innerHTML = "";
-  if (currentView === "daily") {
-    const label = document.createElement("span"); label.className = "filter-label"; label.textContent = "表示日:"; ctx.appendChild(label);
-    const select = document.createElement("select"); select.id = "dailyDateSelect"; select.className = "filter-select";
-    select.onchange = () => { 
-        updateDestDropdown(); updateFormDropdown(); render(); 
-        document.getElementById("cloudStatus").textContent = "☁️ 読込中...";
-        fetchFromCloud(); 
-    };
-    
-    // ★ 修正：メモリ解放済み（_empty）の日付もすべて選択肢として表示する
-    const keys = Object.keys(logs.daily || {}).sort().reverse();
-    if (keys.length === 0) select.appendChild(new Option("記録なし", getDailyKey()));
-    else keys.forEach(k => select.appendChild(new Option(k, k)));
-    
-    if (preservedDailyDate && !Array.from(select.options).some(o => o.value === preservedDailyDate)) {
-        select.appendChild(new Option(preservedDailyDate, preservedDailyDate));
-    }
-    if (preservedDailyDate) select.value = preservedDailyDate;
-    ctx.appendChild(select);
   }
 }
 
