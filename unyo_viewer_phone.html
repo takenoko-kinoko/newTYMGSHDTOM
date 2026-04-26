@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
-  <title>東急線 スマホビューワー</title>
+  <title>東急線 スマホビューワー（超軽量・即時表示版）</title>
   <style>
     :root { 
       --toyoko: #d90240; --meguro: #009cd3; --dento: #01aa8f; 
@@ -13,26 +13,29 @@
     body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background: #eef2f5; font-size: 14px; color: #333; overflow-x: hidden; }
     
     /* 📱 ヘッダー */
-    #sticky-header { background: #fff; border-top: 4px solid #d32f2f; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; width: 100%; }
+    #sticky-header { background: #fff; border-top: 4px solid #1976d2; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; width: 100%; }
     .header-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; flex-wrap: wrap; gap: 8px; }
-    h1 { margin: 0; font-size: 17px; color: #d32f2f; font-weight: bold; flex: 1; min-width: 100%; text-align: center; }
-    .header-right { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 6px; }
+    h1 { margin: 0; font-size: 16px; color: #1976d2; font-weight: bold; flex: 1; text-align: left; white-space: nowrap; }
+    .header-right { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
     
-    .btn-sync { background: #ff9800; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.2); cursor: pointer; }
-    #cloudStatus { font-family: monospace; font-size: 11px; color: #01aa8f; font-weight: bold; background: #e8f5e9; padding: 6px 10px; border-radius: 4px; text-align: center; flex: 1; }
+    .btn-action { background: #333; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.2); cursor: pointer; white-space: nowrap; }
+    .btn-sync { background: #ff9800; }
+    #cloudStatus { font-family: monospace; font-size: 10px; color: #01aa8f; font-weight: bold; background: #e8f5e9; padding: 6px 8px; border-radius: 4px; text-align: center; }
 
-    #noticeBar { background: #ffebee; color: #d32f2f; padding: 10px; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ffcdd2; display: none; text-align: center; }
+    #noticeBar { background: #ffebee; color: #d32f2f; padding: 8px 15px; font-size: 13px; font-weight: bold; border-bottom: 1px solid #ffcdd2; display: none; text-align: center; }
 
     /* 📱 タブ */
-    .tab-area { display: flex; gap: 8px; overflow-x: auto; padding: 8px 15px; background: #fff; border-bottom: 1px solid #ddd; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .tab-area { display: flex; gap: 6px; overflow-x: auto; padding: 8px 12px; background: #fff; border-bottom: 1px solid #ddd; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .tab-area::-webkit-scrollbar { display: none; }
-    .tab { flex: 0 0 auto; padding: 6px 14px; cursor: pointer; border: 1px solid #ccc; background: #f5f5f5; border-radius: 20px; font-size: 13px; font-weight: bold; color: #333; }
+    .tab { flex: 0 0 auto; padding: 6px 14px; cursor: pointer; border: 1px solid #ccc; background: #f5f5f5; border-radius: 20px; font-size: 12px; font-weight: bold; color: #333; }
     .tab.active { background: #333; color: #fff; border-color: #333; }
-    .tab-daily.active { background: #2e7d32; color: #fff; border-color: #2e7d32; }
+    .tab-daily { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; }
+    .tab-import { background: #fff3e0; border-color: #ffcc80; color: #ef6c00; }
+    .tab-daily.active, .tab-import.active { background: #333; color: #fff; border-color: #333; }
 
     /* 📱 フィルター（折りたたみ式） */
     details.filter-accordion { background: #fafafa; border-bottom: 1px solid #ddd; }
-    details.filter-accordion summary { padding: 12px 15px; font-weight: bold; font-size: 14px; color: #1565c0; cursor: pointer; list-style: none; display: flex; justify-content: center; background: #e3f2fd; }
+    details.filter-accordion summary { padding: 10px 15px; font-weight: bold; font-size: 13px; color: #1565c0; cursor: pointer; list-style: none; display: flex; justify-content: center; background: #e3f2fd; }
     details.filter-accordion summary::-webkit-details-marker { display: none; }
     
     .filter-bar { padding: 12px 15px; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -45,52 +48,49 @@
     .running-toggle input { margin:0; transform:scale(1.2); }
 
     /* 📱 メインコンテンツ */
-    #container { padding: 15px; max-width: 800px; margin: 0 auto; width: 100%; }
+    #container { padding: 10px; max-width: 800px; margin: 0 auto; width: 100%; }
     
-    .line-section { margin-bottom: 25px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #ddd; }
-    .line-header { padding: 10px 15px; font-size: 15px; font-weight: bold; color: #fff; letter-spacing: 1px; }
+    .line-section { margin-bottom: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #ddd; }
+    .line-header { padding: 8px 12px; font-size: 14px; font-weight: bold; color: #fff; letter-spacing: 1px; }
     
     .bg-toyoko { background: var(--toyoko); } .bg-meguro { background: var(--meguro); } .bg-dento { background: var(--dento); }
     .bg-oimachi { background: var(--oimachi); } .bg-shinyoko { background: var(--shinyoko); } .bg-extra { background: var(--extra); }
 
-    /* ★ 運用のまとまりを強調するデザイン */
-    .op-box { display: flex; flex-direction: column; border: 2px solid #90a4ae; border-radius: 8px; margin: 12px 10px; overflow: hidden; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.08); }
-    .op-left { width: 100%; display: flex; justify-content: space-between; align-items: center; background: #eceff1; padding: 10px 15px; border-bottom: 2px solid #90a4ae; }
-    .op-no { font-weight: bold; font-family: monospace; font-size: 20px; color: #1e3a8a; letter-spacing: 1px; }
-    .src-tag { font-size: 11px; background: #cfd8dc; padding: 4px 8px; border-radius: 4px; color: #37474f; font-weight: bold; }
+    .op-box { display: flex; flex-direction: column; border: 1px solid #90a4ae; border-radius: 6px; margin: 10px; overflow: hidden; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .op-left { width: 100%; display: flex; justify-content: space-between; align-items: center; background: #eceff1; padding: 8px 12px; border-bottom: 1px solid #90a4ae; }
+    .op-no { font-weight: bold; font-family: monospace; font-size: 16px; color: #1e3a8a; letter-spacing: 1px; }
+    .src-tag { font-size: 10px; background: #cfd8dc; padding: 2px 6px; border-radius: 4px; color: #37474f; font-weight: bold; }
     
     .op-right { flex: 1; display: flex; flex-direction: column; background: #fff; }
-    .train-row { padding: 12px 15px; border-bottom: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 6px; }
+    .train-row { padding: 10px 12px; border-bottom: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 6px; }
     .train-row:last-child { border-bottom: none; }
     .row-active { background: #fffde7; }
-    .row-sync-wait { background: #f5f5f5; opacity: 0.8; }
+    .row-sync-wait { background: #fafafa; opacity: 0.9; }
 
     .t-basic { display: flex; flex-direction: column; gap: 4px; border-bottom: 1px dashed #eee; padding-bottom: 6px; }
     .t-tr { display: flex; align-items: center; gap: 10px; width: 100%; }
-    .t-tr-no { font-family: monospace; color: #1976d2; font-weight: bold; font-size: 14px; }
+    .t-tr-no { font-family: monospace; color: #1976d2; font-weight: bold; font-size: 13px; }
     .t-tr-form { font-size: 11px; color: #4886a5; font-weight: bold; }
     .t-tr-sub { font-size: 10px; color: #666; }
     
     .t-dest { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-    .t-dest-text { font-size: 14px; font-weight: bold; color: #333; display: flex; align-items: center; gap: 6px; }
-    .t-delay { color: #d32f2f; font-size: 11px; font-weight: bold; background: #ffebee; padding: 2px 6px; border-radius: 4px; border: 1px solid #ffcdd2; }
-    .t-remarks { font-size: 11px; color: #555; background: #fff9c4; padding: 2px 6px; border-radius: 4px; border: 1px solid #fff59d; }
+    .t-dest-text { font-size: 13px; font-weight: bold; color: #333; display: flex; align-items: center; gap: 6px; }
+    .t-delay { color: #d32f2f; font-size: 10px; font-weight: bold; background: #ffebee; padding: 2px 4px; border-radius: 4px; border: 1px solid #ffcdd2; }
+    .t-remarks { font-size: 11px; color: #555; background: #fff9c4; padding: 2px 6px; border-radius: 4px; border: 1px solid #fff59d; margin-top: 2px; }
     
-    .t-pos { font-size: 13px; color: #222; margin-top: 2px; }
-    .t-pos strong { color: #1976d2; margin-right: 4px; font-size: 13px; }
+    .t-pos { font-size: 12px; color: #222; margin-top: 2px; }
+    .t-pos strong { color: #1976d2; margin-right: 4px; font-size: 12px; }
     
-    .t-hist { width: 100%; overflow-x: auto; white-space: nowrap; display: flex; align-items: center; gap: 4px; padding-bottom: 8px; margin-top: 2px; -webkit-overflow-scrolling: touch; }
-    .t-hist::-webkit-scrollbar { height: 6px; display: block; }
-    .t-hist::-webkit-scrollbar-track { background: transparent; }
-    .t-hist::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+    .t-hist { width: 100%; overflow-x: auto; white-space: nowrap; display: flex; align-items: center; gap: 4px; padding-bottom: 6px; margin-top: 2px; -webkit-overflow-scrolling: touch; }
+    .t-hist::-webkit-scrollbar { display: none; }
     
-    .hist-item { background: #f5f5f5; padding: 4px 6px; border-radius: 4px; font-size: 11px; border: 1px solid #ddd; display: inline-flex; align-items: center; gap: 4px; }
-    .hist-item.is-ekikan { background: transparent; border: none; color: #888; font-size: 10px; padding: 2px; }
+    .hist-item { background: #f5f5f5; padding: 3px 6px; border-radius: 4px; font-size: 10px; border: 1px solid #ddd; display: inline-flex; align-items: center; gap: 4px; }
+    .hist-item.is-ekikan { background: transparent; border: none; color: #888; font-size: 9px; padding: 2px; }
     .hist-item.live-badge { background: #e3f2fd; border-color: #1976d2; color: #1565c0; font-weight: bold; }
     .hist-item strong { color: #444; }
-    .tentative-mark { color: #d32f2f; font-weight: bold; font-size: 10px; margin-left: 1px; }
+    .tentative-mark { color: #d32f2f; font-weight: bold; font-size: 9px; margin-left: 1px; }
 
-    .kind-badge { display: inline-block; min-width: 40px; padding: 2px 4px; border-radius: 3px; font-size: 10px; font-weight: bold; color: #fff; text-align: center; line-height: 1; }
+    .kind-badge { display: inline-block; min-width: 36px; padding: 2px 4px; border-radius: 3px; font-size: 10px; font-weight: bold; color: #fff; text-align: center; line-height: 1; }
     .kind-各停, .kind-B { background: #1976d2; } .kind-G, .kind-準急 { background: #4caf50; } 
     .kind-急行 { background: #d90240; } .kind-特急, .kind-F { background: #ff9800; } 
     .kind-通特 { background: #fff; border: 1px solid #d90240; color: #d90240; } 
@@ -101,10 +101,11 @@
 
 <div id="sticky-header">
   <div class="header-top">
-    <h1>東急線 スマホビューワー</h1>
+    <h1>運用ビューワー (軽量版)</h1>
     <div class="header-right">
-      <div id="cloudStatus">☁️ 待機中</div>
-      <button class="btn-sync" onclick="forceSync()">🔄 更新</button>
+      <button class="btn-action" onclick="location.href='index.html'+location.search">路線図</button>
+      <div id="cloudStatus">☁️ 初期化中...</div>
+      <button class="btn-action btn-sync" onclick="forceSync()">🔄 更新</button>
     </div>
   </div>
 
@@ -114,6 +115,9 @@
     <button id="tab_weekday" class="tab" onclick="changeTab('weekday')" style="display:none;">平日累計</button>
     <button id="tab_holiday" class="tab" onclick="changeTab('holiday')" style="display:none;">土休累計</button>
     <button id="tab_daily" class="tab tab-daily" onclick="changeTab('daily')" style="display:none;">毎日記録</button>
+    <button id="tab_import1" class="tab tab-import" onclick="changeTab('import1')">読込1</button>
+    <button id="tab_import2" class="tab tab-import" onclick="changeTab('import2')">読込2</button>
+    <button id="tab_import3" class="tab tab-import" onclick="changeTab('import3')">読込3</button>
   </div>
 
   <details class="filter-accordion">
@@ -122,16 +126,15 @@
       <div id="contextFilters" class="filter-item full-width" style="margin-bottom:2px;"></div>
       
       <div class="filter-item">
-        <span class="filter-label">路線 (所属グループ)</span>
+        <span class="filter-label">路線(運用)</span>
         <select id="lineFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render();">
           <option value="all">すべての路線</option>
           <option value="toyoko">東横線</option>
           <option value="meguro">目黒線</option>
-          <option value="shinyokohama">新横浜線</option>
           <option value="dento">田園都市線</option>
           <option value="oimachi">大井町線</option>
-          <option value="extra_tymg">TY/MG 非定期</option>
-          <option value="extra_dtom">DT/OM 非定期</option>
+          <option value="extra_tymg">東横・目黒非定期運用</option>
+          <option value="extra_dtom">田都・大井非定期運用</option>
         </select>
       </div>
       <div class="filter-item">
@@ -153,7 +156,7 @@
       </div>
       
       <div class="filter-item">
-        <span class="filter-label">運行番号検索</span>
+        <span class="filter-label">運番検索</span>
         <input type="text" id="opNumSearch" autocomplete="off" data-lpignore="true" class="filter-select" placeholder="例: 01K, 51" oninput="render()">
       </div>
       <div class="filter-item">
@@ -198,7 +201,7 @@
 
 <script>
 // =========================================
-// グローバル定数・変数
+// グローバル定数・変数（超軽量・No LocalStorage）
 // =========================================
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz2kiJGu75UH_dfN_3qZ3VEzgUacc7dwPM6FJE-ab-V-sR1W74QE96zhi8KPF6gh0Qo/exec";
 const API_ENDPOINTS = [{id:'toyoko',url:"https://w-tid.jp/tokyu/toyoko.json"},{id:'meguro',url:"https://w-tid.jp/tokyu/meguro.json"},{id:'shinyokohama',url:"https://w-tid.jp/tokyu/shinyokohama.json"},{id:'dento',url:"https://w-tid.jp/tokyu/dento.json"},{id:'oimachi',url:"https://w-tid.jp/tokyu/oimachi.json"}];
@@ -210,25 +213,15 @@ const STATION_MAP = { 26:"渋谷", 908:"代官山", 909:"中目黒", 910:"祐天
 const ST_COLOR_MAP = { "代官山":"var(--toyoko)","中目黒":"var(--toyoko)","祐天寺":"var(--toyoko)","学芸大学":"var(--toyoko)","都立大学":"var(--toyoko)","綱島":"var(--toyoko)","大倉山":"var(--toyoko)","菊名":"var(--toyoko)","妙蓮寺":"var(--toyoko)","白楽":"var(--toyoko)","東白楽":"var(--toyoko)","反町":"var(--toyoko)","横浜":"var(--toyoko)","目黒":"var(--meguro)","不動前":"var(--meguro)","武蔵小山":"var(--meguro)","西小山":"var(--meguro)","洗足":"var(--meguro)","奥沢":"var(--meguro)","池尻大橋":"var(--dento)","三軒茶屋":"var(--dento)","駒沢大学":"var(--dento)","桜新町":"var(--dento)","用賀":"var(--dento)","梶が谷":"var(--dento)","宮崎台":"var(--dento)","宮前平":"var(--dento)","鷺沼":"var(--dento)","たまプラーザ":"var(--dento)","あざみ野":"var(--dento)","江田":"var(--dento)","市が尾":"var(--dento)","藤が丘":"var(--dento)","青葉台":"var(--dento)","田奈":"var(--dento)","長津田":"var(--dento)","つくし野":"var(--dento)","すずかけ台":"var(--dento)","南町田":"var(--dento)","つきみ野":"var(--dento)","中央林間":"var(--dento)","恩田":"var(--dento)","こどもの国":"var(--dento)","大井町":"var(--oimachi)","下神明":"var(--oimachi)","戸越公園":"var(--oimachi)","中延":"var(--oimachi)","荏原町":"var(--oimachi)","旗の台":"var(--oimachi)","北千束":"var(--oimachi)","緑が丘":"var(--oimachi)","九品仏":"var(--oimachi)","尾山台":"var(--oimachi)","等々力":"var(--oimachi)","上野毛":"var(--oimachi)","新綱島":"var(--shinyoko)","新横浜":"var(--shinyoko)" };
 
 const OP_SETS = { 
-  weekday: { 
-    toyoko: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65], S:[1,2,3,4,5,7,9,11,13,15,17,19,23,25,29,31,33,41,45,47,53,63,67,71,75,77,79,81,85,87,89,91], M:[2,4,6,10,14,18,20,22,24,28,30,34], T:[3,5,13,19,21,23], G:[91,92,93,94,95]}, 
-    meguro: { K:[1,2,4,5,7,8,9,10,11,12,13,14,15,16,17,18,20,21,22,23,25,26,27,29,30,31,33,34,36,38,40,41,43,46,47,48], S:[30,32,34,36,38,40,42,44,46,50,52,54,56,60,62,64,66,68,70], T:[21,23,25,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85,87,89], M:[80,82,84,86,88,90,92,94,96], G:[31,32,33,35,37,38,39,42,43,44]}, 
-    dento: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44], S:[51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85,87,89,91,93], T:[50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82], N:[181,182,183]}, 
-    oimachi: { O:[101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,131,132,133,134,135,136,137]}
-  }, 
-  holiday: { 
-    toyoko: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,51,52,53,54,55,56,57,58,59,60,61,62,63,64], S:[1,2,3,4,5,7,9,11,13,17,19,23,25,29,31,33,39,43,45,47,49,53,55,57,61,67,73,75,85,87,89,91], M:[2,6,8,10,12,14,24,28,30,71,72,73,74,75], T:[3,5,11,13,17,19], G:[91,92,94]}, 
-    meguro: { K:[1,2,3,6,7,8,9,10,11,12,13,14,15,16,18,20,22,23,24,25,26,27,29,30,31,32,33,35,37,40,42,44], S:[30,32,34,36,38,40,42,44,46,48,50,52,56,60,64,66,68,70], T:[21,23,25,31,33,35,37,39,41,43,45,47,49,53,55,57,59,61,63,65,67], M:[80,82,84,86,88,90,92,94,96], G:[31,32,34,35,37,38,39,41,43,44]}, 
-    dento: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], S:[51,53,55,57,59,61,63,65,67,69,71,73,75,77], T:[50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82], N:[181,182,183]}, 
-    oimachi: { O:[101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,131,132,133,134,135,136]}
-  }
+  weekday: { toyoko: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65], S:[1,2,3,4,5,7,9,11,13,15,17,19,23,25,29,31,33,41,45,47,53,63,67,71,75,77,79,81,85,87,89,91], M:[2,4,6,10,14,18,20,22,24,28,30,34], T:[3,5,13,19,21,23], G:[91,92,93,94,95]}, meguro: { K:[1,2,4,5,7,8,9,10,11,12,13,14,15,16,17,18,20,21,22,23,25,26,27,29,30,31,33,34,36,38,40,41,43,46,47,48], S:[30,32,34,36,38,40,42,44,46,50,52,54,56,60,62,64,66,68,70], T:[21,23,25,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85,87,89], M:[80,82,84,86,88,90,92,94,96], G:[31,32,33,35,37,38,39,42,43,44]}, dento: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44], S:[51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85,87,89,91,93], T:[50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82], N:[181,182,183]}, oimachi: { O:[101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,131,132,133,134,135,136,137]} }, 
+  holiday: { toyoko: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,51,52,53,54,55,56,57,58,59,60,61,62,63,64], S:[1,2,3,4,5,7,9,11,13,17,19,23,25,29,31,33,39,43,45,47,49,53,55,57,61,67,73,75,85,87,89,91], M:[2,6,8,10,12,14,24,28,30,71,72,73,74,75], T:[3,5,11,13,17,19], G:[91,92,94]}, meguro: { K:[1,2,3,6,7,8,9,10,11,12,13,14,15,16,18,20,22,23,24,25,26,27,29,30,31,32,33,35,37,40,42,44], S:[30,32,34,36,38,40,42,44,46,48,50,52,56,60,64,66,68,70], T:[21,23,25,31,33,35,37,39,41,43,45,47,49,53,55,57,59,61,63,65,67], M:[80,82,84,86,88,90,92,94,96], G:[31,32,34,35,37,38,39,41,43,44]}, dento: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], S:[51,53,55,57,59,61,63,65,67,69,71,73,75,77], T:[50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82], N:[181,182,183]}, oimachi: { O:[101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,131,132,133,134,135,136]} } 
 };
 const MEGURO_PAIRS = {
   weekday: { "01K":"01K・02K", "02K":"01K・02K", "07K":"07K・08K", "08K":"07K・08K", "09K":"09K・10K", "10K":"09K・10K", "11K":"11K・12K", "12K":"11K・12K", "13K":"13K・14K", "14K":"13K・14K", "15K":"15K・16K", "16K":"15K・16K", "17K":"17K・18K", "18K":"17K・18K", "21K":"21K・22K", "22K":"21K・22K", "25K":"25K・26K", "26K":"25K・26K", "29K":"29K・30K", "30K":"29K・30K", "33K":"33K・34K", "34K":"33K・34K", "47K":"47K・48K", "48K":"47K・48K", "31G":"31G・32G", "32G":"31G・32G", "37G":"37G・38G", "38G":"37G・38G", "43G":"43G・44G", "44G":"43G・44G" },
   holiday: { "01K":"01K・02K", "02K":"01K・02K", "07K":"07K・08K", "08K":"07K・08K", "11K":"11K・12K", "12K":"11K・12K", "13K":"13K・14K", "14K":"13K・14K", "23K":"23K・24K", "24K":"23K・24K", "25K":"25K・26K", "26K":"25K・26K", "29K":"29K・30K", "30K":"29K・30K", "31K":"31K・32K", "32K":"31K・32K" }
 };
 
-let logs = { weekday: {}, holiday: {}, daily: {}, customViews: [], appConfig: {} };
+let logs = { weekday: {}, holiday: {}, daily: {}, import1: null, import2: null, import3: null, customViews: [], appConfig: {} };
 let hasReceivedCloudData = false; 
 let apiLiveCache = {}; 
 let lastRenderedState = ""; 
@@ -245,7 +238,7 @@ async function loadHolidays() { try { const res = await fetch("https://holidays-
 function updateStatusDisplay() {
     const el = document.getElementById("cloudStatus");
     if (hasReceivedCloudData) { el.textContent = `☁️ ${lastCloudTime || '待機中'}`; } 
-    else { el.textContent = `☁️ 待機中 | 📡 ${lastApiTime || '取得中'}`; }
+    else { el.textContent = `☁️ 取得待機中 | 📡 ${lastApiTime || '即時表示'}`; }
     if (lastCloudTime.includes('エラー') || lastApiTime.includes('エラー')) {
         el.style.color = "#d32f2f"; el.style.background = "#ffebee";
     } else { el.style.color = "#01aa8f"; el.style.background = "#e8f5e9"; }
@@ -283,31 +276,71 @@ function getDispKind(rawKind, groupId) {
   return rawKind;
 }
 
-function getUnyoInfoStr(opNo, lineKey, dayType) {
+// ★ 新横浜線の統合、目黒線・東横線の非定期分離エンジン
+function getUnyoInfoStr(opNo, tNo, lineKey, dayType) {
   const opRaw = parseInt(opNo, 10); if (opRaw === 0 || isNaN(opRaw)) return null;
   const H = opNo.charAt(0); const XX_str = opNo.substring(1); const XX = parseInt(XX_str, 10);
   let hl = "extra"; let label = String(opRaw); let detectedHl = "extra"; let detectedSys = "";
+  
   if (['toyoko', 'meguro', 'shinyokohama'].includes(lineKey)) {
-    if (H==='0') { detectedHl="toyoko"; detectedSys="K"; label=XX_str+"K"; } else if (H==='1') { detectedHl="toyoko"; detectedSys="M"; label=XX_str+"M"; } else if (H==='7') { detectedHl="toyoko"; detectedSys="S"; label=XX_str+"S"; } else if (H==='8') { detectedHl="toyoko"; detectedSys="T"; label=XX_str+"T"; } else if (H==='9') { detectedHl="toyoko"; detectedSys="G"; label=XX_str+"G"; } else if (H==='2') { detectedHl="meguro"; detectedSys="K"; label=XX_str+"K"; } else if (H==='3') { detectedHl="meguro"; detectedSys="S"; label=XX_str+"S"; } else if (H==='4') { detectedHl="meguro"; detectedSys="T"; label=XX_str+"T"; } else if (H==='5') { detectedHl="meguro"; detectedSys="M"; label=XX_str+"M"; } else if (H==='6') { detectedHl="meguro"; detectedSys="G"; label=XX_str+"G"; }
+    if (H==='0') { detectedHl="toyoko"; detectedSys="K"; label=XX_str+"K"; } 
+    else if (H==='1') { detectedHl="toyoko"; detectedSys="M"; label=XX_str+"M"; } 
+    else if (H==='7') { detectedHl="toyoko"; detectedSys="S"; label=XX_str+"S"; } 
+    else if (H==='8') { detectedHl="toyoko"; detectedSys="T"; label=XX_str+"T"; } 
+    else if (H==='9') { detectedHl="toyoko"; detectedSys="G"; label=XX_str+"G"; } 
+    else if (H==='2') { detectedHl="meguro"; detectedSys="K"; label=XX_str+"K"; } 
+    else if (H==='3') { detectedHl="meguro"; detectedSys="S"; label=XX_str+"S"; } 
+    else if (H==='4') { detectedHl="meguro"; detectedSys="T"; label=XX_str+"T"; } 
+    else if (H==='5') { detectedHl="meguro"; detectedSys="M"; label=XX_str+"M"; } 
+    else if (H==='6') { detectedHl="meguro"; detectedSys="G"; label=XX_str+"G"; }
   } else if (['dento', 'oimachi'].includes(lineKey)) {
-    if (opRaw>=101 && opRaw<=149) { detectedHl="oimachi"; detectedSys="O"; label=String(opRaw); } else if (opRaw>=181 && opRaw<=183) { detectedHl="dento"; detectedSys="N"; label=String(opRaw); } else if (opRaw>=1 && opRaw<=49) { detectedHl="dento"; detectedSys="K"; label=String(opRaw).padStart(2,'0')+"K"; } else if (opRaw>=50 && opRaw<=99) { detectedHl="dento"; let ds = [90,92,94,96,98,99].includes(opRaw) ? "K" : (opRaw%2===1?"S":"T"); detectedSys=ds; label=String(opRaw).padStart(2,'0')+ds; }
+    if (opRaw>=101 && opRaw<=149) { detectedHl="oimachi"; detectedSys="O"; label=String(opRaw); } 
+    else if (opRaw>=181 && opRaw<=183) { detectedHl="dento"; detectedSys="N"; label=String(opRaw); } 
+    else if (opRaw>=1 && opRaw<=49) { detectedHl="dento"; detectedSys="K"; label=String(opRaw).padStart(2,'0')+"K"; } 
+    else if (opRaw>=50 && opRaw<=99) {
+      detectedHl="dento";
+      if ([90,92,94,96,98,99].includes(opRaw)) { detectedSys="K"; label=String(opRaw).padStart(2,'0')+"K"; } 
+      else { detectedSys=(opRaw%2===1?"S":"T"); label=String(opRaw).padStart(2,'0')+detectedSys; }
+    }
   }
   let checkVal = XX; if (detectedHl === 'oimachi' || detectedHl === 'dento') checkVal = opRaw;
-  const isReg = OP_SETS[dayType] && OP_SETS[dayType][detectedHl] && OP_SETS[dayType][detectedHl][detectedSys] && OP_SETS[dayType][detectedHl][detectedSys].includes(checkVal);
-  if (isReg) hl = detectedHl; else hl = ['toyoko', 'meguro', 'shinyokohama'].includes(lineKey) ? "extra_tymg" : "extra_dtom";
-  if (detectedHl === 'meguro' && MEGURO_PAIRS[dayType] && MEGURO_PAIRS[dayType][label]) { label = MEGURO_PAIRS[dayType][label]; }
-  return { homeLine: hl, label: label, sourceName: {toyoko:"東横線", meguro:"目黒線", shinyokohama:"新横浜線", dento:"田園都市線", oimachi:"大井町線"}[lineKey] };
+  
+  let isReg = false;
+  if (OP_SETS && OP_SETS[dayType] && OP_SETS[dayType][detectedHl] && OP_SETS[dayType][detectedHl][detectedSys]) {
+      isReg = OP_SETS[dayType][detectedHl][detectedSys].includes(checkVal);
+  }
+  
+  if (isReg) { 
+      hl = detectedHl; 
+      if (detectedHl === 'meguro' && MEGURO_PAIRS && MEGURO_PAIRS[dayType] && MEGURO_PAIRS[dayType][label]) { 
+          label = MEGURO_PAIRS[dayType][label]; 
+      }
+  } else {
+      if (['toyoko', 'meguro', 'shinyokohama'].includes(lineKey)) { 
+          hl = "extra_tymg"; 
+          if (lineKey === 'meguro' || detectedHl === 'meguro') {
+              label = tNo ? tNo.substring(0, 3) : String(opRaw).padStart(3, '0');
+          }
+      } else { hl = "extra_dtom"; }
+  }
+  
+  let srcName = {toyoko:"東横線", meguro:"目黒線", shinyokohama:"新横浜線", dento:"田園都市線", oimachi:"大井町線"}[lineKey] || lineKey;
+  if (lineKey === 'shinyokohama') {
+      srcName = (detectedHl === 'toyoko') ? "東横線" : "目黒線";
+  }
+  
+  return { homeLine: hl, label: label, sourceName: srcName };
 }
 
 function getAffiliationGroup(lineId, aff) {
     if (!aff) return null;
-    if (lineId === 'meguro') {
+    if (lineId === 'meguro' || lineId === 'extra_meguro' || lineId === 'extra_tymg') {
         if (aff.includes("急") || aff.includes("東")) return "K";
         if (aff.includes("メ") || aff.includes("営") || aff.includes("南") || aff.includes("副")) return "S";
         if (aff.includes("都") || aff.includes("三")) return "T";
         if (aff.includes("埼") || aff.includes("西")) return "M";
         if (aff.includes("相") || aff.includes("G")) return "G";
-    } else if (lineId === 'dento') {
+    } else if (lineId === 'dento' || lineId === 'extra_dtom') {
         if (aff.includes("急") || aff.includes("東")) return "K";
         if (aff.includes("メ") || aff.includes("営") || aff.includes("半")) return "S";
         if (aff.includes("武") || aff.includes("東武")) return "T";
@@ -323,7 +356,7 @@ function getAffiliationGroup(lineId, aff) {
 
 function getFormationString(lineId, aff, orchStr, useFormat) {
     if (!aff && !orchStr) return { dispAff: "", fNo: "" };
-    if (!useFormat || lineId.startsWith('extra') || !['toyoko', 'meguro'].includes(lineId)) { return { dispAff: aff, fNo: orchStr }; }
+    if (!useFormat || lineId.startsWith('extra')) { return { dispAff: aff, fNo: orchStr }; }
     
     let orch = parseInt(orchStr, 10); let orchStrPad = String(orch).padStart(2, '0');
     if (isNaN(orch)) return { dispAff: aff, fNo: orchStr };
@@ -332,7 +365,7 @@ function getFormationString(lineId, aff, orchStr, useFormat) {
     if (lineId === 'meguro') {
         if (aff === "急" || aff === "東") { dispAff = aff; if ((orch >= 1 && orch <= 13) || (orch >= 21 && orch <= 23)) fNo = `31${orchStrPad}F`; else if (orch >= 31 && orch <= 40) fNo = `51${String(orch + 50).padStart(2, '0')}F`; else fNo = orchStr; } 
         else if (aff === "相" || aff === "G") { fNo = `211${orchStrPad}F`; } else { fNo = orchStr; }
-    } else if (lineId === 'toyoko') {
+    } else if (lineId === 'toyoko' || lineId === 'shinyokohama') {
         if (aff === "相" || aff === "G") { fNo = `201${orchStrPad}F`; } 
         else if (aff === "副" || aff === "メ" || aff === "営") { if (orch >= 81 && orch <= 95) fNo = `171${orchStrPad}F`; else if (orch >= 41 && orch <= 76) fNo = `101${String(orch - 40).padStart(2, '0')}F`; else if (orch >= 21 && orch <= 26) fNo = `171${String(orch - 20).padStart(2, '0')}F`; else fNo = orchStr; } 
         else if (aff === "東" || aff === "武") { if ((orch >= 1 && orch <= 8) || orch === 51 || orch === 52) fNo = `91${orchStrPad}F`; else if (orch >= 71 && orch <= 77) fNo = `510${orchStrPad}F`; else fNo = orchStr; } 
@@ -353,6 +386,20 @@ function getFormationString(lineId, aff, orchStr, useFormat) {
 // =========================================
 // UI更新関数
 // =========================================
+function getActiveData() {
+  if (currentView === 'weekday' || currentView === 'holiday') return logs[currentView];
+  if (currentView === 'daily') { const sel = document.getElementById('dailyDateSelect'); return sel ? logs.daily[sel.value] : null; }
+  if (currentView.startsWith('import')) return logs[currentView];
+  if (currentView.startsWith('custom_')) {
+    let idx = parseInt(currentView.split('_')[1]); let cv = logs.customViews[idx];
+    if (!cv) return null; if (cv.type === 'upload' && cv.uploadData) return cv.uploadData;
+    let baseData = logs.daily[cv.date]; if (!baseData) return null;
+    let filtered = {}; for (let opKey in baseData) { if (cv.groups.includes(baseData[opKey].homeLine)) filtered[opKey] = baseData[opKey]; }
+    return filtered;
+  }
+  return null;
+}
+
 function updateDestDropdown() {
   const destSelect = document.getElementById("destFilter"); const currentDest = destSelect.value || "all";
   let allDests = []; Object.values(MASTER_LINE_ORDERS).forEach(list => { list.forEach(d => { if (!allDests.includes(d)) allDests.push(d); }); });
@@ -381,16 +428,6 @@ function updateFormDropdown() {
   const secF = document.getElementById("sectionFilter").value;
   const opSearch = document.getElementById("opNumSearch") ? document.getElementById("opNumSearch").value.trim().toUpperCase() : "";
 
-  const addForm = (hl, aff, orch) => {
-      if (!aff && (!orch || orch === "00")) return;
-      let fObj = getFormationString(hl, aff, orch, useFmt);
-      let dispText = useFmt ? fObj.fNo : orch;
-      if (dispText) {
-          let val = hl === 'oimachi' ? dispText : (fObj.dispAff ? `[${fObj.dispAff}] ${dispText}` : dispText);
-          forms.add(val);
-      }
-  };
-
   const checkComp = (label) => {
       if (compF === "all") return true;
       if (!label) return false;
@@ -401,6 +438,16 @@ function updateFormDropdown() {
       if (compF === "G" && label.includes("G")) return true;
       if (label.match(/^\d+$/)) { let num = parseInt(label, 10); if (compF === "O100" && num >= 100 && num <= 129) return true; if (compF === "O130" && num >= 130) return true; }
       return false;
+  };
+
+  const addForm = (hl, aff, orch) => {
+      if (!aff && (!orch || orch === "00")) return;
+      let fObj = getFormationString(hl, aff, orch, useFmt);
+      let dispText = useFmt ? fObj.fNo : orch;
+      if (dispText) {
+          let val = hl.includes('oimachi') ? dispText : (fObj.dispAff ? `[${fObj.dispAff}] ${dispText}` : dispText);
+          forms.add(val);
+      }
   };
 
   if (data) {
@@ -455,20 +502,6 @@ function updateFormDropdown() {
   formSel.value = Array.from(forms).includes(currentForm) ? currentForm : "all";
 }
 
-function getActiveData() {
-  if (currentView === 'weekday' || currentView === 'holiday') return logs[currentView];
-  if (currentView === 'daily') { const sel = document.getElementById('dailyDateSelect'); return sel ? logs.daily[sel.value] : null; }
-  if (currentView.startsWith('custom_')) {
-    let idx = parseInt(currentView.split('_')[1]); let cv = logs.customViews[idx];
-    if (!cv) return null; if (cv.type === 'upload' && cv.uploadData) return cv.uploadData;
-    let baseData = logs.daily[cv.date]; if (!baseData) return null;
-    let filtered = {}; for (let opKey in baseData) { if (cv.groups.includes(baseData[opKey].homeLine)) filtered[opKey] = baseData[opKey]; }
-    return filtered;
-  }
-  return null;
-}
-
-// ★ 日付の「記録なし」バグの完全修正
 function updateContextUI(preservedDailyDate = null) {
   const ctx = document.getElementById("contextFilters"); if (!ctx) return; ctx.innerHTML = "";
   if (currentView === "daily") {
@@ -478,6 +511,9 @@ function updateContextUI(preservedDailyDate = null) {
         updateDestDropdown(); updateFormDropdown(); render(); 
         document.getElementById("cloudStatus").textContent = "☁️ 読込中...";
         fetchFromCloud(); 
+        
+        let isTodayDaily = (select.value === getDailyKey(new Date()));
+        if (isTodayDaily) fetchLiveApiData();
     };
     
     const keys = Object.keys(logs.daily || {}).sort().reverse();
@@ -489,6 +525,11 @@ function updateContextUI(preservedDailyDate = null) {
     }
     if (preservedDailyDate) select.value = preservedDailyDate;
     ctx.appendChild(select);
+  } else if (currentView.startsWith("import") && logs[currentView]) {
+    const clearBtn = document.createElement("button"); clearBtn.className = "btn-reset"; clearBtn.textContent = "✖ 破棄";
+    clearBtn.style.cssText = "background:#c62828; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-left:10px;";
+    clearBtn.onclick = () => { if(confirm(`読み込んだデータを破棄しますか？`)) { logs[currentView] = null; changeTab('daily'); } };
+    ctx.appendChild(clearBtn);
   }
 }
 
@@ -526,13 +567,34 @@ function changeTab(tabId) {
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
   const target = document.getElementById('tab_' + tabId); if(target) target.classList.add('active');
   updateContextUI(); updateDestDropdown(); updateFormDropdown(); render(); 
+  
+  if (!tabId.startsWith('import')) {
+      document.getElementById("cloudStatus").textContent = "☁️ 読込中...";
+      fetchFromCloud();
+      let isTodayDaily = (tabId === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
+      if (isTodayDaily) { fetchLiveApiData(); }
+  } else {
+      document.getElementById("cloudStatus").textContent = "☁️ オフライン";
+      document.getElementById("cloudStatus").style.background = "#fff3e0";
+      document.getElementById("cloudStatus").style.color = "#e65100";
+  }
 }
 
 // =========================================
-// 🚀 スマホ特化: 高視認＆PC版デザイン準拠 描画ロジック
+// 🚀 スマホ特化: 描画ロジック (Array Join方式)
 // =========================================
 function render() {
   const container = document.getElementById("container");
+  
+  if (currentView.startsWith("import") && (!logs[currentView] || Object.keys(logs[currentView]).length === 0)) {
+    container.innerHTML = `<div style="text-align:center; padding:30px 10px; background:#fff; border-radius:8px;">
+        <p style="font-weight:bold; margin-bottom:15px; color:#555;">JSONファイルを読み込んで表示します。</p>
+        <input type="file" id="jsonUpload_${currentView}" accept=".json" style="margin-bottom: 15px; max-width:100%;"><br>
+        <button class="btn-sync" style="padding:10px 20px; font-size:14px; background:#1976d2;" onclick="importJSONData(document.getElementById('jsonUpload_${currentView}').files[0], '${currentView}')">ファイルを読み込む</button>
+      </div>`;
+    return;
+  }
+
   const data = getActiveData();
   const cfg = logs.appConfig || { lines: {} };
   
@@ -549,22 +611,37 @@ function render() {
   const daisoF = document.getElementById("daisoFilter") ? document.getElementById("daisoFilter").checked : false;
 
   let htmlArr = [];
+  
   const groups = [
     { id: 'toyoko', name: '東横線 定期運用', cl: 'bg-toyoko' }, { id: 'meguro', name: '目黒線 定期運用', cl: 'bg-meguro' },
-    { id: 'shinyokohama', name: '新横浜線 定期運用', cl: 'bg-shinyoko' }, { id: 'dento', name: '田園都市線 定期運用', cl: 'bg-dento' },
-    { id: 'oimachi', name: '大井町線 定期運用', cl: 'bg-oimachi' },
-    { id: 'extra_tymg', name: '東横・目黒 非定期/臨時', cl: 'bg-extra' }, { id: 'extra_dtom', name: '田都・大井 非定期/臨時', cl: 'bg-extra' }
+    { id: 'dento', name: '田園都市線 定期運用', cl: 'bg-dento' }, { id: 'oimachi', name: '大井町線 定期運用', cl: 'bg-oimachi' },
+    { id: 'extra_tymg', name: '東横・目黒非定期運用', cl: 'bg-extra' },
+    { id: 'extra_dtom', name: '田都・大井非定期運用', cl: 'bg-extra' }
   ];
 
   groups.forEach(g => {
-    if (cfg.lines && cfg.lines[g.id] && cfg.lines[g.id].disp === false) return;
+    if (!currentView.startsWith("import") && !currentView.startsWith("custom_")) { if (cfg.lines && cfg.lines[g.id] && cfg.lines[g.id].disp === false) return; }
     if (lineF !== "all" && lineF !== g.id) return;
     
     let opKeys = new Set();
-    if (data) { Object.keys(data).forEach(k => { if (data[k] && data[k].homeLine === g.id) opKeys.add(k); }); }
+    if (data) { 
+        Object.keys(data).forEach(k => { 
+            if (data[k]) {
+                let hl = data[k].homeLine;
+                if (g.id === 'extra_tymg' && (hl === 'extra_tymg' || hl === 'extra_toyoko' || hl === 'extra_meguro')) opKeys.add(k);
+                else if (hl === g.id) opKeys.add(k);
+            }
+        }); 
+    }
     
     const isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-    if (!hasReceivedCloudData || isTodayDaily) { Object.keys(apiLiveCache).forEach(k => { if (k.startsWith(g.id)) opKeys.add(k); }); }
+    if (isTodayDaily && !hasReceivedCloudData) {
+        Object.keys(apiLiveCache).forEach(k => { 
+            let hl = k.split('_')[0]; if (k.startsWith("extra_")) hl = k.split('_').slice(0,2).join('_');
+            if (g.id === 'extra_tymg' && (hl === 'extra_tymg' || hl === 'extra_toyoko' || hl === 'extra_meguro')) opKeys.add(k);
+            else if (hl === g.id) opKeys.add(k);
+        });
+    }
 
     let opKeysArr = Array.from(opKeys).sort((a, b) => {
       const getRank = s => { if(s.includes('K')) return 1; if(s.includes('S')) return 2; if(s.includes('T')) return 3; return 4; };
@@ -579,12 +656,10 @@ function render() {
 
     opKeysArr.forEach(ok => {
       const u = data ? data[ok] : null; 
-      const liveTrainsForOp = apiLiveCache[ok] || {};
+      const liveTrainsForOp = (isTodayDaily && !hasReceivedCloudData && apiLiveCache[ok]) ? apiLiveCache[ok] : {};
       if (!u && Object.keys(liveTrainsForOp).length === 0) return;
       
       const label = u ? u.label : ok.split('_')[1];
-      
-      // ★ 運行番号検索フィルター
       if (opSearch && !label.toUpperCase().includes(opSearch)) return;
 
       const firstTrain = u ? Object.values(u.trains)[0] : null;
@@ -592,10 +667,8 @@ function render() {
 
       if (compF !== "all") {
           let isMatch = false;
-          if (compF === "K" && label.includes("K")) isMatch = true;
-          if (compF === "S" && label.includes("S")) isMatch = true;
-          if (compF === "T" && label.includes("T")) isMatch = true;
-          if (compF === "M" && label.includes("M")) isMatch = true;
+          if (compF === "K" && label.includes("K")) isMatch = true; if (compF === "S" && label.includes("S")) isMatch = true;
+          if (compF === "T" && label.includes("T")) isMatch = true; if (compF === "M" && label.includes("M")) isMatch = true;
           if (compF === "G" && label.includes("G")) isMatch = true;
           if (label.match(/^\d+$/)) { let num = parseInt(label, 10); if (compF === "O100" && num >= 100 && num <= 129) isMatch = true; if (compF === "O130" && num >= 130) isMatch = true; }
           if (!isMatch) return; 
@@ -628,10 +701,7 @@ function render() {
             if (daisoF && !isDaiso) return;
             
             let fObj = getFormationString(g.id, aff, orch, useFmt);
-            let dispText = useFmt ? fObj.fNo : orch;
-            let formVal = "";
-            if (dispText) { formVal = (g.id === 'oimachi') ? dispText : (fObj.dispAff ? `[${fObj.dispAff}] ${dispText}` : dispText); }
-            if (formF !== "all" && formVal !== formF) return;
+            if (currentView !== 'weekday' && currentView !== 'holiday' && formF !== "all" && formF !== `[${fObj.dispAff}] ${fObj.fNo}`) return;
 
             let liveInfo = liveTrainsForOp[t.trainNo];
             let isRunning = false; let currentPosSt = ""; let currentPosT = ""; let currentDelay = 0; let showLiveBadge = false;
@@ -648,13 +718,17 @@ function render() {
                 }
             }
             
-            if (!isRunning) { if (t.lastSeen && (Date.now() - t.lastSeen < 300000)) isRunning = true; }
+            if (!isRunning && isTodayDaily) { if (t.lastSeen && (Date.now() - t.lastSeen < 300000)) isRunning = true; }
             if (showRunningOnly && !isRunning) return;
             hasContent = true; 
             
             let formTag = "";
-            if (currentView === 'daily') {
-                if (formVal) formTag = `<div class="t-tr-form">${formVal}</div>`;
+            if ((currentView === 'daily' || currentView.startsWith('custom_') || currentView.startsWith('import'))) {
+                if (aff || orch) {
+                    let dispText = useFmt ? `${fObj.fNo}` : `${orch}`;
+                    let affPart = fObj.dispAff ? `[${fObj.dispAff}] ` : "";
+                    formTag = `<div class="t-tr-form">${affPart}${dispText}</div>`;
+                }
             }
             
             let remarksTag = "";
@@ -664,13 +738,13 @@ function render() {
 
             let hHtmlArr = [`<div class="t-hist">`];
             t.history.forEach((h, i) => {
-              const lColor = ST_COLOR_MAP[h.st] || `var(--${g.id.replace('extra_tymg','extra').replace('extra_dtom','extra')})`;
+              const lColor = ST_COLOR_MAP[h.st] || `var(--${g.id.replace('extra_tymg','extra').replace('extra_dtom','extra').replace('extra_toyoko','toyoko').replace('extra_meguro','meguro').replace('extra_shinyokohama','shinyoko')})`;
               const isEkikan = h.st.includes("駅間");
               const style = !isEkikan ? `border-color:${lColor};` : ``;
               const cls = `hist-item ${isEkikan ? 'is-ekikan' : ''}`;
               
               let delayMark = "";
-              if (h.delay > 0) { delayMark = (currentView === 'daily') ? `<sup class="tentative-mark">⁺${h.delay}</sup>` : `<sup class="tentative-mark">*</sup>`; }
+              if (h.delay > 0) { delayMark = (currentView === 'daily' || currentView.startsWith('import') || currentView.startsWith('custom_')) ? `<sup class="tentative-mark">⁺${h.delay}</sup>` : `<sup class="tentative-mark">*</sup>`; }
               hHtmlArr.push(`<span class="${cls}" style="${style}"><strong>${h.t}${delayMark}</strong> ${h.st}</span>`);
               if(i < t.history.length-1) hHtmlArr.push(`<span style="color:#aaa; font-size:10px;">▶</span>`);
             });
@@ -695,7 +769,9 @@ function render() {
             if (isTodayDaily && !isRunning) posText = ''; 
 
             let badgeDelayHtml = "";
-            if (badgeDelay > 0 && currentView === 'daily') badgeDelayHtml = `<div class="t-delay">${badgeDelay}分遅れ</div>`;
+            if (badgeDelay > 0 && (currentView === 'daily' || currentView.startsWith('import') || currentView.startsWith('custom_'))) {
+                badgeDelayHtml = `<div class="t-delay">${badgeDelay}分遅れ</div>`;
+            }
 
             let rowClass = isRunning ? 'row-active' : '';
 
@@ -714,70 +790,75 @@ function render() {
           });
       }
 
-      Object.keys(liveTrainsForOp).forEach(tNo => {
-          if (!processedLiveTnos.has(tNo)) {
-              const liveInfo = liveTrainsForOp[tNo];
-              
-              let srcMatch = false;
-              if (secF === "all") srcMatch = true;
-              else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(liveInfo.sourceName)) srcMatch = true;
-              else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(liveInfo.sourceName)) srcMatch = true;
-              else if (liveInfo.sourceName === secF) srcMatch = true;
-              if (!srcMatch) return;
+      if (!hasReceivedCloudData) {
+          Object.keys(liveTrainsForOp).forEach(tNo => {
+              if (!processedLiveTnos.has(tNo)) {
+                  const liveInfo = liveTrainsForOp[tNo];
+                  
+                  let srcMatch = false;
+                  if (secF === "all") srcMatch = true;
+                  else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(liveInfo.sourceName)) srcMatch = true;
+                  else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(liveInfo.sourceName)) srcMatch = true;
+                  else if (liveInfo.sourceName === secF) srcMatch = true;
+                  if (!srcMatch) return;
 
-              if(kindF !== "all" && liveInfo.kind !== kindF && !(kindF==='特急_all' && (liveInfo.kind==='特急'||liveInfo.kind==='F'))) return;
-              if(destF !== "all" && liveInfo.dest !== destF) return;
-              
-              let isDaiso = false;
-              if (liveInfo.affiliation && label) {
-                  const opAlphaMatch = label.match(/[A-Za-z]/);
-                  if (opAlphaMatch) {
-                      const affGroup = getAffiliationGroup(g.id, liveInfo.affiliation); 
-                      if (affGroup && opAlphaMatch[0] !== affGroup) isDaiso = true;
+                  if(kindF !== "all" && liveInfo.kind !== kindF && !(kindF==='特急_all' && (liveInfo.kind==='特急'||liveInfo.kind==='F'))) return;
+                  if(destF !== "all" && liveInfo.dest !== destF) return;
+                  
+                  let isDaiso = false;
+                  if (liveInfo.affiliation && label) {
+                      const opAlphaMatch = label.match(/[A-Za-z]/);
+                      if (opAlphaMatch) {
+                          const affGroup = getAffiliationGroup(g.id, liveInfo.affiliation); 
+                          if (affGroup && opAlphaMatch[0] !== affGroup) isDaiso = true;
+                      }
                   }
+                  if (daisoF && !isDaiso) return;
+
+                  let fObj = getFormationString(g.id, liveInfo.affiliation, liveInfo.orchestration, useFmt);
+                  if (currentView !== 'weekday' && currentView !== 'holiday' && formF !== "all" && formF !== `[${fObj.dispAff}] ${fObj.fNo}`) return;
+
+                  hasContent = true;
+                  
+                  let formTag = "";
+                  if (liveInfo.affiliation || liveInfo.orchestration) {
+                      let dispText = useFmt ? fObj.fNo : liveInfo.orchestration;
+                      let affPart = fObj.dispAff ? `[${fObj.dispAff}] ` : "";
+                      formTag = `<div class="t-tr-form">${affPart}${dispText}</div>`;
+                  }
+                  
+                  let badgeText = liveInfo.kind; if (badgeText === "F") badgeText = "Fラ"; else if (badgeText === "B") badgeText = "B各停"; else if (badgeText === "G") badgeText = "G各停"; else if (badgeText === "Sトレイン") badgeText = "S";
+                  let posText = `<strong>${liveInfo.t}</strong> ${liveInfo.st}`;
+                  let badgeDelay = liveInfo.delay || 0;
+                  let badgeDelayHtml = badgeDelay > 0 ? `<div class="t-delay">${badgeDelay}分遅れ</div>` : "";
+                  let liveDelayMark = badgeDelay > 0 ? `<sup class="tentative-mark">⁺${badgeDelay}</sup>` : "";
+
+                  tHtmlArr.push(`<div class="train-row row-sync-wait">
+                    <div class="t-basic">
+                      <div class="t-tr">
+                          <div class="t-tr-no">${tNo.substring(0,3)}-${tNo.substring(3)}</div>
+                          ${formTag}
+                          <div class="t-tr-sub" style="color:#9e9e9e; font-weight:bold;">(待機中)</div>
+                      </div>
+                      <div class="t-dest">
+                        <div class="t-dest-text"><span class="kind-badge kind-${liveInfo.kind}">${badgeText}</span>${liveInfo.dest}${liveInfo.dest.endsWith('線')?'直通':'行'}</div>
+                        ${badgeDelayHtml}
+                      </div>
+                    </div>
+                    <div class="t-pos">${posText}</div>
+                    <div class="t-hist">
+                        <span class="hist-item" style="border-color:#9e9e9e;"><strong>${liveInfo.t}${liveDelayMark}</strong> ${liveInfo.st}</span>
+                    </div>
+                  </div>`);
               }
-              if (daisoF && !isDaiso) return;
-
-              let fObj = getFormationString(g.id, liveInfo.affiliation, liveInfo.orchestration, useFmt);
-              let dispText = useFmt ? fObj.fNo : liveInfo.orchestration;
-              let formVal = "";
-              if (dispText) { formVal = (g.id === 'oimachi') ? dispText : (fObj.dispAff ? `[${fObj.dispAff}] ${dispText}` : dispText); }
-              if (formF !== "all" && formVal !== formF) return;
-
-              hasContent = true;
-              let formTag = formVal ? `<div class="t-tr-form">${formVal}</div>` : "";
-              
-              let badgeText = liveInfo.kind; if (badgeText === "F") badgeText = "Fラ"; else if (badgeText === "B") badgeText = "B各停"; else if (badgeText === "G") badgeText = "G各停"; else if (badgeText === "Sトレイン") badgeText = "S";
-              let posText = `<strong>${liveInfo.t}</strong> ${liveInfo.st}`;
-              let badgeDelay = liveInfo.delay || 0;
-              let badgeDelayHtml = badgeDelay > 0 ? `<div class="t-delay">${badgeDelay}分遅れ</div>` : "";
-              let liveDelayMark = badgeDelay > 0 ? `<sup class="tentative-mark">⁺${badgeDelay}</sup>` : "";
-
-              tHtmlArr.push(`<div class="train-row row-sync-wait">
-                <div class="t-basic">
-                  <div class="t-tr">
-                      <div class="t-tr-no">${tNo.substring(0,3)}-${tNo.substring(3)}</div>
-                      ${formTag}
-                      <div class="t-tr-sub" style="color:#9e9e9e; font-weight:bold;">(待機中)</div>
-                  </div>
-                  <div class="t-dest">
-                    <div class="t-dest-text"><span class="kind-badge kind-${liveInfo.kind}">${badgeText}</span>${liveInfo.dest}${liveInfo.dest.endsWith('線')?'直通':'行'}</div>
-                    ${badgeDelayHtml}
-                  </div>
-                </div>
-                <div class="t-pos">${posText}</div>
-                <div class="t-hist">
-                    <span class="hist-item" style="border-color:#9e9e9e;"><strong>${liveInfo.t}${liveDelayMark}</strong> ${liveInfo.st}</span>
-                </div>
-              </div>`);
-          }
-      });
+          });
+      }
       
       if(tHtmlArr.length > 0) {
         groupHtmlArr.push(`<div class="op-box">
           <div class="op-left">
             <div class="op-no">${label || "不明"}</div>
-            ${g.id.startsWith('extra')?`<div class="src-tag">${srcName}</div>`:''}
+            ${g.id.startsWith('extra')?`<div class="src-tag">from<br>${srcName}</div>`:''}
           </div>
           <div class="op-right">${tHtmlArr.join('')}</div>
         </div>`);
@@ -799,26 +880,23 @@ function render() {
 }
 
 // =========================================
-// ライブAPI取得
+// API直接通信機能 (即時表示対応)
 // =========================================
 async function fetchLiveApiData() {
-  if (isFetchingApi) return; 
+  if (hasReceivedCloudData || isFetchingApi) return; 
   isFetchingApi = true;
   const now = new Date();
   let targetDateForCalc = new Date(now.getTime() - 4 * 60 * 60 * 1000);
   let autoInfo = getAutoDayType(targetDateForCalc); let dayType = autoInfo.type;
 
-  let newLiveCache = {}; 
+  const newLiveCache = {};
   try {
       for(let api of API_ENDPOINTS) {
-          const controller = new AbortController(); 
-          const timeoutId = setTimeout(() => controller.abort(), 8000);
+          const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 10000);
           const res = await fetch(`${api.url}?t=${Date.now()}`, { cache: 'no-store', signal: controller.signal });
           clearTimeout(timeoutId);
           if (!res.ok) continue;
-          
-          const text = await res.text();
-          const data = JSON.parse(text);
+          const data = await res.json();
           if (!data || !data.trains) continue;
           
           data.trains.forEach(t => {
@@ -834,7 +912,7 @@ async function fetchLiveApiData() {
               const stName = STATION_MAP[t.station_id] || (t.section_id ? `駅間(${t.section_id})` : "不明");
               if (api.id === 'meguro' && tNo === "999090" && stName.includes("大岡山")) return;
 
-              const info = getUnyoInfoStr(opNo, api.id, dayType); if (!info) return;
+              const info = getUnyoInfoStr(opNo, tNo, api.id, dayType); if (!info) return;
 
               const opKey = `${info.homeLine}_${info.label}`;
               const destMapToUse = ['toyoko', 'meguro', 'shinyokohama'].includes(api.id) ? DEST_MAP_TYMG : DEST_MAP_DTOM;
@@ -846,109 +924,168 @@ async function fetchLiveApiData() {
               if (!newLiveCache[opKey]) newLiveCache[opKey] = {};
               newLiveCache[opKey][tNo] = {
                   trainNo: tNo, kind: dispKind, dest: destStr,
-                  sourceName: {toyoko:"東横線", meguro:"目黒線", shinyokohama:"新横浜線", dento:"田園都市線", oimachi:"大井町線"}[api.id],
+                  sourceName: info.sourceName,
                   st: stName, t: actualTimeStr, delay: delay,
                   affiliation: t.affiliation || "", orchestration: t.train_orchestration_number || ""
               };
           });
       }
       
-      apiLiveCache = newLiveCache;
-      lastApiTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-      updateStatusDisplay();
-      
-      updateDestDropdown(); updateFormDropdown();
-      requestAnimationFrame(() => render());
+      if (!hasReceivedCloudData) {
+          apiLiveCache = newLiveCache; 
+          lastApiTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+          updateStatusDisplay();
+          if (!currentView.startsWith("import")) { updateDestDropdown(); updateFormDropdown(); render(); }
+      }
   } catch (err) {
       lastApiTime = "⚠ エラー (自動再試行中)";
       updateStatusDisplay();
   } finally {
       isFetchingApi = false;
-      newLiveCache = null; 
   }
 }
 
-// =========================================
-// クラウド取得処理
-// =========================================
 async function fetchFromCloud() {
   if (isFetchingCloud) return;
   isFetchingCloud = true;
+  document.getElementById("cloudStatus").textContent = "☁️ 受信中...";
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
     const res = await fetch(GAS_URL + "?t=" + Date.now(), { signal: controller.signal });
     clearTimeout(timeoutId);
     
     if (!res.ok) throw new Error("HTTP " + res.status);
     
-    const text = await res.text();
-    const data = JSON.parse(text);
+    let text = await res.text();
+    let data = null;
+    try {
+        data = JSON.parse(text);
+    } catch (parseError) {
+        let lastIdx = text.lastIndexOf('{"weekday"');
+        if (lastIdx === -1) lastIdx = text.lastIndexOf('{"appConfig"');
+        if (lastIdx !== -1) {
+            let recoveredText = text.substring(lastIdx);
+            let endIdx = recoveredText.lastIndexOf('}');
+            if (endIdx !== -1) recoveredText = recoveredText.substring(0, endIdx + 1);
+            data = JSON.parse(recoveredText);
+        } else {
+            throw parseError; 
+        }
+    }
     
     if (data) {
       hasReceivedCloudData = true; 
+      apiLiveCache = {}; 
       
       let selectedDaily = null;
       const dailySel = document.getElementById("dailyDateSelect");
       if(dailySel && currentView === 'daily') selectedDaily = dailySel.value;
-      if(!selectedDaily) selectedDaily = getDailyKey(new Date());
-      
-      logs = null; 
-      logs = { weekday: {}, holiday: {}, daily: {}, customViews: [], appConfig: {} };
       
       logs.weekday = data.weekday || {};
       logs.holiday = data.holiday || {};
+      logs.daily = data.daily || {};
       logs.customViews = data.customViews || [];
-      logs.appConfig = data.appConfig || {};
-      
-      if (data.daily) {
-          const todayKey = getDailyKey(new Date());
-          Object.keys(data.daily).forEach(k => {
-              if (k === selectedDaily || k === todayKey) {
-                  logs.daily[k] = data.daily[k];
-              } else {
-                  logs.daily[k] = { _empty: true };
-              }
-          });
-      }
+      if(data.appConfig) logs.appConfig = data.appConfig;
       
       updateTabs(); updateNotice();
-      updateContextUI(selectedDaily); 
-      updateDestDropdown(); updateFormDropdown();
-      requestAnimationFrame(() => render());
+      
+      if (!currentView.startsWith("import")) {
+        updateContextUI(selectedDaily); 
+        updateDestDropdown(); updateFormDropdown(); render();
+      }
       
       lastCloudTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
       updateStatusDisplay();
     }
   } catch (err) {
-    lastCloudTime = "⚠ 取得エラー (自動再試行中)";
+    if (!hasReceivedCloudData) {
+        lastCloudTime = "⚠ エラー (自動再試行中)";
+    } else {
+        lastCloudTime += " [更新遅延]";
+    }
     updateStatusDisplay();
   } finally {
     isFetchingCloud = false;
   }
 }
 
-// =========================================
-// 安全な直列同期ループ
-// =========================================
+// ★ 必要なときだけ3秒間隔で高速通信するスマート・ループ
 async function cloudLoop() {
-    if (!isFetchingCloud && !isFetchingApi) await fetchFromCloud();
-    setTimeout(cloudLoop, 30000); 
+    let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
+    if (isTodayDaily && !isFetchingCloud) {
+        await fetchFromCloud();
+    }
+    setTimeout(cloudLoop, 3000); 
 }
 
 async function apiLoop() {
-    if (!isFetchingApi && !isFetchingCloud) await fetchLiveApiData();
-    setTimeout(apiLoop, 10000); 
+    let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
+    if (isTodayDaily && !isFetchingApi) {
+        await fetchLiveApiData();
+    }
+    setTimeout(apiLoop, 3000); 
+}
+
+function importJSONData(file, targetTab) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const json = JSON.parse(e.target.result);
+      let jpKeyToUse = Object.keys(json).find(k => k.includes("ダイヤ")) || Object.keys(json)[0];
+      const result = {};
+      if (json[jpKeyToUse]) {
+        for (const opName in json[jpKeyToUse]) {
+          let hl = "extra_tymg"; const firstPart = opName.split(" ")[0]; let label = opName.split(" ").slice(1).join(" ") || opName;
+          
+          if (firstPart.includes("東横")) hl = "toyoko"; else if (firstPart.includes("目黒")) hl = "meguro";
+          else if (firstPart.includes("新横浜")) hl = "shinyokohama"; else if (firstPart.includes("田園")) hl = "dento"; else if (firstPart.includes("大井町")) hl = "oimachi";
+          
+          if (opName.includes("非定期") && firstPart.includes("東横")) hl = "extra_toyoko";
+          else if (opName.includes("非定期") && firstPart.includes("目黒")) hl = "extra_meguro";
+          else if (opName.includes("非定期") && (firstPart.includes("田園") || firstPart.includes("大井町"))) hl = "extra_dtom";
+          
+          label = label.replace(/定期運用|非定期運用・臨時等|非定期・臨時等|非定期/g, "").trim();
+          const opKey = `${hl}_${label}`; result[opKey] = { label, homeLine: hl, trains: {} };
+          json[jpKeyToUse][opName].forEach((t, i) => {
+            let internalKind = t["種別"];
+            if (internalKind === "Fライナー" || internalKind === "Fラ") internalKind = "F"; else if (internalKind === "B各停") internalKind = "B"; else if (internalKind === "G各停") internalKind = "G"; else if (internalKind === "S") internalKind = "Sトレイン";
+            const dateStr = t["初回記録日"] ? t["初回記録日"].replace(/\//g, '-') : null;
+            const trainNoStr = t["列車番号"] ? t["列車番号"].replace(/-/g, "") : "000000";
+            const finalUid = dateStr ? `${trainNoStr}_${internalKind}_${dateStr}_${i}` : `${trainNoStr}_${internalKind}_${i}`;
+            const histArray = t["履歴"] ? t["履歴"].map(hStr => { 
+                const match = hStr.match(/^(\d{2}:\d{2})\s+(.*?)(?:\s+\(\*(\d+)\))?$/); 
+                if (match) { let dVal = 0; if (hStr.includes("(*")) dVal = match[3] ? parseInt(match[3], 10) : 1; return { t: match[1], st: match[2].trim(), delay: dVal }; }
+                return null; 
+            }).filter(Boolean) : [];
+            result[opKey].trains[finalUid] = { 
+                trainNo: trainNoStr, kind: internalKind, dest: t["行先"], sourceName: t["走行区間"] || firstPart, 
+                date: dateStr, history: histArray, affiliation: t["社局"] || "", orchestration: t["編成"] || "", remarks: t["備考"] || "", lastSeen: Date.now()
+            };
+          });
+        }
+      }
+      logs[targetTab] = result; changeTab(targetTab);
+    } catch (err) { alert("読み込みに失敗しました。対応していないファイル形式です。"); }
+  };
+  reader.readAsText(file);
 }
 
 function initCloudSync() {
-  document.getElementById("cloudStatus").textContent = "☁️ 読込中...";
-  cloudLoop();
-  setTimeout(apiLoop, 2000);
+  document.getElementById("cloudStatus").textContent = "☁️ 読込中... | 📡 読込中...";
+  fetchLiveApiData();
+  fetchFromCloud();
+  setTimeout(cloudLoop, 3000);
+  setTimeout(apiLoop, 4500); 
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadHolidays();
+document.addEventListener("DOMContentLoaded", () => {
+  const params = location.search.substring(1);
+  if (params && document.getElementById("opFilter")) {
+      const opts = Array.from(document.getElementById("opFilter").options).map(o => o.value);
+      if (opts.includes(params)) document.getElementById("opFilter").value = params;
+  }
   changeTab('daily'); 
   initCloudSync(); 
 });
