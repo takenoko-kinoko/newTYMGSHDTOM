@@ -12,10 +12,11 @@
     *, *::before, *::after { box-sizing: border-box; }
     body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background: #eef2f5; font-size: 14px; color: #333; overflow-x: hidden; }
     
+    /* 📱 ヘッダー */
     #sticky-header { background: #fff; border-top: 4px solid #1976d2; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; width: 100%; }
-    .header-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; flex-wrap: nowrap; gap: 8px; }
-    h1 { margin: 0; font-size: 15px; color: #1976d2; font-weight: bold; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .header-right { display: flex; align-items: center; gap: 6px; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; flex-wrap: wrap; gap: 8px; }
+    h1 { margin: 0; font-size: 16px; color: #1976d2; font-weight: bold; flex: 1; text-align: left; white-space: nowrap; }
+    .header-right { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
     
     .btn-action { background: #333; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.2); cursor: pointer; white-space: nowrap; }
     .btn-sync { background: #ff9800; }
@@ -23,6 +24,7 @@
 
     #noticeBar { background: #ffebee; color: #d32f2f; padding: 8px 15px; font-size: 13px; font-weight: bold; border-bottom: 1px solid #ffcdd2; display: none; text-align: center; }
 
+    /* 📱 タブ */
     .tab-area { display: flex; gap: 6px; overflow-x: auto; padding: 8px 12px; background: #fff; border-bottom: 1px solid #ddd; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .tab-area::-webkit-scrollbar { display: none; }
     .tab { flex: 0 0 auto; padding: 6px 14px; cursor: pointer; border: 1px solid #ccc; background: #f5f5f5; border-radius: 20px; font-size: 12px; font-weight: bold; color: #333; }
@@ -31,6 +33,7 @@
     .tab-import { background: #fff3e0; border-color: #ffcc80; color: #ef6c00; }
     .tab-daily.active, .tab-import.active { background: #333; color: #fff; border-color: #333; }
 
+    /* 📱 フィルター（折りたたみ式） */
     details.filter-accordion { background: #fafafa; border-bottom: 1px solid #ddd; }
     details.filter-accordion summary { padding: 10px 15px; font-weight: bold; font-size: 13px; color: #1565c0; cursor: pointer; list-style: none; display: flex; justify-content: center; background: #e3f2fd; }
     details.filter-accordion summary::-webkit-details-marker { display: none; }
@@ -44,6 +47,7 @@
     .running-toggle { flex: 1; display:flex; justify-content:center; align-items:center; gap:4px; background:#fff; padding:8px; border-radius:4px; border:1px solid #ccc; font-size:12px; font-weight:bold; color:#555; cursor:pointer; white-space: nowrap; }
     .running-toggle input { margin:0; transform:scale(1.2); }
 
+    /* 📱 メインコンテンツ */
     #container { padding: 10px; max-width: 800px; margin: 0 auto; width: 100%; }
     
     .line-section { margin-bottom: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #ddd; }
@@ -73,7 +77,7 @@
     .t-dest-text { font-size: 14px; font-weight: bold; color: #333; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
     .t-delay { color: #d32f2f; font-size: 10px; font-weight: bold; background: #ffebee; padding: 2px 4px; border-radius: 4px; border: 1px solid #ffcdd2; display: inline-block; }
     
-    .t-remarks { font-size: 11px; color: #555; background: #fff9c4; padding: 2px 6px; border-radius: 4px; border: 1px solid #fff59d; width: 100%; box-sizing: border-box; }
+    .t-remarks { font-size: 11px; color: #555; background: #fff9c4; padding: 2px 6px; border-radius: 4px; border: 1px solid #fff59d; margin-top: 2px; }
     
     .t-pos { font-size: 12px; color: #222; margin-top: 2px; display: flex; gap: 4px; align-items: center; }
     .t-pos strong { color: #1976d2; font-size: 12px; }
@@ -193,7 +197,7 @@
 
 <script>
 // =========================================
-// グローバル定数・変数 (キャッシュ完全廃止・省メモリ)
+// グローバル定数・変数（超軽量・No LocalStorage）
 // =========================================
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz2kiJGu75UH_dfN_3qZ3VEzgUacc7dwPM6FJE-ab-V-sR1W74QE96zhi8KPF6gh0Qo/exec";
 const API_ENDPOINTS = [{id:'toyoko',url:"https://w-tid.jp/tokyu/toyoko.json"},{id:'meguro',url:"https://w-tid.jp/tokyu/meguro.json"},{id:'shinyokohama',url:"https://w-tid.jp/tokyu/shinyokohama.json"},{id:'dento',url:"https://w-tid.jp/tokyu/dento.json"},{id:'oimachi',url:"https://w-tid.jp/tokyu/oimachi.json"}];
@@ -268,6 +272,7 @@ function getDispKind(rawKind, groupId) {
   return rawKind;
 }
 
+// ★ 新横浜線の統合、目黒線・東横線の非定期分離エンジン
 function getUnyoInfoStr(opNo, tNo, lineKey, dayType) {
   const opRaw = parseInt(opNo, 10); if (opRaw === 0 || isNaN(opRaw)) return null;
   const H = opNo.charAt(0); const XX_str = opNo.substring(1); const XX = parseInt(XX_str, 10);
@@ -316,7 +321,10 @@ function getUnyoInfoStr(opNo, tNo, lineKey, dayType) {
   }
   
   let srcName = {toyoko:"東横線", meguro:"目黒線", shinyokohama:"新横浜線", dento:"田園都市線", oimachi:"大井町線"}[lineKey] || lineKey;
-  if (lineKey === 'shinyokohama') { srcName = (detectedHl === 'toyoko') ? "東横線" : "目黒線"; }
+  if (lineKey === 'shinyokohama') {
+      srcName = (detectedHl === 'toyoko') ? "東横線" : "目黒線";
+  }
+  
   return { homeLine: hl, label: label, sourceName: srcName };
 }
 
@@ -344,16 +352,16 @@ function getAffiliationGroup(lineId, aff) {
 
 function getFormationString(lineId, aff, orchStr, useFormat) {
     if (!aff && !orchStr) return { dispAff: "", fNo: "" };
-    if (!useFormat || lineId.startsWith('extra')) { return { dispAff: aff, fNo: orchStr }; }
+    if (!useFormat || lineId.includes('extra_dtom') || lineId.includes('extra_oimachi')) { return { dispAff: aff, fNo: orchStr }; }
     
     let orch = parseInt(orchStr, 10); let orchStrPad = String(orch).padStart(2, '0');
     if (isNaN(orch)) return { dispAff: aff, fNo: orchStr };
     
     let fNo = ""; let dispAff = aff; 
-    if (lineId === 'meguro') {
+    if (lineId === 'meguro' || lineId === 'extra_meguro' || (lineId === 'extra_tymg' && aff && !aff.includes("急") && !aff.includes("み") && !aff.includes("相"))) {
         if (aff === "急" || aff === "東") { dispAff = aff; if ((orch >= 1 && orch <= 13) || (orch >= 21 && orch <= 23)) fNo = `31${orchStrPad}F`; else if (orch >= 31 && orch <= 40) fNo = `51${String(orch + 50).padStart(2, '0')}F`; else fNo = orchStr; } 
         else if (aff === "相" || aff === "G") { fNo = `211${orchStrPad}F`; } else { fNo = orchStr; }
-    } else if (lineId === 'toyoko' || lineId === 'shinyokohama') {
+    } else if (lineId === 'toyoko' || lineId === 'extra_toyoko' || lineId === 'extra_tymg' || lineId === 'extra_shinyokohama') {
         if (aff === "相" || aff === "G") { fNo = `201${orchStrPad}F`; } 
         else if (aff === "副" || aff === "メ" || aff === "営") { if (orch >= 81 && orch <= 95) fNo = `171${orchStrPad}F`; else if (orch >= 41 && orch <= 76) fNo = `101${String(orch - 40).padStart(2, '0')}F`; else if (orch >= 21 && orch <= 26) fNo = `171${String(orch - 20).padStart(2, '0')}F`; else fNo = orchStr; } 
         else if (aff === "東" || aff === "武") { if ((orch >= 1 && orch <= 8) || orch === 51 || orch === 52) fNo = `91${orchStrPad}F`; else if (orch >= 71 && orch <= 77) fNo = `510${orchStrPad}F`; else fNo = orchStr; } 
@@ -879,7 +887,6 @@ async function fetchLiveApiData() {
   let autoInfo = getAutoDayType(targetDateForCalc); let dayType = autoInfo.type;
 
   try {
-      // ★ 5つのAPIを同時に取得して超高速化 (Promise.all)
       const fetchPromises = API_ENDPOINTS.map(api => {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -958,6 +965,7 @@ async function fetchFromCloud() {
     try {
         data = JSON.parse(text);
     } catch (parseError) {
+        console.warn("JSON解析エラー。最新分を抽出します...");
         let lastIdx = text.lastIndexOf('{"weekday"');
         if (lastIdx === -1) lastIdx = text.lastIndexOf('{"appConfig"');
         if (lastIdx !== -1) {
@@ -997,7 +1005,11 @@ async function fetchFromCloud() {
     if (!hasReceivedCloudData) {
         lastCloudTime = "⚠ エラー";
     } else {
-        lastCloudTime += " [遅延]";
+        if (!lastCloudTime.includes("遅延")) {
+            let baseTime = lastCloudTime.split(' ')[0];
+            if(baseTime === "☁️" || baseTime === "同期中...") baseTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+            lastCloudTime = baseTime + " ⚠遅延";
+        }
     }
     updateStatusDisplay();
   } finally {
@@ -1005,7 +1017,6 @@ async function fetchFromCloud() {
   }
 }
 
-// ★ 必要なときだけ3秒間隔で高速通信するスマート・ループ
 async function cloudLoop() {
     let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
     if (isTodayDaily && !isFetchingCloud) {
@@ -1069,9 +1080,7 @@ function importJSONData(file, targetTab) {
 
 function initCloudSync() {
   document.getElementById("cloudStatus").textContent = "📡 取得中...";
-  // ★ キャッシュがないため、開いた瞬間にまずライブデータを並列取得して即表示
   fetchLiveApiData().then(() => {
-      // ライブデータ表示後、裏側でクラウドデータとループを開始
       setTimeout(fetchFromCloud, 500);
       setTimeout(cloudLoop, 3000);
       setTimeout(apiLoop, 3000); 
