@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
-  <title>東急線 スマホビューワー（超軽量・即時表示版）</title>
+  <title>東急線 スマホビューワー（超高速・省メモリ版）</title>
   <style>
     :root { 
       --toyoko: #d90240; --meguro: #009cd3; --dento: #01aa8f; 
@@ -13,7 +13,7 @@
     body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background: #eef2f5; font-size: 14px; color: #333; overflow-x: hidden; }
     
     #sticky-header { background: #fff; border-top: 4px solid #1976d2; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; width: 100%; }
-    .header-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; flex-wrap: nowrap; gap: 8px; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; flex-wrap: wrap; gap: 8px; }
     h1 { margin: 0; font-size: 16px; color: #1976d2; font-weight: bold; flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .header-right { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
     
@@ -211,7 +211,7 @@ const MEGURO_PAIRS = {
   holiday: { "01K":"01K・02K", "02K":"01K・02K", "07K":"07K・08K", "08K":"07K・08K", "11K":"11K・12K", "12K":"11K・12K", "13K":"13K・14K", "14K":"13K・14K", "23K":"23K・24K", "24K":"23K・24K", "25K":"25K・26K", "26K":"25K・26K", "29K":"29K・30K", "30K":"29K・30K", "31K":"31K・32K", "32K":"31K・32K" }
 };
 
-let logs = { weekday: {}, holiday: {}, daily: {}, customViews: [], appConfig: {} };
+let logs = { weekday: {}, holiday: {}, daily: {}, import1: null, import2: null, import3: null, customViews: [], appConfig: {} };
 let apiLiveCache = {}; 
 let hasReceivedCloudData = false; 
 let isFetchingApi = false; let isFetchingCloud = false;
@@ -219,11 +219,15 @@ let publicHolidays = {};
 let lastCloudTime = ""; let lastApiTime = "";
 let currentView = "daily";
 let lastRenderedState = "";
-let _inputTimer = null;
 
-// =========================================
-// パスワードマネージャー誤作動防止
-// =========================================
+// 🌟 フリーズ・クラッシュ対策のデバウンス処理 🌟
+let _inputTimer = null;
+function inputDebounce(fn) {
+  if(_inputTimer) clearTimeout(_inputTimer);
+  _inputTimer = setTimeout(fn, 400); 
+}
+
+// 拡張機能による誤作動を防ぐため、全inputタグにignore属性を付与
 function disablePasswordManagers() {
     document.querySelectorAll('input').forEach(el => {
         el.setAttribute('data-lpignore', 'true');
@@ -231,11 +235,6 @@ function disablePasswordManagers() {
         el.setAttribute('data-1p-ignore', 'true');
         el.setAttribute('autocomplete', 'new-password');
     });
-}
-
-function inputDebounce(fn) {
-  if(_inputTimer) clearTimeout(_inputTimer);
-  _inputTimer = setTimeout(fn, 400); 
 }
 
 // =========================================
@@ -325,7 +324,9 @@ function getUnyoInfoStr(opNo, tNo, lineKey, dayType) {
   } else {
       if (['toyoko', 'meguro', 'shinyokohama'].includes(lineKey)) { 
           hl = "extra_tymg"; 
-          if (lineKey === 'meguro' || detectedHl === 'meguro') { label = tNo ? tNo.substring(0, 3) : String(opRaw).padStart(3, '0'); }
+          if (lineKey === 'meguro' || detectedHl === 'meguro') {
+              label = tNo ? tNo.substring(0, 3) : String(opRaw).padStart(3, '0');
+          }
       } else { hl = "extra_dtom"; }
   }
   
@@ -386,11 +387,34 @@ function getFormationString(lineId, aff, orchStr, useFormat) {
 }
 
 // =========================================
+// 📢 お知らせ更新関数（修正版）
+// =========================================
+function updateNotice() {
+  const noticeBar = document.getElementById('noticeBar');
+  const noticeText = document.getElementById('noticeText');
+  const txt = logs.appConfig && logs.appConfig.noticeText ? logs.appConfig.noticeText.trim() : "";
+  if (txt && noticeBar && noticeText) { 
+      noticeText.textContent = "📢 " + txt; 
+      noticeBar.style.display = "block"; 
+  } else if (noticeBar) { 
+      noticeBar.style.display = "none"; 
+  }
+}
+
+// =========================================
 // UI更新関数
 // =========================================
 function getActiveData() {
   if (currentView === 'weekday' || currentView === 'holiday') return logs[currentView];
   if (currentView === 'daily') { const sel = document.getElementById('dailyDateSelect'); return sel ? logs.daily[sel.value] : null; }
+  if (currentView.startsWith('import')) return logs[currentView];
+  if (currentView.startsWith('custom_')) {
+    let idx = parseInt(currentView.split('_')[1]); let cv = logs.customViews[idx];
+    if (!cv) return null; if (cv.type === 'upload' && cv.uploadData) return cv.uploadData;
+    let baseData = logs.daily[cv.date]; if (!baseData) return null;
+    let filtered = {}; for (let opKey in baseData) { if (cv.groups.includes(baseData[opKey].homeLine)) filtered[opKey] = baseData[opKey]; }
+    return filtered;
+  }
   return null;
 }
 
@@ -497,13 +521,6 @@ function updateFormDropdown() {
   formSel.value = Array.from(forms).includes(currentForm) ? currentForm : "all";
 }
 
-function updateNotice() {
-  const noticeBar = document.getElementById('noticeBar');
-  const txt = logs.appConfig && logs.appConfig.noticeText ? logs.appConfig.noticeText.trim() : "";
-  if (txt) { noticeBar.innerHTML = `<span id="noticeText">📢 ${txt}</span>`; noticeBar.style.display = "block"; } 
-  else { noticeBar.style.display = "none"; }
-}
-
 function updateContextUI(preservedDailyDate = null) {
   const ctx = document.getElementById("contextFilters"); if (!ctx) return; ctx.innerHTML = "";
   if (currentView === "daily") {
@@ -513,6 +530,7 @@ function updateContextUI(preservedDailyDate = null) {
         updateDestDropdown(); updateFormDropdown(); render(); 
         document.getElementById("cloudStatus").textContent = "☁️ 読込中...";
         fetchFromCloud(); 
+        
         let isTodayDaily = (select.value === getDailyKey(new Date()));
         if (isTodayDaily) fetchLiveApiData();
     };
@@ -526,6 +544,11 @@ function updateContextUI(preservedDailyDate = null) {
     }
     if (preservedDailyDate) select.value = preservedDailyDate;
     ctx.appendChild(select);
+  } else if (currentView.startsWith("import") && logs[currentView]) {
+    const clearBtn = document.createElement("button"); clearBtn.className = "btn-action"; clearBtn.textContent = "✖ 破棄";
+    clearBtn.style.cssText = "background:#c62828; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-left:10px;";
+    clearBtn.onclick = () => { if(confirm(`読み込んだデータを破棄しますか？`)) { logs[currentView] = null; changeTab('daily'); } };
+    ctx.appendChild(clearBtn);
   }
 }
 
@@ -570,7 +593,7 @@ function changeTab(tabId) {
       let isTodayDaily = (tabId === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
       if (isTodayDaily) { fetchLiveApiData(); }
   } else {
-      document.getElementById("cloudStatus").textContent = "☁️ オフライン";
+      document.getElementById("cloudStatus").textContent = "☁️ オフライン (インポート)";
       document.getElementById("cloudStatus").style.background = "#fff3e0";
       document.getElementById("cloudStatus").style.color = "#e65100";
   }
@@ -631,7 +654,9 @@ function render() {
     }
     
     const isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-    if (isTodayDaily && !hasReceivedCloudData) {
+    
+    // ★ クラウドデータの有無に関わらず、今日の「毎日記録」ならライブデータを必ず合流させる
+    if (isTodayDaily) {
         Object.keys(apiLiveCache).forEach(k => { 
             let hl = k.split('_')[0]; if (k.startsWith("extra_")) hl = k.split('_').slice(0,2).join('_');
             if (g.id === 'extra_tymg' && (hl === 'extra_tymg' || hl === 'extra_toyoko' || hl === 'extra_meguro')) opKeys.add(k);
@@ -652,7 +677,8 @@ function render() {
 
     opKeysArr.forEach(ok => {
       const u = data ? data[ok] : null; 
-      const liveTrainsForOp = (isTodayDaily && !hasReceivedCloudData && apiLiveCache[ok]) ? apiLiveCache[ok] : {};
+      // ★ ライブデータを常に参照
+      const liveTrainsForOp = (isTodayDaily && apiLiveCache[ok]) ? apiLiveCache[ok] : {};
       if (!u && Object.keys(liveTrainsForOp).length === 0) return;
       
       const label = u ? u.label : ok.split('_')[1];
@@ -786,69 +812,68 @@ function render() {
           });
       }
 
-      if (!hasReceivedCloudData) {
-          Object.keys(liveTrainsForOp).forEach(tNo => {
-              if (!processedLiveTnos.has(tNo)) {
-                  const liveInfo = liveTrainsForOp[tNo];
-                  
-                  let srcMatch = false;
-                  if (secF === "all") srcMatch = true;
-                  else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(liveInfo.sourceName)) srcMatch = true;
-                  else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(liveInfo.sourceName)) srcMatch = true;
-                  else if (liveInfo.sourceName === secF) srcMatch = true;
-                  if (!srcMatch) return;
+      // ★ ライブデータ専用列車の表示
+      Object.keys(liveTrainsForOp).forEach(tNo => {
+          if (!processedLiveTnos.has(tNo)) {
+              const liveInfo = liveTrainsForOp[tNo];
+              
+              let srcMatch = false;
+              if (secF === "all") srcMatch = true;
+              else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(liveInfo.sourceName)) srcMatch = true;
+              else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(liveInfo.sourceName)) srcMatch = true;
+              else if (liveInfo.sourceName === secF) srcMatch = true;
+              if (!srcMatch) return;
 
-                  if(kindF !== "all" && liveInfo.kind !== kindF && !(kindF==='特急_all' && (liveInfo.kind==='特急'||liveInfo.kind==='F'))) return;
-                  if(destF !== "all" && liveInfo.dest !== destF) return;
-                  
-                  let isDaiso = false;
-                  if (liveInfo.affiliation && label) {
-                      const opAlphaMatch = label.match(/[A-Za-z]/);
-                      if (opAlphaMatch) {
-                          const affGroup = getAffiliationGroup(g.id, liveInfo.affiliation); 
-                          if (affGroup && opAlphaMatch[0] !== affGroup) isDaiso = true;
-                      }
+              if(kindF !== "all" && liveInfo.kind !== kindF && !(kindF==='特急_all' && (liveInfo.kind==='特急'||liveInfo.kind==='F'))) return;
+              if(destF !== "all" && liveInfo.dest !== destF) return;
+              
+              let isDaiso = false;
+              if (liveInfo.affiliation && label) {
+                  const opAlphaMatch = label.match(/[A-Za-z]/);
+                  if (opAlphaMatch) {
+                      const affGroup = getAffiliationGroup(g.id, liveInfo.affiliation); 
+                      if (affGroup && opAlphaMatch[0] !== affGroup) isDaiso = true;
                   }
-                  if (daisoF && !isDaiso) return;
-
-                  let fObj = getFormationString(g.id, liveInfo.affiliation, liveInfo.orchestration, useFmt);
-                  if (currentView !== 'weekday' && currentView !== 'holiday' && formSelVal !== "all" && formSelVal !== `[${fObj.dispAff}] ${fObj.fNo}`) return;
-
-                  hasContent = true;
-                  
-                  let formTag = "";
-                  if (liveInfo.affiliation || liveInfo.orchestration) {
-                      let dispText = useFmt ? fObj.fNo : liveInfo.orchestration;
-                      let affPart = fObj.dispAff ? `[${fObj.dispAff}] ` : "";
-                      formTag = `<div class="t-tr-form">${affPart}${dispText}</div>`;
-                  }
-                  
-                  let badgeText = liveInfo.kind; if (badgeText === "F") badgeText = "Fラ"; else if (badgeText === "B") badgeText = "B各停"; else if (badgeText === "G") badgeText = "G各停"; else if (badgeText === "Sトレイン") badgeText = "S";
-                  let posText = `<strong>${liveInfo.t}</strong> ${liveInfo.st}`;
-                  let badgeDelay = liveInfo.delay || 0;
-                  let badgeDelayHtml = badgeDelay > 0 ? `<div class="t-delay">${badgeDelay}分遅れ</div>` : "";
-                  let liveDelayMark = badgeDelay > 0 ? `<sup class="tentative-mark">⁺${badgeDelay}</sup>` : "";
-
-                  tHtmlArr.push(`<div class="train-row row-sync-wait">
-                    <div class="t-basic">
-                      <div class="t-tr">
-                          <div class="t-tr-no">${tNo.substring(0,3)}-${tNo.substring(3)}</div>
-                          ${formTag}
-                          <div class="t-tr-sub" style="color:#9e9e9e; font-weight:bold;">(待機中)</div>
-                      </div>
-                      <div class="t-dest">
-                        <div class="t-dest-text"><span class="kind-badge kind-${liveInfo.kind}">${badgeText}</span>${liveInfo.dest}${liveInfo.dest.endsWith('線')?'直通':'行'}</div>
-                        ${badgeDelayHtml}
-                      </div>
-                    </div>
-                    <div class="t-pos">${posText}</div>
-                    <div class="t-hist">
-                        <span class="hist-item" style="border-color:#9e9e9e;"><strong>${liveInfo.t}${liveDelayMark}</strong> ${liveInfo.st}</span>
-                    </div>
-                  </div>`);
               }
-          });
-      }
+              if (daisoF && !isDaiso) return;
+
+              let fObj = getFormationString(g.id, liveInfo.affiliation, liveInfo.orchestration, useFmt);
+              if (currentView !== 'weekday' && currentView !== 'holiday' && formF !== "all" && formF !== `[${fObj.dispAff}] ${fObj.fNo}`) return;
+
+              hasContent = true;
+              
+              let formTag = "";
+              if (liveInfo.affiliation || liveInfo.orchestration) {
+                  let dispText = useFmt ? fObj.fNo : liveInfo.orchestration;
+                  let affPart = fObj.dispAff ? `[${fObj.dispAff}] ` : "";
+                  formTag = `<div class="t-tr-form">${affPart}${dispText}</div>`;
+              }
+              
+              let badgeText = liveInfo.kind; if (badgeText === "F") badgeText = "Fラ"; else if (badgeText === "B") badgeText = "B各停"; else if (badgeText === "G") badgeText = "G各停"; else if (badgeText === "Sトレイン") badgeText = "S";
+              let posText = `<strong>${liveInfo.t}</strong> ${liveInfo.st}`;
+              let badgeDelay = liveInfo.delay || 0;
+              let badgeDelayHtml = badgeDelay > 0 ? `<div class="t-delay">${badgeDelay}分遅れ</div>` : "";
+              let liveDelayMark = badgeDelay > 0 ? `<sup class="tentative-mark">⁺${badgeDelay}</sup>` : "";
+
+              tHtmlArr.push(`<div class="train-row row-sync-wait">
+                <div class="t-basic">
+                  <div class="t-tr">
+                      <div class="t-tr-no">${tNo.substring(0,3)}-${tNo.substring(3)}</div>
+                      ${formTag}
+                      <div class="t-tr-sub" style="color:#9e9e9e; font-weight:bold;">(待機中)</div>
+                  </div>
+                  <div class="t-dest">
+                    <div class="t-dest-text"><span class="kind-badge kind-${liveInfo.kind}">${badgeText}</span>${liveInfo.dest}${liveInfo.dest.endsWith('線')?'直通':'行'}</div>
+                    ${badgeDelayHtml}
+                  </div>
+                </div>
+                <div class="t-pos">${posText}</div>
+                <div class="t-hist">
+                    <span class="hist-item" style="border-color:#9e9e9e;"><strong>${liveInfo.t}${liveDelayMark}</strong> ${liveInfo.st}</span>
+                </div>
+              </div>`);
+          }
+      });
       
       if(tHtmlArr.length > 0) {
         groupHtmlArr.push(`<div class="op-box">
@@ -948,6 +973,7 @@ async function fetchLiveApiData() {
   }
 }
 
+// ☁️ クラウド受信＆JSON完全修復関数（スパムエラー防止版）
 async function fetchFromCloud() {
   if (isFetchingCloud) return;
   isFetchingCloud = true;
@@ -957,21 +983,35 @@ async function fetchFromCloud() {
     const timeoutId = setTimeout(() => controller.abort(), 20000);
     const res = await fetch(GAS_URL + "?t=" + Date.now(), { signal: controller.signal });
     clearTimeout(timeoutId);
+    
     if (!res.ok) throw new Error("HTTP " + res.status);
     
-    let text = await res.text(); let data = null;
+    let text = await res.text(); 
+    let data = null;
     try {
         data = JSON.parse(text);
     } catch (parseError) {
-        console.warn("JSON解析エラー。最新分を抽出します...");
-        let lastIdx = text.lastIndexOf('{"weekday"');
-        if (lastIdx === -1) lastIdx = text.lastIndexOf('{"appConfig"');
-        if (lastIdx !== -1) {
-            let recoveredText = text.substring(lastIdx);
-            let endIdx = recoveredText.lastIndexOf('}');
-            if (endIdx !== -1) recoveredText = recoveredText.substring(0, endIdx + 1);
-            data = JSON.parse(recoveredText);
-        } else { throw parseError; }
+        console.warn("JSON修復処理を実行します...");
+        try {
+            // ★ GASの追記バグ（}{で連結されている）を強制的に配列化して最後のデータを抽出
+            let fixedText = text.replace(/}{/g, '},{');
+            if (!fixedText.startsWith('[')) fixedText = '[' + fixedText + ']';
+            let arr = JSON.parse(fixedText);
+            data = arr[arr.length - 1];
+        } catch (e2) {
+            // ★ 修復不能時はスパム回避のため即終了する
+            console.error("JSON修復失敗。データが完全に破損しています。");
+            document.getElementById("cloudStatus").textContent = "⚠ データ破損";
+            document.getElementById("cloudStatus").style.color = "#d32f2f";
+            
+            const nb = document.getElementById("noticeBar");
+            const nt = document.getElementById("noticeText");
+            if (nb && nt) {
+                nt.textContent = "⚠️ クラウドデータが破損しています。マスター機で「全データを初期化」してください。";
+                nb.style.display = "block";
+            }
+            return; // ★ エラーを投げずに終了し、catchブロックの遅延ロジックをスキップ
+        }
     }
     
     if (data) {
@@ -983,7 +1023,8 @@ async function fetchFromCloud() {
       logs.weekday = data.weekday || {}; logs.holiday = data.holiday || {}; logs.daily = data.daily || {};
       logs.customViews = data.customViews || []; if(data.appConfig) logs.appConfig = data.appConfig;
       
-      updateTabs();
+      updateTabs(); 
+      updateNotice(); 
       
       if (!currentView.startsWith("import")) {
         updateContextUI(selectedDaily); updateDestDropdown(); updateFormDropdown(); render();
@@ -1002,18 +1043,24 @@ async function fetchFromCloud() {
         }
     }
     updateStatusDisplay();
-  } finally { isFetchingCloud = false; }
+  } finally { 
+      isFetchingCloud = false; 
+  }
 }
 
 async function cloudLoop() {
     let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-    if (isTodayDaily && !isFetchingCloud) { await fetchFromCloud(); }
+    if (isTodayDaily && !isFetchingCloud) {
+        await fetchFromCloud();
+    }
     setTimeout(cloudLoop, 3000); 
 }
 
 async function apiLoop() {
     let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-    if (isTodayDaily && !isFetchingApi) { await fetchLiveApiData(); }
+    if (isTodayDaily && !isFetchingApi) {
+        await fetchLiveApiData();
+    }
     setTimeout(apiLoop, 3000); 
 }
 
@@ -1031,6 +1078,7 @@ function importJSONData(file, targetTab) {
           
           if (firstPart.includes("東横")) hl = "toyoko"; else if (firstPart.includes("目黒")) hl = "meguro";
           else if (firstPart.includes("新横浜")) hl = "shinyokohama"; else if (firstPart.includes("田園")) hl = "dento"; else if (firstPart.includes("大井町")) hl = "oimachi";
+          
           if (opName.includes("非定期") && firstPart.includes("東横")) hl = "extra_toyoko";
           else if (opName.includes("非定期") && firstPart.includes("目黒")) hl = "extra_meguro";
           else if (opName.includes("非定期") && (firstPart.includes("田園") || firstPart.includes("大井町"))) hl = "extra_dtom";
