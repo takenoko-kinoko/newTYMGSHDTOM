@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
-  <title>東急線 スマホビューワー（超高速・省メモリ版）</title>
+  <title>東急線 スマホビューワー（超軽量・即時表示版）</title>
   <style>
     :root { 
       --toyoko: #d90240; --meguro: #009cd3; --dento: #01aa8f; 
@@ -12,10 +12,9 @@
     *, *::before, *::after { box-sizing: border-box; }
     body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background: #eef2f5; font-size: 14px; color: #333; overflow-x: hidden; }
     
-    /* 📱 ヘッダー */
     #sticky-header { background: #fff; border-top: 4px solid #1976d2; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; width: 100%; }
-    .header-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; flex-wrap: wrap; gap: 8px; }
-    h1 { margin: 0; font-size: 16px; color: #1976d2; font-weight: bold; flex: 1; text-align: left; white-space: nowrap; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; flex-wrap: nowrap; gap: 8px; }
+    h1 { margin: 0; font-size: 16px; color: #1976d2; font-weight: bold; flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .header-right { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
     
     .btn-action { background: #333; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.2); cursor: pointer; white-space: nowrap; }
@@ -24,16 +23,13 @@
 
     #noticeBar { background: #ffebee; color: #d32f2f; padding: 8px 15px; font-size: 13px; font-weight: bold; border-bottom: 1px solid #ffcdd2; display: none; text-align: center; }
 
-    /* 📱 タブ */
     .tab-area { display: flex; gap: 6px; overflow-x: auto; padding: 8px 12px; background: #fff; border-bottom: 1px solid #ddd; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .tab-area::-webkit-scrollbar { display: none; }
     .tab { flex: 0 0 auto; padding: 6px 14px; cursor: pointer; border: 1px solid #ccc; background: #f5f5f5; border-radius: 20px; font-size: 12px; font-weight: bold; color: #333; }
     .tab.active { background: #333; color: #fff; border-color: #333; }
     .tab-daily { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; }
-    .tab-import { background: #fff3e0; border-color: #ffcc80; color: #ef6c00; }
-    .tab-daily.active, .tab-import.active { background: #333; color: #fff; border-color: #333; }
+    .tab-daily.active { background: #333; color: #fff; border-color: #333; }
 
-    /* 📱 フィルター（折りたたみ式） */
     details.filter-accordion { background: #fafafa; border-bottom: 1px solid #ddd; }
     details.filter-accordion summary { padding: 10px 15px; font-weight: bold; font-size: 13px; color: #1565c0; cursor: pointer; list-style: none; display: flex; justify-content: center; background: #e3f2fd; }
     details.filter-accordion summary::-webkit-details-marker { display: none; }
@@ -47,7 +43,6 @@
     .running-toggle { flex: 1; display:flex; justify-content:center; align-items:center; gap:4px; background:#fff; padding:8px; border-radius:4px; border:1px solid #ccc; font-size:12px; font-weight:bold; color:#555; cursor:pointer; white-space: nowrap; }
     .running-toggle input { margin:0; transform:scale(1.2); }
 
-    /* 📱 メインコンテンツ */
     #container { padding: 10px; max-width: 800px; margin: 0 auto; width: 100%; }
     
     .line-section { margin-bottom: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #ddd; }
@@ -77,7 +72,7 @@
     .t-dest-text { font-size: 14px; font-weight: bold; color: #333; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
     .t-delay { color: #d32f2f; font-size: 10px; font-weight: bold; background: #ffebee; padding: 2px 4px; border-radius: 4px; border: 1px solid #ffcdd2; display: inline-block; }
     
-    .t-remarks { font-size: 11px; color: #555; background: #fff9c4; padding: 2px 6px; border-radius: 4px; border: 1px solid #fff59d; margin-top: 2px; }
+    .t-remarks { font-size: 11px; color: #555; background: #fff9c4; padding: 2px 6px; border-radius: 4px; border: 1px solid #fff59d; width: 100%; box-sizing: border-box; }
     
     .t-pos { font-size: 12px; color: #222; margin-top: 2px; display: flex; gap: 4px; align-items: center; }
     .t-pos strong { color: #1976d2; font-size: 12px; }
@@ -109,7 +104,7 @@
     </div>
   </div>
 
-  <div id="noticeBar" id="noticeText"></div>
+  <div id="noticeBar"><span id="noticeText"></span></div>
 
   <div class="tab-area" id="tabArea">
     <button id="tab_weekday" class="tab" onclick="changeTab('weekday')" style="display:none;">平日累計</button>
@@ -124,7 +119,7 @@
       
       <div class="filter-item">
         <span class="filter-label">路線(運用)</span>
-        <select id="lineFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render();">
+        <select id="lineFilter" autocomplete="off" class="filter-select" onchange="updateFormDropdown(); render();">
           <option value="all">すべての路線</option>
           <option value="toyoko">東横線</option>
           <option value="meguro">目黒線</option>
@@ -136,7 +131,7 @@
       </div>
       <div class="filter-item">
         <span class="filter-label">系統・走行区間</span>
-        <select id="sectionFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateDestDropdown(); updateFormDropdown(); render();">
+        <select id="sectionFilter" autocomplete="off" class="filter-select" onchange="updateDestDropdown(); updateFormDropdown(); render();">
           <option value="all">すべて</option>
           <optgroup label="系統別">
             <option value="system_tymg">東横・目黒線系統</option>
@@ -153,11 +148,11 @@
       
       <div class="filter-item">
         <span class="filter-label">運番検索</span>
-        <input type="text" id="opNumSearch" autocomplete="off" data-lpignore="true" class="filter-select" placeholder="例: 01K, 51" oninput="render()">
+        <input type="text" id="opNumSearch" autocomplete="off" class="filter-select" placeholder="例: 01K, 51" oninput="inputDebounce(() => { updateFormDropdown(); render(); })">
       </div>
       <div class="filter-item">
         <span class="filter-label">運用 (所属記号)</span>
-        <select id="companyFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render();">
+        <select id="companyFilter" autocomplete="off" class="filter-select" onchange="updateFormDropdown(); render();">
           <option value="all">すべての運用</option>
           <option value="K">K運用 (東急)</option>
           <option value="S">S運用 (メトロ)</option>
@@ -171,23 +166,23 @@
       
       <div class="filter-item">
         <span class="filter-label">種別</span>
-        <select id="kindFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render()"><option value="all">すべて表示</option><option value="各停">各停</option><option value="B">B各停</option><option value="G">G各停</option><option value="準急">準急</option><option value="急行">急行</option><option value="通特">通特</option><option value="特急_all">Fラ/特急</option><option value="特急">特急</option><option value="F">Fラ</option><option value="Sトレイン">Sトレイン</option><option value="回送">回送</option></select>
+        <select id="kindFilter" autocomplete="off" class="filter-select" onchange="updateFormDropdown(); render()"><option value="all">すべて表示</option><option value="各停">各停</option><option value="B">B各停</option><option value="G">G各停</option><option value="準急">準急</option><option value="急行">急行</option><option value="通特">通特</option><option value="特急_all">Fラ/特急</option><option value="特急">特急</option><option value="F">Fラ</option><option value="Sトレイン">Sトレイン</option><option value="回送">回送</option></select>
       </div>
       <div class="filter-item">
         <span class="filter-label">行先</span>
-        <select id="destFilter" autocomplete="off" data-lpignore="true" class="filter-select" onchange="updateFormDropdown(); render()"></select>
+        <select id="destFilter" autocomplete="off" class="filter-select" onchange="updateFormDropdown(); render()"></select>
       </div>
       <div class="filter-item full-width">
         <span class="filter-label">編成</span>
-        <select id="formFilterSel" autocomplete="off" data-lpignore="true" class="filter-select" onchange="render()">
+        <select id="formFilterSel" autocomplete="off" class="filter-select" onchange="render()">
           <option value="all">すべての編成</option>
         </select>
       </div>
       
       <div class="filter-item full-width">
-        <label class="running-toggle"><input type="checkbox" id="daisoFilter" autocomplete="off" data-lpignore="true" onchange="updateFormDropdown(); render();"> 代走</label>
-        <label class="running-toggle" style="color:#1976d2;"><input type="checkbox" id="runningFilter" autocomplete="off" data-lpignore="true" onchange="updateFormDropdown(); render();" checked> 走行中</label>
-        <label class="running-toggle"><input type="checkbox" id="formatFilter" autocomplete="off" data-lpignore="true" onchange="updateFormDropdown(); render();"> 編成表示</label>
+        <label class="running-toggle"><input type="checkbox" id="daisoFilter" autocomplete="off" onchange="updateFormDropdown(); render();"> 代走</label>
+        <label class="running-toggle" style="color:#1976d2;"><input type="checkbox" id="runningFilter" autocomplete="off" onchange="updateFormDropdown(); render();" checked> 走行中</label>
+        <label class="running-toggle"><input type="checkbox" id="formatFilter" autocomplete="off" onchange="updateFormDropdown(); render();"> 編成表示</label>
       </div>
     </div>
   </details>
@@ -197,7 +192,7 @@
 
 <script>
 // =========================================
-// グローバル定数・変数（超軽量・No LocalStorage）
+// 🚀 スマホ専用：軽量・キャシュレス基盤
 // =========================================
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz2kiJGu75UH_dfN_3qZ3VEzgUacc7dwPM6FJE-ab-V-sR1W74QE96zhi8KPF6gh0Qo/exec";
 const API_ENDPOINTS = [{id:'toyoko',url:"https://w-tid.jp/tokyu/toyoko.json"},{id:'meguro',url:"https://w-tid.jp/tokyu/meguro.json"},{id:'shinyokohama',url:"https://w-tid.jp/tokyu/shinyokohama.json"},{id:'dento',url:"https://w-tid.jp/tokyu/dento.json"},{id:'oimachi',url:"https://w-tid.jp/tokyu/oimachi.json"}];
@@ -207,7 +202,6 @@ const MASTER_LINE_ORDERS = { "東横線": ["副都心線", "渋谷", "中目黒"
 const SECTION_KIND_MAP = { "all": ["all", "各停", "B", "G", "準急", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "東横線": ["all", "各停", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "目黒線": ["all", "各停", "急行", "回送"], "田園都市線": ["all", "各停", "準急", "急行", "回送"], "大井町線": ["all", "各停", "B", "G", "急行", "回送"], "新横浜線": ["all", "各停", "急行", "特急_all", "特急", "F", "回送"] };
 const STATION_MAP = { 26:"渋谷", 908:"代官山", 909:"中目黒", 910:"祐天寺", 911:"学芸大学", 912:"都立大学", 913:"自由が丘", 914:"田園調布", 915:"多摩川", 916:"新丸子", 57:"武蔵小杉", 918:"元住吉", 919:"日吉", 920:"綱島", 921:"大倉山", 108:"菊名", 923:"妙蓮寺", 924:"白楽", 925:"東白楽", 926:"反町", 5:"横浜", 24:"目黒", 929:"不動前", 930:"武蔵小山", 931:"西小山", 932:"洗足", 933:"大岡山", 934:"奥沢", 942:"池尻大橋", 943:"三軒茶屋", 944:"駒沢大学", 945:"桜新町", 946:"用賀", 947:"二子玉川", 948:"二子新地", 949:"高津", 950:"溝の口", 951:"梶が谷", 952:"宮崎台", 953:"宮前平", 954:"鷺沼", 955:"たまプラーザ", 956:"あざみ野", 957:"江田", 958:"市が尾", 959:"藤が丘", 960:"青葉台", 961:"田奈", 114:"長津田", 963:"つくし野", 964:"すずかけ台", 965:"南町田", 966:"つきみ野", 967:"中央林間", 494:"大井町", 969:"下神明", 970:"戸越公園", 971:"中延", 972:"荏原町", 973:"旗の台", 974:"北千束", 976:"緑が丘", 978:"九品仏", 979:"尾山台", 980:"等々力", 981:"上野毛", 982:"新綱島", 983:"新横浜" };
 const ST_COLOR_MAP = { "代官山":"var(--toyoko)","中目黒":"var(--toyoko)","祐天寺":"var(--toyoko)","学芸大学":"var(--toyoko)","都立大学":"var(--toyoko)","綱島":"var(--toyoko)","大倉山":"var(--toyoko)","菊名":"var(--toyoko)","妙蓮寺":"var(--toyoko)","白楽":"var(--toyoko)","東白楽":"var(--toyoko)","反町":"var(--toyoko)","横浜":"var(--toyoko)","目黒":"var(--meguro)","不動前":"var(--meguro)","武蔵小山":"var(--meguro)","西小山":"var(--meguro)","洗足":"var(--meguro)","奥沢":"var(--meguro)","池尻大橋":"var(--dento)","三軒茶屋":"var(--dento)","駒沢大学":"var(--dento)","桜新町":"var(--dento)","用賀":"var(--dento)","梶が谷":"var(--dento)","宮崎台":"var(--dento)","宮前平":"var(--dento)","鷺沼":"var(--dento)","たまプラーザ":"var(--dento)","あざみ野":"var(--dento)","江田":"var(--dento)","市が尾":"var(--dento)","藤が丘":"var(--dento)","青葉台":"var(--dento)","田奈":"var(--dento)","長津田":"var(--dento)","つくし野":"var(--dento)","すずかけ台":"var(--dento)","南町田":"var(--dento)","つきみ野":"var(--dento)","中央林間":"var(--dento)","恩田":"var(--dento)","こどもの国":"var(--dento)","大井町":"var(--oimachi)","下神明":"var(--oimachi)","戸越公園":"var(--oimachi)","中延":"var(--oimachi)","荏原町":"var(--oimachi)","旗の台":"var(--oimachi)","北千束":"var(--oimachi)","緑が丘":"var(--oimachi)","九品仏":"var(--oimachi)","尾山台":"var(--oimachi)","等々力":"var(--oimachi)","上野毛":"var(--oimachi)","新綱島":"var(--shinyoko)","新横浜":"var(--shinyoko)" };
-
 const OP_SETS = { 
   weekday: { toyoko: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65], S:[1,2,3,4,5,7,9,11,13,15,17,19,23,25,29,31,33,41,45,47,53,63,67,71,75,77,79,81,85,87,89,91], M:[2,4,6,10,14,18,20,22,24,28,30,34], T:[3,5,13,19,21,23], G:[91,92,93,94,95]}, meguro: { K:[1,2,4,5,7,8,9,10,11,12,13,14,15,16,17,18,20,21,22,23,25,26,27,29,30,31,33,34,36,38,40,41,43,46,47,48], S:[30,32,34,36,38,40,42,44,46,50,52,54,56,60,62,64,66,68,70], T:[21,23,25,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85,87,89], M:[80,82,84,86,88,90,92,94,96], G:[31,32,33,35,37,38,39,42,43,44]}, dento: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44], S:[51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85,87,89,91,93], T:[50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82], N:[181,182,183]}, oimachi: { O:[101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,131,132,133,134,135,136,137]} }, 
   holiday: { toyoko: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,51,52,53,54,55,56,57,58,59,60,61,62,63,64], S:[1,2,3,4,5,7,9,11,13,17,19,23,25,29,31,33,39,43,45,47,49,53,55,57,61,67,73,75,85,87,89,91], M:[2,6,8,10,12,14,24,28,30,71,72,73,74,75], T:[3,5,11,13,17,19], G:[91,92,94]}, meguro: { K:[1,2,3,6,7,8,9,10,11,12,13,14,15,16,18,20,22,23,24,25,26,27,29,30,31,32,33,35,37,40,42,44], S:[30,32,34,36,38,40,42,44,46,48,50,52,56,60,64,66,68,70], T:[21,23,25,31,33,35,37,39,41,43,45,47,49,53,55,57,59,61,63,65,67], M:[80,82,84,86,88,90,92,94,96], G:[31,32,34,35,37,38,39,41,43,44]}, dento: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], S:[51,53,55,57,59,61,63,65,67,69,71,73,75,77], T:[50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82], N:[181,182,183]}, oimachi: { O:[101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,131,132,133,134,135,136]} } 
@@ -217,14 +211,32 @@ const MEGURO_PAIRS = {
   holiday: { "01K":"01K・02K", "02K":"01K・02K", "07K":"07K・08K", "08K":"07K・08K", "11K":"11K・12K", "12K":"11K・12K", "13K":"13K・14K", "14K":"13K・14K", "23K":"23K・24K", "24K":"23K・24K", "25K":"25K・26K", "26K":"25K・26K", "29K":"29K・30K", "30K":"29K・30K", "31K":"31K・32K", "32K":"31K・32K" }
 };
 
-let logs = { weekday: {}, holiday: {}, daily: {}, import1: null, import2: null, import3: null, customViews: [], appConfig: {} };
-let hasReceivedCloudData = false; 
+let logs = { weekday: {}, holiday: {}, daily: {}, customViews: [], appConfig: {} };
 let apiLiveCache = {}; 
-let lastRenderedState = ""; 
-let currentView = "weekday"; 
+let hasReceivedCloudData = false; 
 let isFetchingApi = false; let isFetchingCloud = false;
 let publicHolidays = {};
 let lastCloudTime = ""; let lastApiTime = "";
+let currentView = "daily";
+let lastRenderedState = "";
+let _inputTimer = null;
+
+// =========================================
+// パスワードマネージャー誤作動防止
+// =========================================
+function disablePasswordManagers() {
+    document.querySelectorAll('input').forEach(el => {
+        el.setAttribute('data-lpignore', 'true');
+        el.setAttribute('data-bwignore', 'true');
+        el.setAttribute('data-1p-ignore', 'true');
+        el.setAttribute('autocomplete', 'new-password');
+    });
+}
+
+function inputDebounce(fn) {
+  if(_inputTimer) clearTimeout(_inputTimer);
+  _inputTimer = setTimeout(fn, 400); 
+}
 
 // =========================================
 // ユーティリティ関数
@@ -234,7 +246,7 @@ async function loadHolidays() { try { const res = await fetch("https://holidays-
 function updateStatusDisplay() {
     const el = document.getElementById("cloudStatus");
     if (hasReceivedCloudData) { el.textContent = `☁️ ${lastCloudTime || '待機中'}`; } 
-    else { el.textContent = `☁️ 待機中 | 📡 ${lastApiTime || '取得中...'}`; }
+    else { el.textContent = `☁️ 待機中 | 📡 ${lastApiTime || '即時表示'}`; }
     if (lastCloudTime.includes('エラー') || lastApiTime.includes('エラー')) {
         el.style.color = "#d32f2f"; el.style.background = "#ffebee";
     } else { el.style.color = "#01aa8f"; el.style.background = "#e8f5e9"; }
@@ -272,7 +284,6 @@ function getDispKind(rawKind, groupId) {
   return rawKind;
 }
 
-// ★ 新横浜線の統合、目黒線・東横線の非定期分離エンジン
 function getUnyoInfoStr(opNo, tNo, lineKey, dayType) {
   const opRaw = parseInt(opNo, 10); if (opRaw === 0 || isNaN(opRaw)) return null;
   const H = opNo.charAt(0); const XX_str = opNo.substring(1); const XX = parseInt(XX_str, 10);
@@ -314,17 +325,12 @@ function getUnyoInfoStr(opNo, tNo, lineKey, dayType) {
   } else {
       if (['toyoko', 'meguro', 'shinyokohama'].includes(lineKey)) { 
           hl = "extra_tymg"; 
-          if (lineKey === 'meguro' || detectedHl === 'meguro') {
-              label = tNo ? tNo.substring(0, 3) : String(opRaw).padStart(3, '0');
-          }
+          if (lineKey === 'meguro' || detectedHl === 'meguro') { label = tNo ? tNo.substring(0, 3) : String(opRaw).padStart(3, '0'); }
       } else { hl = "extra_dtom"; }
   }
   
   let srcName = {toyoko:"東横線", meguro:"目黒線", shinyokohama:"新横浜線", dento:"田園都市線", oimachi:"大井町線"}[lineKey] || lineKey;
-  if (lineKey === 'shinyokohama') {
-      srcName = (detectedHl === 'toyoko') ? "東横線" : "目黒線";
-  }
-  
+  if (lineKey === 'shinyokohama') { srcName = (detectedHl === 'toyoko') ? "東横線" : "目黒線"; }
   return { homeLine: hl, label: label, sourceName: srcName };
 }
 
@@ -352,16 +358,16 @@ function getAffiliationGroup(lineId, aff) {
 
 function getFormationString(lineId, aff, orchStr, useFormat) {
     if (!aff && !orchStr) return { dispAff: "", fNo: "" };
-    if (!useFormat || lineId.includes('extra_dtom') || lineId.includes('extra_oimachi')) { return { dispAff: aff, fNo: orchStr }; }
+    if (!useFormat || lineId.startsWith('extra')) { return { dispAff: aff, fNo: orchStr }; }
     
     let orch = parseInt(orchStr, 10); let orchStrPad = String(orch).padStart(2, '0');
     if (isNaN(orch)) return { dispAff: aff, fNo: orchStr };
     
     let fNo = ""; let dispAff = aff; 
-    if (lineId === 'meguro' || lineId === 'extra_meguro' || (lineId === 'extra_tymg' && aff && !aff.includes("急") && !aff.includes("み") && !aff.includes("相"))) {
+    if (lineId === 'meguro') {
         if (aff === "急" || aff === "東") { dispAff = aff; if ((orch >= 1 && orch <= 13) || (orch >= 21 && orch <= 23)) fNo = `31${orchStrPad}F`; else if (orch >= 31 && orch <= 40) fNo = `51${String(orch + 50).padStart(2, '0')}F`; else fNo = orchStr; } 
         else if (aff === "相" || aff === "G") { fNo = `211${orchStrPad}F`; } else { fNo = orchStr; }
-    } else if (lineId === 'toyoko' || lineId === 'extra_toyoko' || lineId === 'extra_tymg' || lineId === 'extra_shinyokohama') {
+    } else if (lineId === 'toyoko' || lineId === 'shinyokohama') {
         if (aff === "相" || aff === "G") { fNo = `201${orchStrPad}F`; } 
         else if (aff === "副" || aff === "メ" || aff === "営") { if (orch >= 81 && orch <= 95) fNo = `171${orchStrPad}F`; else if (orch >= 41 && orch <= 76) fNo = `101${String(orch - 40).padStart(2, '0')}F`; else if (orch >= 21 && orch <= 26) fNo = `171${String(orch - 20).padStart(2, '0')}F`; else fNo = orchStr; } 
         else if (aff === "東" || aff === "武") { if ((orch >= 1 && orch <= 8) || orch === 51 || orch === 52) fNo = `91${orchStrPad}F`; else if (orch >= 71 && orch <= 77) fNo = `510${orchStrPad}F`; else fNo = orchStr; } 
@@ -385,14 +391,6 @@ function getFormationString(lineId, aff, orchStr, useFormat) {
 function getActiveData() {
   if (currentView === 'weekday' || currentView === 'holiday') return logs[currentView];
   if (currentView === 'daily') { const sel = document.getElementById('dailyDateSelect'); return sel ? logs.daily[sel.value] : null; }
-  if (currentView.startsWith('import')) return logs[currentView];
-  if (currentView.startsWith('custom_')) {
-    let idx = parseInt(currentView.split('_')[1]); let cv = logs.customViews[idx];
-    if (!cv) return null; if (cv.type === 'upload' && cv.uploadData) return cv.uploadData;
-    let baseData = logs.daily[cv.date]; if (!baseData) return null;
-    let filtered = {}; for (let opKey in baseData) { if (cv.groups.includes(baseData[opKey].homeLine)) filtered[opKey] = baseData[opKey]; }
-    return filtered;
-  }
   return null;
 }
 
@@ -449,6 +447,7 @@ function updateFormDropdown() {
   if (data) {
     for (const opKey in data) {
       let hl = data[opKey].homeLine;
+      if (hl === 'extra_toyoko' || hl === 'extra_meguro') hl = 'extra_tymg';
       if (lineF !== "all" && lineF !== hl) continue;
       
       let label = data[opKey].label;
@@ -498,6 +497,13 @@ function updateFormDropdown() {
   formSel.value = Array.from(forms).includes(currentForm) ? currentForm : "all";
 }
 
+function updateNotice() {
+  const noticeBar = document.getElementById('noticeBar');
+  const txt = logs.appConfig && logs.appConfig.noticeText ? logs.appConfig.noticeText.trim() : "";
+  if (txt) { noticeBar.innerHTML = `<span id="noticeText">📢 ${txt}</span>`; noticeBar.style.display = "block"; } 
+  else { noticeBar.style.display = "none"; }
+}
+
 function updateContextUI(preservedDailyDate = null) {
   const ctx = document.getElementById("contextFilters"); if (!ctx) return; ctx.innerHTML = "";
   if (currentView === "daily") {
@@ -506,10 +512,9 @@ function updateContextUI(preservedDailyDate = null) {
     select.onchange = () => { 
         updateDestDropdown(); updateFormDropdown(); render(); 
         document.getElementById("cloudStatus").textContent = "☁️ 読込中...";
-        
-        let isTodayDaily = (select.value === getDailyKey(new Date()));
-        if (isTodayDaily && !hasReceivedCloudData) fetchLiveApiData();
         fetchFromCloud(); 
+        let isTodayDaily = (select.value === getDailyKey(new Date()));
+        if (isTodayDaily) fetchLiveApiData();
     };
     
     const keys = Object.keys(logs.daily || {}).sort().reverse();
@@ -521,11 +526,6 @@ function updateContextUI(preservedDailyDate = null) {
     }
     if (preservedDailyDate) select.value = preservedDailyDate;
     ctx.appendChild(select);
-  } else if (currentView.startsWith("import") && logs[currentView]) {
-    const clearBtn = document.createElement("button"); clearBtn.className = "btn-action"; clearBtn.textContent = "✖ 破棄";
-    clearBtn.style.cssText = "background:#c62828; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-left:10px;";
-    clearBtn.onclick = () => { if(confirm(`読み込んだデータを破棄しますか？`)) { logs[currentView] = null; changeTab('daily'); } };
-    ctx.appendChild(clearBtn);
   }
 }
 
@@ -957,11 +957,9 @@ async function fetchFromCloud() {
     const timeoutId = setTimeout(() => controller.abort(), 20000);
     const res = await fetch(GAS_URL + "?t=" + Date.now(), { signal: controller.signal });
     clearTimeout(timeoutId);
-    
     if (!res.ok) throw new Error("HTTP " + res.status);
     
-    let text = await res.text();
-    let data = null;
+    let text = await res.text(); let data = null;
     try {
         data = JSON.parse(text);
     } catch (parseError) {
@@ -973,31 +971,23 @@ async function fetchFromCloud() {
             let endIdx = recoveredText.lastIndexOf('}');
             if (endIdx !== -1) recoveredText = recoveredText.substring(0, endIdx + 1);
             data = JSON.parse(recoveredText);
-        } else {
-            throw parseError; 
-        }
+        } else { throw parseError; }
     }
     
     if (data) {
       hasReceivedCloudData = true; 
-      
       let selectedDaily = null;
       const dailySel = document.getElementById("dailyDateSelect");
       if(dailySel && currentView === 'daily') selectedDaily = dailySel.value;
       
-      logs.weekday = data.weekday || {};
-      logs.holiday = data.holiday || {};
-      logs.daily = data.daily || {};
-      logs.customViews = data.customViews || [];
-      if(data.appConfig) logs.appConfig = data.appConfig;
+      logs.weekday = data.weekday || {}; logs.holiday = data.holiday || {}; logs.daily = data.daily || {};
+      logs.customViews = data.customViews || []; if(data.appConfig) logs.appConfig = data.appConfig;
       
-      updateTabs(); updateNotice();
+      updateTabs();
       
       if (!currentView.startsWith("import")) {
-        updateContextUI(selectedDaily); 
-        updateDestDropdown(); updateFormDropdown(); render();
+        updateContextUI(selectedDaily); updateDestDropdown(); updateFormDropdown(); render();
       }
-      
       lastCloudTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
       updateStatusDisplay();
     }
@@ -1012,24 +1002,18 @@ async function fetchFromCloud() {
         }
     }
     updateStatusDisplay();
-  } finally {
-    isFetchingCloud = false;
-  }
+  } finally { isFetchingCloud = false; }
 }
 
 async function cloudLoop() {
     let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-    if (isTodayDaily && !isFetchingCloud) {
-        await fetchFromCloud();
-    }
+    if (isTodayDaily && !isFetchingCloud) { await fetchFromCloud(); }
     setTimeout(cloudLoop, 3000); 
 }
 
 async function apiLoop() {
     let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-    if (isTodayDaily && !isFetchingApi) {
-        await fetchLiveApiData();
-    }
+    if (isTodayDaily && !isFetchingApi) { await fetchLiveApiData(); }
     setTimeout(apiLoop, 3000); 
 }
 
@@ -1047,7 +1031,6 @@ function importJSONData(file, targetTab) {
           
           if (firstPart.includes("東横")) hl = "toyoko"; else if (firstPart.includes("目黒")) hl = "meguro";
           else if (firstPart.includes("新横浜")) hl = "shinyokohama"; else if (firstPart.includes("田園")) hl = "dento"; else if (firstPart.includes("大井町")) hl = "oimachi";
-          
           if (opName.includes("非定期") && firstPart.includes("東横")) hl = "extra_toyoko";
           else if (opName.includes("非定期") && firstPart.includes("目黒")) hl = "extra_meguro";
           else if (opName.includes("非定期") && (firstPart.includes("田園") || firstPart.includes("大井町"))) hl = "extra_dtom";
@@ -1088,6 +1071,7 @@ function initCloudSync() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  disablePasswordManagers(); // ★ 初期化時にパスワードマネージャー誤作動をブロック
   const params = location.search.substring(1);
   if (params && document.getElementById("opFilter")) {
       const opts = Array.from(document.getElementById("opFilter").options).map(o => o.value);
