@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
-  <title>東急線 運用ビューワー (Mobile)</title>
+  <title>東急線 運用ビューワー（Mobile完全互換版）</title>
   <style>
     :root { 
       --toyoko: #d90240; --meguro: #009cd3; --dento: #01aa8f; 
@@ -20,11 +20,13 @@
     
     .btn-action { background: #333; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; white-space: nowrap; flex-shrink: 0; transition: 0.2s; }
     .btn-action:hover { opacity: 0.8; }
+    .btn-export { background: #1976d2; }
     .btn-sync { background: #ff9800; color: #fff; }
+    .btn-reset { background: #c62828; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; }
     
     #cloudStatus { font-family: monospace; font-size: 11px; color: #01aa8f; font-weight: bold; background: #e8f5e9; padding: 6px 8px; border-radius: 4px; text-align: center; white-space: nowrap; flex-shrink: 0; min-width: 140px; }
 
-    #noticeBar { background: #ffebee; color: #d32f2f; padding: 10px 15px; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ffcdd2; overflow: hidden; display: none; }
+    #noticeBar { background: #ffebee; color: #d32f2f; padding: 12px 20px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #ffcdd2; overflow: hidden; display: none; letter-spacing: 1px; }
     .marquee-container { width: 100%; overflow: hidden; white-space: nowrap; box-sizing: border-box; }
     .marquee-content { display: inline-block; padding-left: 100%; animation: marquee 20s linear infinite; }
     @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
@@ -43,8 +45,8 @@
     .filter-item { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .filter-label { font-weight: bold; color: #555; font-size: 12px; white-space: nowrap; }
     .filter-select { padding: 6px 8px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; font-weight: bold; min-width: 100px; max-width: 140px; }
-
-    #container { padding: 15px; max-width: 1200px; margin: 0 auto; width: 100%; padding-bottom: 90px; }
+    
+    #container { padding: 15px; max-width: 1200px; margin: 0 auto; width: 100%; padding-bottom: 90px; } /* 余白追加 */
     .line-section { margin-bottom: 25px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid var(--border-color); }
     .line-header { padding: 10px 15px; font-size: 15px; font-weight: bold; color: #fff; letter-spacing: 1px; }
     .line-body { padding: 10px; }
@@ -52,8 +54,7 @@
     .bg-toyoko { background: var(--toyoko); } .bg-meguro { background: var(--meguro); } .bg-dento { background: var(--dento); }
     .bg-oimachi { background: var(--oimachi); } .bg-shinyoko { background: var(--shinyoko); } .bg-extra { background: var(--extra); }
 
-    /* ★ 処理落ち対策: content-visibilityで画面外の描画をスキップ */
-    .op-box { display: flex; align-items: stretch; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 10px; overflow: hidden; content-visibility: auto; contain-intrinsic-size: auto 150px; }
+    .op-box { display: flex; align-items: stretch; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
     .op-left { width: 85px; background: #f8f9fa; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; flex-shrink: 0; }
     .op-no { font-weight: bold; font-family: monospace; font-size: 18px; color: #d32f2f; text-align: center; }
     .src-tag { font-size: 10px; background: #ddd; padding: 2px 4px; border-radius: 4px; color: #555; margin-top: 6px; text-align: center; line-height: 1.2; word-break: break-all;}
@@ -83,7 +84,7 @@
     .t-hist::-webkit-scrollbar-track { background: transparent; }
     .t-hist::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
     
-    /* ★ 処理落ち対策: 矢印はCSSで描写しDOMタグ数を半減 */
+    /* ★ 処理落ち対策： 矢印(▶)のDOMを削減し、CSSの疑似要素に置き換え */
     .hist-item { background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; border-bottom: 2px solid #ccc; display: inline-flex; align-items: center; gap: 4px; position: relative; margin-right: 14px; cursor: pointer; }
     .hist-item::after { content: '▶'; position: absolute; right: -12px; color: #aaa; font-size: 9px; top: 50%; transform: translateY(-50%); }
     .hist-item:last-child::after { content: ''; }
@@ -121,7 +122,7 @@
     }
 
     /* --- FAB（浮遊フィルターボタン） --- */
-    .fab { position: fixed; bottom: 20px; right: 20px; background: #1976d2; color: #fff; width: 56px; height: 56px; border-radius: 28px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1500; cursor: pointer; border: none; }
+    .fab { position: fixed; bottom: 20px; right: 20px; background: #1976d2; color: #fff; width: 56px; height: 56px; border-radius: 28px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1500; cursor: pointer; border: none; font-size: 24px; }
     .fab:active { background: #115293; transform: scale(0.95); }
 
     /* --- モーダル全般 --- */
@@ -142,7 +143,7 @@
     .modal-box { background:#fff; padding:0; border-radius:10px; width:95%; max-width:550px; height:85vh; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,0.3); overflow:hidden; }
     .tt-controls-area { background: #f8f9fa; padding: 10px 15px; border-bottom: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;}
     .tt-main-wrapper { display: flex; flex: 1; overflow: hidden; position: relative; }
-    .modal-content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; background:#fafafa; padding-bottom: 30px; }
+    .modal-content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; background:#fafafa; padding-bottom: 30px; margin:0; }
     
     /* ★ インデックスバー (時間帯ジャンプ) */
     .tt-index-bar { width: 30px; background: #fff; border-left: 1px solid #eee; display: flex; flex-direction: column; z-index: 10; overflow-y: auto; scrollbar-width: none; flex-shrink: 0; }
@@ -185,6 +186,7 @@
   <div class="header-top">
     <h1>東急線 運用ビューワー</h1>
     <div class="header-right">
+      <button class="btn-action" onclick="location.href='index.html'+location.search">路線図</button>
       <button class="btn-action btn-sync" onclick="forceSync()">🔄 強制同期</button>
       <div id="cloudStatus">☁️ 待機中</div>
     </div>
@@ -349,13 +351,11 @@ let isFetchingApi = false; let isFetchingCloud = false; let publicHolidays = {};
 let lastCloudTime = ""; let lastApiTime = "";
 
 let targetTimetableStation = null;
+let hasOpenedStandalone = false;
 
 let ttState = {
   stName: "", trains: [], dirMode: "both", lineMode: "all", availableLines: [], currentTUid: null
 };
-
-// レンダリング制御用トークン（プログレッシブレンダリングの中断用）
-let renderToken = 0;
 
 const API_ENDPOINTS = [{id:'toyoko',url:"https://w-tid.jp/tokyu/toyoko.json"},{id:'meguro',url:"https://w-tid.jp/tokyu/meguro.json"},{id:'shinyokohama',url:"https://w-tid.jp/tokyu/shinyokohama.json"},{id:'dento',url:"https://w-tid.jp/tokyu/dento.json"},{id:'oimachi',url:"https://w-tid.jp/tokyu/oimachi.json"}];
 const DEST_MAP_TYMG = { 0:"", 33:"副都心線", 54:"三田線", 67:"南北線", 71:"目黒", 73:"武蔵小山", 76:"大岡山", 77:"奥沢", 78:"渋谷", 84:"自由が丘", 88:"武蔵小杉", 89:"元住吉", 90:"日吉", 93:"菊名", 98:"横浜", 103:"元町・中華街", 108:"新横浜", 111:"相鉄線" };
@@ -371,7 +371,7 @@ const OP_SETS = {
 };
 
 // =========================================
-// ローカルキャッシュ機能
+// キャッシュ・通信機能
 // =========================================
 function saveCache(data) { try { localStorage.setItem('tokyu_unyo_cache_pc', JSON.stringify(data)); localStorage.setItem('tokyu_unyo_cache_time_pc', Date.now()); } catch (e) {} }
 
@@ -380,8 +380,11 @@ function loadCache() {
     let cached = localStorage.getItem('tokyu_unyo_cache_pc');
     if (cached) {
       let data = JSON.parse(cached);
-      logs.weekday = data.weekday || {}; logs.holiday = data.holiday || {}; logs.daily = data.daily || {};
-      logs.customViews = data.customViews || []; if(data.appConfig) logs.appConfig = data.appConfig;
+      logs.weekday = data.weekday || {};
+      logs.holiday = data.holiday || {};
+      logs.daily = data.daily || {};
+      logs.customViews = data.customViews || [];
+      if(data.appConfig) logs.appConfig = data.appConfig;
       hasReceivedCloudData = true;
       updateTabs(); updateNotice();
       
@@ -389,12 +392,13 @@ function loadCache() {
       const dailySel = document.getElementById("dailyDateSelect");
       if(dailySel && currentView === 'daily') selectedDaily = dailySel.value;
       if (!currentView.startsWith("import")) {
-        updateContextUI(selectedDaily); updateDestDropdown(); updateFormDropdown(); render();
+        updateContextUI(selectedDaily); 
+        updateDestDropdown(); updateFormDropdown(); render();
       }
       
       let cTime = localStorage.getItem('tokyu_unyo_cache_time_pc');
       if (cTime) {
-        lastCloudTime = new Date(parseInt(cTime)).toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + " (C)";
+        lastCloudTime = new Date(parseInt(cTime)).toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + " (キャッシュ)";
         updateStatusDisplay();
       }
     }
@@ -470,7 +474,9 @@ function getUnyoInfoStr(opNo, tNo, lineKey, dayType) {
   let checkVal = XX; if (detectedHl === 'oimachi' || detectedHl === 'dento') checkVal = opRaw;
   
   let isReg = false;
-  if (OP_SETS && OP_SETS[dayType] && OP_SETS[dayType][detectedHl] && OP_SETS[dayType][detectedHl][detectedSys]) { isReg = OP_SETS[dayType][detectedHl][detectedSys].includes(checkVal); }
+  if (OP_SETS && OP_SETS[dayType] && OP_SETS[dayType][detectedHl] && OP_SETS[dayType][detectedHl][detectedSys]) {
+      isReg = OP_SETS[dayType][detectedHl][detectedSys].includes(checkVal);
+  }
   
   if (isReg) { hl = detectedHl; } else {
       if (['toyoko', 'meguro', 'shinyokohama'].includes(lineKey)) { 
@@ -478,7 +484,6 @@ function getUnyoInfoStr(opNo, tNo, lineKey, dayType) {
           if (lineKey === 'meguro' || detectedHl === 'meguro') { label = tNo ? tNo.substring(0, 3) : String(opRaw).padStart(3, '0'); }
       } else { hl = "extra_dtom"; }
   }
-  
   let srcName = {toyoko:"東横線", meguro:"目黒線", shinyokohama:"新横浜線", dento:"田園都市線", oimachi:"大井町線"}[lineKey] || lineKey;
   if (lineKey === 'shinyokohama') { srcName = (detectedHl === 'toyoko') ? "東横線" : "目黒線"; }
   return { homeLine: hl, label: label, sourceName: srcName };
@@ -499,6 +504,7 @@ function getAffiliationGroup(lineId, aff) {
 function getFormationString(lineId, aff, orchStr, useFormat) {
     if (!aff && !orchStr) return { dispAff: "", fNo: "" };
     if (!useFormat || lineId.includes('extra_dtom') || lineId.includes('extra_oimachi')) { return { dispAff: aff, fNo: orchStr }; }
+    
     let orch = parseInt(orchStr, 10); let orchStrPad = String(orch).padStart(2, '0');
     if (isNaN(orch)) return { dispAff: aff, fNo: orchStr };
     
@@ -561,7 +567,7 @@ function updateFormDropdown() {
   if (currentView === 'weekday' || currentView === 'holiday') { formFilterArea.style.display = 'none'; formSelect.innerHTML = '<option value="all">すべて表示</option>'; return; }
   formFilterArea.style.display = 'flex';
   const currentForm = formSelect.value || "all"; let forms = new Set();
-  const data = getActiveData(); const useFmt = document.getElementById("formatFilter") ? document.getElementById("formatFilter").checked : true;
+  const data = getActiveData(); const useFmt = document.getElementById("formatFilter")?.checked;
   const lineF = document.getElementById("lineFilter").value;
   const compF = document.getElementById("companyFilter").value;
   const secF = document.getElementById("sectionFilter").value;
@@ -587,6 +593,7 @@ function updateFormDropdown() {
     for (const opKey in data) { 
       let hl = data[opKey].homeLine; if (hl === 'extra_toyoko' || hl === 'extra_meguro') hl = 'extra_tymg';
       if (lineF !== "all" && lineF !== hl) continue;
+      
       let label = data[opKey].label;
       if (opSearch && !label.toUpperCase().includes(opSearch)) continue;
       if (!checkComp(label)) continue;
@@ -597,10 +604,7 @@ function updateFormDropdown() {
         if (currentView === 'weekday' || currentView === 'holiday') { if (t.trainNo && (t.trainNo.endsWith("000") || t.trainNo.endsWith("990"))) continue; }
         if (t && !t.deleted && (t.affiliation || t.orchestration)) {
             let srcMatch = false;
-            if (secF === "all") srcMatch = true;
-            else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(t.sourceName)) srcMatch = true;
-            else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(t.sourceName)) srcMatch = true;
-            else if (t.sourceName === secF) srcMatch = true;
+            if (secF === "all") srcMatch = true; else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(t.sourceName)) srcMatch = true; else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(t.sourceName)) srcMatch = true; else if (t.sourceName === secF) srcMatch = true;
             if (srcMatch) addForm(hl, t.affiliation, t.orchestration);
         }
       }
@@ -612,16 +616,15 @@ function updateFormDropdown() {
           let hl = opKey.split('_')[0]; if (opKey.startsWith("extra_")) hl = opKey.split('_').slice(0,2).join('_');
           if (hl === 'extra_toyoko' || hl === 'extra_meguro') hl = 'extra_tymg';
           if (lineF !== "all" && lineF !== hl) continue;
+          
           let label = opKey.split('_')[1];
           if (opSearch && !label.toUpperCase().includes(opSearch)) continue;
           if (!checkComp(label)) continue;
+          
           let trains = apiLiveCache[opKey];
           for (let tNo in trains) { 
               let t = trains[tNo]; let srcMatch = false;
-              if (secF === "all") srcMatch = true;
-              else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(t.sourceName)) srcMatch = true;
-              else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(t.sourceName)) srcMatch = true;
-              else if (t.sourceName === secF) srcMatch = true;
+              if (secF === "all") srcMatch = true; else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(t.sourceName)) srcMatch = true; else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(t.sourceName)) srcMatch = true; else if (t.sourceName === secF) srcMatch = true;
               if (srcMatch) addForm(hl, t.affiliation, t.orchestration);
           }
       }
@@ -703,13 +706,10 @@ function changeTab(tabId) {
 }
 
 // =========================================
-// ★ 描画ロジック（プログレッシブレンダリング搭載）
+// 描画ロジック（超高速化版）
 // =========================================
 function render() {
-  renderToken++;
-  const currentToken = renderToken;
   const container = document.getElementById("container");
-  
   if (currentView.startsWith("import") && (!logs[currentView] || Object.keys(logs[currentView]).length === 0)) {
     container.innerHTML = `<div style="text-align:center; padding:40px; background:#fff; border-radius:8px;">
         <p style="font-weight:bold; margin-bottom:15px; color:#555;">JSONファイルを読み込んで表示します。</p>
@@ -727,18 +727,18 @@ function render() {
   const kindF = document.getElementById("kindFilter") ? document.getElementById("kindFilter").value : "all";
   const destF = document.getElementById("destFilter") ? document.getElementById("destFilter").value : "all";
   const showRunningOnly = document.getElementById("runningFilter")?.checked;
-  const useFmt = document.getElementById("formatFilter") ? document.getElementById("formatFilter").checked : true; 
+  const useFmt = document.getElementById("formatFilter")?.checked; 
   const formSelVal = document.getElementById("formFilterSel")?.value || "all";
   const daisoF = document.getElementById("daisoFilter") ? document.getElementById("daisoFilter").checked : false;
   const opSearch = document.getElementById("opNumSearch") ? document.getElementById("opNumSearch").value.trim().toUpperCase() : "";
 
+  let html = "";
+  
   const groups = [
     { id: 'toyoko', name: '東横線 定期運用', cl: 'bg-toyoko' }, { id: 'meguro', name: '目黒線 定期運用', cl: 'bg-meguro' },
     { id: 'dento', name: '田園都市線 定期運用', cl: 'bg-dento' }, { id: 'oimachi', name: '大井町線 定期運用', cl: 'bg-oimachi' },
     { id: 'extra_tymg', name: '東横・目黒非定期運用', cl: 'bg-extra' }, { id: 'extra_dtom', name: '田都・大井非定期運用', cl: 'bg-extra' }
   ];
-
-  let renderedGroups = [];
 
   groups.forEach(g => {
     if (!currentView.startsWith("import") && !currentView.startsWith("custom_")) { if (cfg.lines && cfg.lines[g.id] && cfg.lines[g.id].disp === false) return; }
@@ -747,11 +747,7 @@ function render() {
     let opKeys = new Set();
     if (data) { 
         Object.keys(data).forEach(k => { 
-            if (data[k]) {
-                let hl = data[k].homeLine;
-                if (g.id === 'extra_tymg' && (hl === 'extra_tymg' || hl === 'extra_toyoko' || hl === 'extra_meguro')) opKeys.add(k);
-                else if (hl === g.id) opKeys.add(k);
-            }
+            if (data[k]) { let hl = data[k].homeLine; if (g.id === 'extra_tymg' && (hl === 'extra_tymg' || hl === 'extra_toyoko' || hl === 'extra_meguro')) opKeys.add(k); else if (hl === g.id) opKeys.add(k); }
         }); 
     }
     
@@ -759,12 +755,11 @@ function render() {
     if (isTodayDaily && !hasReceivedCloudData) {
         Object.keys(apiLiveCache).forEach(k => { 
             let hl = k.split('_')[0]; if (k.startsWith("extra_")) hl = k.split('_').slice(0,2).join('_');
-            if (g.id === 'extra_tymg' && (hl === 'extra_tymg' || hl === 'extra_toyoko' || hl === 'extra_meguro')) opKeys.add(k);
-            else if (hl === g.id) opKeys.add(k);
+            if (g.id === 'extra_tymg' && (hl === 'extra_tymg' || hl === 'extra_toyoko' || hl === 'extra_meguro')) opKeys.add(k); else if (hl === g.id) opKeys.add(k);
         });
     }
 
-    // ★ 運用の並び順をPC版通り（完全ソート）に設定
+    // ★ 運用の並び順をPC版に完全準拠 (K, S, Tなどの文字順＋数値順)
     let opKeysArr = Array.from(opKeys).sort((a, b) => {
       let partsA = a.split('_'); let labelA = partsA[partsA.length - 1];
       let partsB = b.split('_'); let labelB = partsB[partsB.length - 1];
@@ -775,12 +770,14 @@ function render() {
       
       let numA = parseInt(labelA.match(/\d+/) || 0, 10); let numB = parseInt(labelB.match(/\d+/) || 0, 10);
       if (numA !== numB) return numA - numB;
+      
       return a.localeCompare(b);
     });
     
     if(opKeysArr.length === 0) return;
 
-    let groupOpsHtml = [];
+    let groupHtml = `<div class="line-section"><div class="line-header ${g.cl}">${g.name}</div><div class="line-body">`;
+    let hasContent = false;
 
     opKeysArr.forEach(ok => {
       const u = data ? data[ok] : null; 
@@ -813,18 +810,12 @@ function render() {
             if (tA !== tB) return tA - tB; return (u.trains[a].date || "").localeCompare(u.trains[b].date || "");
           }).forEach(tUid => {
             const t = u.trains[tUid]; if(!t || t.deleted || !t.history || t.history.length===0) return; 
-            
-            if (currentView === 'weekday' || currentView === 'holiday') {
-                if (t.trainNo && (t.trainNo.endsWith("000") || t.trainNo.endsWith("990"))) return;
-            }
+            if (currentView === 'weekday' || currentView === 'holiday') { if (t.trainNo && (t.trainNo.endsWith("000") || t.trainNo.endsWith("990"))) return; }
 
             let dKind = t.kind === "通勤特急" ? "通特" : t.kind;
             
             let srcMatch = false;
-            if (secF === "all") srcMatch = true;
-            else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(t.sourceName)) srcMatch = true;
-            else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(t.sourceName)) srcMatch = true;
-            else if (t.sourceName === secF) srcMatch = true;
+            if (secF === "all") srcMatch = true; else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(t.sourceName)) srcMatch = true; else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(t.sourceName)) srcMatch = true; else if (t.sourceName === secF) srcMatch = true;
             if (!srcMatch) return;
 
             if(kindF !== "all" && dKind !== kindF && !(kindF==='特急_all' && (dKind==='特急'||dKind==='F'))) return;
@@ -844,25 +835,17 @@ function render() {
                 const lastH = t.history[t.history.length-1];
                 let tvHist = getTv(lastH.t); let tvLive = getTv(liveInfo.t);
                 let diff = Math.abs(tvLive - tvHist); if (diff > 1440 - 180) diff = 1440 - diff;
-                
-                if (diff <= 180) {
-                    isRunning = true; currentPosSt = liveInfo.st; currentPosT = liveInfo.t; currentDelay = liveInfo.delay;
-                    processedLiveTnos.add(t.trainNo);
-                    if (lastH.st !== currentPosSt) showLiveBadge = true; 
-                }
+                if (diff <= 180) { isRunning = true; currentPosSt = liveInfo.st; currentPosT = liveInfo.t; currentDelay = liveInfo.delay; processedLiveTnos.add(t.trainNo); if (lastH.st !== currentPosSt) showLiveBadge = true; }
             }
-            
-            if (!isRunning && isTodayDaily) {
-               if (t.lastSeen && (Date.now() - t.lastSeen < 300000)) isRunning = true;
-            }
-
+            if (!isRunning && isTodayDaily) { if (t.lastSeen && (Date.now() - t.lastSeen < 300000)) isRunning = true; }
             if (showRunningOnly && !isRunning) return;
 
+            hasContent = true; 
+            
             let formTag = "";
             if ((currentView === 'daily' || currentView.startsWith('custom_') || currentView.startsWith('import'))) {
                 if (aff || orch) {
-                    let dispText = useFmt ? `${fObj.fNo}` : `${orch}`;
-                    let affPart = fObj.dispAff ? `[${fObj.dispAff}] ` : "";
+                    let dispText = useFmt ? `${fObj.fNo}` : `${orch}`; let affPart = fObj.dispAff ? `[${fObj.dispAff}] ` : "";
                     formTag = `<div class="t-tr-form" title="${affPart}${dispText}">${affPart}${dispText}</div>`;
                 }
             }
@@ -872,23 +855,15 @@ function render() {
                 remarksTag = `<div style="font-size:11px; color:#555; background:#fff9c4; padding:2px 6px; border-radius:4px; margin-top:4px; border:1px solid #fff59d; display:inline-block; max-width:100%; white-space:normal; word-break:break-all;">✎ ${t.remarks}</div>`;
             }
 
-            // ★ スマホクラッシュ対策: CSS疑似要素でDOM数を半減
-            let hHtml = `<div class="t-hist">`;
-            t.history.forEach((h, i) => {
+            // ★ スマホクラッシュ対策: map().join() による爆速レンダリング
+            let hHtml = `<div class="t-hist">` + t.history.map(h => {
               const isEkikan = h.st.includes("駅間");
               const cls = `hist-item ${isEkikan ? 'is-ekikan' : ''}`;
-              
               let delayMark = "";
-              if (h.delay > 0) {
-                  if (currentView === 'daily' || currentView.startsWith('import') || currentView.startsWith('custom_')) {
-                      delayMark = `<sup class="tentative-mark">⁺${h.delay}</sup>`;
-                  } else {
-                      delayMark = `<sup class="tentative-mark">*</sup>`;
-                  }
-              }
-              
-              hHtml += `<span class="${cls} clickable-st" onclick="openStationTimetable('${h.st}', '${tUid}')" title="この駅の時刻表を見る"><strong>${h.t}${delayMark}</strong> ${h.st}</span>`;
-            });
+              if (h.delay > 0) { delayMark = (currentView === 'daily' || currentView.startsWith('import') || currentView.startsWith('custom_')) ? `<sup class="tentative-mark">⁺${h.delay}</sup>` : `<sup class="tentative-mark">*</sup>`; }
+              // 安全な onclick 設定
+              return `<span class="${cls} clickable-st" onclick="openStationTimetable(this.getAttribute('data-st'), '${tUid}')" data-st="${h.st}" title="この駅の時刻表を見る"><strong>${h.t}${delayMark}</strong> ${h.st}</span>`;
+            }).join('');
             if (showLiveBadge) {
                 let liveDelayMark = currentDelay > 0 ? `<sup class="tentative-mark">⁺${currentDelay}</sup>` : "";
                 hHtml += `<span class="hist-item live-badge"><strong>${currentPosT}${liveDelayMark}</strong> ${currentPosSt} <span style="font-size:10px;">(Live)</span></span>`;
@@ -899,8 +874,7 @@ function render() {
             let badgeText = dKind; if (dKind === "F") badgeText = "Fラ"; else if (dKind === "B") badgeText = "B各停"; else if (dKind === "G") badgeText = "G各停"; else if (dKind === "Sトレイン") badgeText = "S";
             let dateTag = (g.id.startsWith('extra') && t.date && currentView !== 'daily') ? `<div class="t-tr-sub">(${t.date})</div>` : "";
 
-            let posText = "";
-            let badgeDelay = 0;
+            let posText = ""; let badgeDelay = 0;
             if (isRunning) {
                 badgeDelay = currentDelay > 0 ? currentDelay : (!showLiveBadge && t.history[t.history.length-1].delay > 0 ? t.history[t.history.length-1].delay : 0);
                 posText = `<strong>${currentPosT || t.history[t.history.length-1].t}</strong> ${currentPosSt || t.history[t.history.length-1].st}`;
@@ -942,43 +916,26 @@ function render() {
                   const liveInfo = liveTrainsForOp[tNo];
                   
                   let srcMatch = false;
-                  if (secF === "all") srcMatch = true;
-                  else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(liveInfo.sourceName)) srcMatch = true;
-                  else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(liveInfo.sourceName)) srcMatch = true;
-                  else if (liveInfo.sourceName === secF) srcMatch = true;
+                  if (secF === "all") srcMatch = true; else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(liveInfo.sourceName)) srcMatch = true; else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(liveInfo.sourceName)) srcMatch = true; else if (liveInfo.sourceName === secF) srcMatch = true;
                   if (!srcMatch) return;
-
                   if(kindF !== "all" && liveInfo.kind !== kindF && !(kindF==='特急_all' && (liveInfo.kind==='特急'||liveInfo.kind==='F'))) return;
                   if(destF !== "all" && liveInfo.dest !== destF) return;
                   
                   let isDaiso = false;
-                  if (liveInfo.affiliation && label) {
-                      const opAlphaMatch = label.match(/[A-Za-z]/);
-                      if (opAlphaMatch) {
-                          const affGroup = getAffiliationGroup(g.id, liveInfo.affiliation); 
-                          if (affGroup && opAlphaMatch[0] !== affGroup) isDaiso = true;
-                      }
-                  }
+                  if (liveInfo.affiliation && label) { const opAlphaMatch = label.match(/[A-Za-z]/); if (opAlphaMatch) { const affGroup = getAffiliationGroup(g.id, liveInfo.affiliation); if (affGroup && opAlphaMatch[0] !== affGroup) isDaiso = true; } }
                   if (daisoF && !isDaiso) return;
 
                   let fObj = getFormationString(g.id, liveInfo.affiliation, liveInfo.orchestration, useFmt);
                   if (currentView !== 'weekday' && currentView !== 'holiday' && formSelVal !== "all" && formSelVal !== `[${fObj.dispAff}] ${fObj.fNo}`) return;
-
+                  hasContent = true;
+                  
                   let formTag = "";
-                  if (liveInfo.affiliation || liveInfo.orchestration) {
-                      let dispText = useFmt ? fObj.fNo : liveInfo.orchestration;
-                      let affPart = fObj.dispAff ? `[${fObj.dispAff}] ` : "";
-                      formTag = `<div class="t-tr-form">${affPart}${dispText}</div>`;
-                  }
+                  if (liveInfo.affiliation || liveInfo.orchestration) { let dispText = useFmt ? fObj.fNo : liveInfo.orchestration; let affPart = fObj.dispAff ? `[${fObj.dispAff}] ` : ""; formTag = `<div class="t-tr-form">${affPart}${dispText}</div>`; }
                   
                   let badgeText = liveInfo.kind; if (badgeText === "F") badgeText = "Fラ"; else if (badgeText === "B") badgeText = "B各停"; else if (badgeText === "G") badgeText = "G各停"; else if (badgeText === "Sトレイン") badgeText = "S";
                   let posText = `<strong>${liveInfo.t}</strong> ${liveInfo.st}`;
                   let badgeDelay = liveInfo.delay || 0;
-
-                  let badgeDelayHtml = "";
-                  if (badgeDelay > 0) {
-                      badgeDelayHtml = `<span class="t-delay">${badgeDelay}分遅れ</span>`;
-                  }
+                  let badgeDelayHtml = ""; if (badgeDelay > 0) { badgeDelayHtml = `<span class="t-delay">${badgeDelay}分遅れ</span>`; }
                   let liveDelayMark = badgeDelay > 0 ? `<sup class="tentative-mark">⁺${badgeDelay}</sup>` : "";
 
                   tHtml += `<div class="train-row row-sync-wait">
@@ -1002,75 +959,17 @@ function render() {
           });
       }
       
-      if(tHtml) {
-          let finalOpHtml = `<div class="op-box">
-            <div class="op-left">
-              <div class="op-no">${label || "不明"}</div>
-              ${g.id.startsWith('extra')?`<div class="src-tag">from<br>${srcName}</div>`:''}
-            </div>
-            <div class="op-right">${tHtml}</div>
-          </div>`;
-          groupOpsHtml.push(finalOpHtml);
-      }
+      if(tHtml) groupHtml += `<div class="op-box">
+        <div class="op-left">
+          <div class="op-no">${label || "不明"}</div>
+          ${g.id.startsWith('extra')?`<div class="src-tag">from<br>${srcName}</div>`:''}
+        </div>
+        <div class="op-right">${tHtml}</div>
+      </div>`;
     });
-    
-    if(groupOpsHtml.length > 0) {
-        renderedGroups.push({ g: g, opsHtml: groupOpsHtml });
-    }
+    if(hasContent) html += groupHtml + "</div></div>";
   });
-
-  if (renderedGroups.length === 0) {
-      container.innerHTML = "<div style='padding:40px; text-align:center; color:#888; font-weight:bold;'>指定した条件に一致する運用はありません。</div>";
-      return;
-  }
-
-  // ★ プログレッシブレンダリング（非同期描画）で処理落ちを完全回避
-  container.innerHTML = `<div id="loadingMsg" style="text-align:center; padding:30px; color:#1976d2; font-weight:bold;">🔄 データを展開中...</div>`;
-  
-  let currentGroupIdx = 0;
-  let currentOpIdx = 0;
-
-  function renderNextChunk() {
-      if (renderToken !== currentToken) return;
-
-      const loadingMsg = document.getElementById("loadingMsg");
-      if (loadingMsg) loadingMsg.remove();
-
-      let opsRenderedThisFrame = 0;
-      const OPS_PER_FRAME = 15; // 1フレームに15運用ずつ描画して負担を分散
-
-      while(opsRenderedThisFrame < OPS_PER_FRAME && currentGroupIdx < renderedGroups.length) {
-          let currentGroup = renderedGroups[currentGroupIdx];
-          let groupBodyId = `lb_${currentGroup.g.id}_${currentToken}`;
-          let groupBodyEl = document.getElementById(groupBodyId);
-
-          if (!groupBodyEl) {
-              let section = document.createElement('div');
-              section.className = "line-section";
-              section.innerHTML = `<div class="line-header ${currentGroup.g.cl}">${currentGroup.g.name}</div><div class="line-body" id="${groupBodyId}"></div>`;
-              container.appendChild(section);
-              groupBodyEl = section.querySelector('.line-body');
-          }
-
-          let opsToInsert = currentGroup.opsHtml.slice(currentOpIdx, currentOpIdx + (OPS_PER_FRAME - opsRenderedThisFrame));
-          if (opsToInsert.length > 0) {
-              groupBodyEl.insertAdjacentHTML('beforeend', opsToInsert.join(""));
-              opsRenderedThisFrame += opsToInsert.length;
-              currentOpIdx += opsToInsert.length;
-          }
-
-          if (currentOpIdx >= currentGroup.opsHtml.length) {
-              currentGroupIdx++;
-              currentOpIdx = 0;
-          }
-      }
-
-      if (currentGroupIdx < renderedGroups.length) {
-          setTimeout(renderNextChunk, 16); 
-      }
-  }
-
-  renderNextChunk();
+  if (container) container.innerHTML = html || "<div style='padding:40px; text-align:center; color:#888; font-weight:bold;'>指定した条件に一致する運用はありません。</div>";
 }
 
 // =========================================
@@ -1121,9 +1020,8 @@ function openStationTimetable(stName, currentTUid) {
       if (targetHist) {
         let isTerminal = (tr.dest === stName);
         let isFirst = (tr.history[0] && tr.history[0].st === stName);
-        
         let isPass = isPassStation(tr.kind, stName);
-        if (isTerminal || isFirst) isPass = false;
+        if (isTerminal || isFirst) isPass = false; 
 
         let tData = {
           time: targetHist.t, tv: getTv(targetHist.t), delay: targetHist.delay || 0,
@@ -1163,7 +1061,6 @@ function openStationTimetable(stName, currentTUid) {
 
   document.getElementById('ttModalTitle').innerText = `🕒 ${stName} 駅 時刻表`;
   document.getElementById('timetableModal').style.display = 'flex';
-  
   renderTimetable();
 }
 
@@ -1183,7 +1080,7 @@ function renderTimetable() {
     let lineRow = document.getElementById('ttLineControlRow');
     if (ttState.availableLines.length > 0) {
         lineRow.style.display = 'flex';
-        let lineHtml = `<button class="tt-tab-btn ${ttState.lineMode === 'all' ? 'active' : ''}" onclick="setTtLine('all')">すべて表示</button>`;
+        let lineHtml = `<button class="tt-tab-btn ${ttState.lineMode === 'all' ? 'active' : ''}" onclick="setTtLine('all')">すべて</button>`;
         ttState.availableLines.forEach(l => { lineHtml += `<button class="tt-tab-btn ${ttState.lineMode === l ? 'active' : ''}" onclick="setTtLine('${l}')">${l}</button>`; });
         document.getElementById('ttLineTabs').innerHTML = lineHtml;
     } else { lineRow.style.display = 'none'; }
@@ -1194,7 +1091,7 @@ function renderTimetable() {
         let badgeText = dKind; if (dKind === "F") badgeText = "Fラ"; else if (dKind === "B") badgeText = "B各停"; else if (dKind === "G") badgeText = "G各停"; else if (dKind === "Sトレイン") badgeText = "S";
         
         let dispNo = t.tNo ? `${t.tNo.substring(0,3)}-${t.tNo.substring(3)}` : "不明";
-        let delayHtml = t.delay > 0 ? `<span class="t-delay" style="margin-left:6px; font-weight:normal;">${t.delay}分遅れ</span>` : "";
+        let delayHtml = t.delay > 0 ? `<span class="t-delay">${t.delay}分遅れ</span>` : "";
         let isActive = (t.tUid === ttState.currentTUid) ? "is-active" : "";
         let rowIdAttr = (t.tUid === ttState.currentTUid) ? "id='tt_active_row'" : "";
         let passClass = t.isPass ? "is-pass" : "";
@@ -1212,7 +1109,7 @@ function renderTimetable() {
                     <span class="dest-text">${t.dest}${t.dest.endsWith('線')?'直通':'行'}</span>
                     ${t.isPass ? '<span class="pass-badge">通過</span>' : ''}
                     ${t.isExtra ? '<span class="extra-badge">不定期</span>' : ''}
-                    ${t.isTerminal ? '<span class="terminal-badge">当駅止まり</span>' : ''}
+                    ${t.isTerminal ? '<span class="terminal-badge">当駅止</span>' : ''}
                     ${t.tUid === ttState.currentTUid ? '<span class="active-badge">選択中</span>' : ''}
                 </div>
                 <div style="font-size:12px; color:#777; margin-top:5px; display:flex; flex-wrap:wrap; gap:10px;">
@@ -1229,45 +1126,41 @@ function renderTimetable() {
     setTimeout(() => { let activeRow = document.getElementById('tt_active_row'); if (activeRow) activeRow.scrollIntoView({ behavior: 'auto', block: 'center' }); }, 30);
 }
 
-// ★ 時間帯ジャンプ関数
+// ★ 時間帯ジャンプ処理
 function jumpToTime(hour) {
-    const container = document.getElementById('ttModalContent');
-    const rows = container.querySelectorAll('.tt-row');
-    for (let row of rows) {
-        const timeDiv = row.querySelector('.tt-time');
-        if (!timeDiv) continue;
-        const timeText = timeDiv.innerText.trim();
-        const parts = timeText.split(':');
-        if (parts.length < 2) continue;
-        
-        let tHour = parseInt(parts[0], 10);
-        if (tHour < 4) tHour += 24; 
-        
-        let targetHour = hour;
-        if (targetHour < 4) targetHour += 24;
-        
-        if (tHour >= targetHour) {
-            row.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            row.classList.remove('highlight-flash');
-            void row.offsetWidth;
-            row.classList.add('highlight-flash');
-            break;
-        }
+  let container = document.getElementById('ttModalContent');
+  let rows = container.querySelectorAll('.tt-row');
+  for (let row of rows) {
+    let tTimeEl = row.querySelector('.tt-time');
+    if (!tTimeEl) continue;
+    
+    let parts = tTimeEl.innerText.split(':');
+    if(parts.length < 2) continue;
+    
+    let tHour = parseInt(parts[0], 10);
+    if (tHour < 4) tHour += 24;
+    
+    let targetHour = hour;
+    if (targetHour < 4) targetHour += 24;
+    
+    if (tHour >= targetHour) {
+      row.scrollIntoView({ behavior: 'auto', block: 'start' });
+      row.classList.remove('highlight-flash');
+      void row.offsetWidth;
+      row.classList.add('highlight-flash');
+      break;
     }
+  }
 }
 
 function closeTimetableModal(e) {
   if (e && e.target !== document.getElementById('timetableModal')) return;
-  closeTimetable();
-}
-
-function closeTimetable() {
   document.getElementById('timetableModal').style.display = 'none';
   if (targetTimetableStation) { window.location.href = window.location.pathname; }
 }
 
 function jumpToTrain(tUid) {
-  closeTimetable();
+  document.getElementById('timetableModal').style.display = 'none';
   if (targetTimetableStation) return; 
   const targetEl = document.getElementById(`train_row_${tUid}`);
   if (targetEl) {
@@ -1322,27 +1215,20 @@ async function fetchLiveApiData() {
 
               if (!newLiveCache[opKey]) newLiveCache[opKey] = {};
               newLiveCache[opKey][tNo] = {
-                  trainNo: tNo, kind: dispKind, dest: destStr,
-                  sourceName: info.sourceName, st: stName, t: actualTimeStr, delay: delay,
+                  trainNo: tNo, kind: dispKind, dest: destStr, sourceName: info.sourceName, st: stName, t: actualTimeStr, delay: delay,
                   affiliation: t.affiliation || "", orchestration: t.train_orchestration_number || ""
               };
           });
       }
-      
       if (!hasReceivedCloudData) {
-          apiLiveCache = newLiveCache; 
-          lastApiTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-          updateStatusDisplay();
-          if (!currentView.startsWith("import")) { updateDestDropdown(); updateFormDropdown(); render(); }
+          apiLiveCache = newLiveCache; lastApiTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+          updateStatusDisplay(); if (!currentView.startsWith("import")) { updateDestDropdown(); updateFormDropdown(); render(); }
       }
-  } catch (err) {
-      lastApiTime = "⚠ エラー (自動再試行中)"; updateStatusDisplay();
-  } finally { isFetchingApi = false; }
+  } catch (err) { lastApiTime = "⚠ エラー (自動再試行中)"; updateStatusDisplay(); } finally { isFetchingApi = false; }
 }
 
 async function fetchFromCloud() {
-  if (isFetchingCloud) return;
-  isFetchingCloud = true; document.getElementById("cloudStatus").textContent = "☁️ 受信中...";
+  if (isFetchingCloud) return; isFetchingCloud = true; document.getElementById("cloudStatus").textContent = "☁️ 受信中...";
   try {
     const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 45000); 
     const res = await fetch(GAS_URL + "?t=" + Date.now(), { signal: controller.signal });
@@ -1354,8 +1240,7 @@ async function fetchFromCloud() {
         let lastIdx = text.lastIndexOf('{"weekday"'); if (lastIdx === -1) lastIdx = text.lastIndexOf('{"appConfig"');
         if (lastIdx !== -1) {
             let recoveredText = text.substring(lastIdx); let endIdx = recoveredText.lastIndexOf('}');
-            if (endIdx !== -1) recoveredText = recoveredText.substring(0, endIdx + 1);
-            data = JSON.parse(recoveredText);
+            if (endIdx !== -1) recoveredText = recoveredText.substring(0, endIdx + 1); data = JSON.parse(recoveredText);
         } else { throw parseError; }
     }
     
@@ -1370,39 +1255,28 @@ async function fetchFromCloud() {
       updateTabs(); updateNotice();
       if (!currentView.startsWith("import")) { updateContextUI(selectedDaily); updateDestDropdown(); updateFormDropdown(); render(); }
       
-      lastCloudTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-      updateStatusDisplay();
-      
-      if (targetTimetableStation && !hasOpenedStandalone) {
-          hasOpenedStandalone = true; setTimeout(() => openStationTimetable(targetTimetableStation, null), 300);
-      }
+      lastCloudTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'}); updateStatusDisplay();
+      if (targetTimetableStation && !hasOpenedStandalone) { hasOpenedStandalone = true; setTimeout(() => openStationTimetable(targetTimetableStation, null), 300); }
     }
-  } catch (err) {
-    if (!hasReceivedCloudData) { lastCloudTime = "⚠ エラー (自動再試行中)"; } else { lastCloudTime += " [更新遅延]"; }
-    updateStatusDisplay();
-  } finally { isFetchingCloud = false; }
+  } catch (err) { if (!hasReceivedCloudData) { lastCloudTime = "⚠ エラー"; } else { lastCloudTime += " [遅延]"; } updateStatusDisplay(); } finally { isFetchingCloud = false; }
 }
 
 async function cloudLoop() {
     let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-    if (isTodayDaily && !isFetchingCloud) { await fetchFromCloud(); }
-    setTimeout(cloudLoop, 3000); 
+    if (isTodayDaily && !isFetchingCloud) { await fetchFromCloud(); } setTimeout(cloudLoop, 3000); 
 }
 
 async function apiLoop() {
     let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-    if (isTodayDaily && !isFetchingApi) { await fetchLiveApiData(); }
-    setTimeout(apiLoop, 3000); 
+    if (isTodayDaily && !isFetchingApi) { await fetchLiveApiData(); } setTimeout(apiLoop, 3000); 
 }
 
 function initCloudSync() {
   loadCache(); document.getElementById("cloudStatus").textContent = "☁️ 読込中... | 📡 読込中...";
-  fetchFromCloud(); fetchLiveApiData();
-  setTimeout(cloudLoop, 3000); setTimeout(apiLoop, 4500); 
+  fetchFromCloud(); fetchLiveApiData(); setTimeout(cloudLoop, 3000); setTimeout(apiLoop, 4500); 
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // ★ 時間帯ジャンプのインデックス生成 (04〜25時)
   let ibar = document.getElementById("ttIndexBar");
   if(ibar) {
       let hHtml = "";
