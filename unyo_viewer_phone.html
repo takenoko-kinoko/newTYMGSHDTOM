@@ -24,7 +24,7 @@
     /* --- スクロールメニュー（路線・タブ） --- */
     .scroll-menu { display: flex; overflow-x: auto; gap: 5px; padding: 6px 10px; background: #fff; border-top: 1px solid #eee; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .scroll-menu::-webkit-scrollbar { display: none; }
-    .sm-btn { flex: 0 0 auto; padding: 5px 12px; border-radius: 15px; border: 1px solid #ccc; background: #fafafa; font-size: 12px; font-weight: bold; color: #555; }
+    .sm-btn { flex: 0 0 auto; padding: 5px 12px; border-radius: 15px; border: 1px solid #ccc; background: #fafafa; font-size: 12px; font-weight: bold; color: #555; cursor: pointer; }
     .sm-btn.active { background: #333; color: #fff; border-color: #333; }
     .sm-btn.l-ty.active { background: var(--toyoko); border-color: var(--toyoko); }
     .sm-btn.l-mg.active { background: var(--meguro); border-color: var(--meguro); }
@@ -36,7 +36,8 @@
     /* --- メインコンテンツ --- */
     #container { padding: 8px; padding-bottom: 80px; }
     
-    .op-card { background: #fff; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #e0e0e0; }
+    /* ★ クラッシュ対策: 画面外のレンダリングをスキップしてメモリとCPUを節約 */
+    .op-card { background: #fff; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #e0e0e0; content-visibility: auto; contain-intrinsic-size: 200px; }
     .op-head { background: #f8f9fa; padding: 6px 10px; font-weight: bold; font-family: monospace; font-size: 16px; color: #d32f2f; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
     .op-src { font-size: 10px; font-family: sans-serif; background: #ddd; color: #555; padding: 2px 6px; border-radius: 4px; }
     
@@ -63,9 +64,13 @@
     /* --- 軽量化された履歴DOM --- */
     .t-hist { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; font-size: 11px; padding-bottom: 4px; }
     .t-hist::-webkit-scrollbar { display: none; }
-    .h-st { display: inline-block; padding: 2px 5px; background: #f0f0f0; border-radius: 3px; color: #444; margin-right: 4px; margin-bottom: 2px; border: 1px solid #e0e0e0; }
+    
+    /* ★ クラッシュ対策: 矢印(>)をタグではなくCSS擬似要素にしてDOM数を半減 */
+    .h-st { display: inline-flex; align-items: center; padding: 2px 4px; background: #f0f0f0; border-radius: 3px; color: #444; border: 1px solid #e0e0e0; margin-right: 14px; position: relative; cursor: pointer; }
+    .h-st:not(:last-child)::after { content: '▶'; position: absolute; right: -12px; color: #ccc; font-size: 8px; }
     .h-st.live { background: #e3f2fd; color: #1565c0; font-weight: bold; border-color: #bbdefb; }
-    .h-arr { color: #ccc; margin-right: 4px; font-size: 9px; }
+    .h-st:active { background: #e0e0e0; }
+    
     .tentative-mark { color: #d32f2f; font-weight: bold; font-size: 9px; margin-left: 1px; }
 
     /* バッジ類 */
@@ -77,6 +82,8 @@
     
     .x-badge { font-size: 9px; background: #9c27b0; color: #fff; padding: 1px 3px; border-radius: 2px; }
     .term-badge { font-size: 9px; background: #d32f2f; color: #fff; padding: 1px 3px; border-radius: 2px; }
+    .pass-badge { font-size: 9px; background: #eee; color: #777; padding: 1px 3px; border-radius: 2px; border: 1px solid #ccc; }
+    .active-badge { font-size: 9px; background: #fbc02d; color: #333; padding: 1px 4px; border-radius: 2px; font-weight: bold; }
 
     /* --- フィルターモーダル（全画面） --- */
     #filterModal { display: none; position: fixed; inset: 0; background: #fff; z-index: 2000; flex-direction: column; }
@@ -94,19 +101,21 @@
     .tt-ctrl { background: #f8f9fa; padding: 8px 10px; border-bottom: 1px solid #ddd; display: flex; flex-direction: column; gap: 6px; }
     .tt-tab-group { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
     .tt-tab-group::-webkit-scrollbar { display: none; }
-    .tt-btn { background: #fff; border: 1px solid #ccc; padding: 5px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; color: #555; white-space: nowrap; }
+    .tt-btn { background: #fff; border: 1px solid #ccc; padding: 5px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; color: #555; white-space: nowrap; cursor: pointer; }
     .tt-btn.active { background: #333; color: #fff; border-color: #333; }
     .tt-body { flex: 1; overflow-y: auto; background: #fafafa; }
     
-    .tt-row { padding: 12px 10px; border-bottom: 1px solid #eee; display: flex; gap: 10px; background: #fff; align-items: center; }
+    .tt-row { padding: 12px 10px; border-bottom: 1px solid #eee; display: flex; gap: 10px; background: #fff; align-items: center; cursor: pointer; }
     .tt-row.active { background: #fffde7; border-left: 4px solid #fbc02d; }
     .tt-row.pass { background: #fdfdfd; }
     .tt-row.pass .tt-time { color: #aaa; font-size: 14px; }
+    
     .tt-time-box { width: 50px; text-align: center; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; }
     .tt-time { font-size: 16px; font-weight: bold; color: #1976d2; font-family: monospace; }
-    .tt-dir { font-size: 9px; font-weight: bold; padding: 1px 3px; border-radius: 2px; }
+    .tt-dir { font-size: 9px; font-weight: bold; padding: 1px 3px; border-radius: 2px; line-height: 1; white-space: nowrap; }
     .tt-dir.up { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
     .tt-dir.down { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+    
     .tt-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
     .tt-info-top { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
     .tt-info-sub { font-size: 11px; color: #777; display: flex; gap: 8px; flex-wrap: wrap; }
@@ -133,17 +142,17 @@
   <div id="noticeBar"></div>
 
   <div class="scroll-menu" id="quickTabs">
-    <div class="sm-btn active" onclick="setLineFilter('all')">全路線</div>
-    <div class="sm-btn l-ty" onclick="setLineFilter('toyoko')">東横線</div>
-    <div class="sm-btn l-mg" onclick="setLineFilter('meguro')">目黒線</div>
-    <div class="sm-btn l-dt" onclick="setLineFilter('dento')">田園都市線</div>
-    <div class="sm-btn l-om" onclick="setLineFilter('oimachi')">大井町線</div>
-    <div class="sm-btn" onclick="setLineFilter('extra_tymg')">非定期(東)</div>
-    <div class="sm-btn" onclick="setLineFilter('extra_dtom')">非定期(田)</div>
+    <div class="sm-btn active" onclick="setLineFilter('all', this)">全路線</div>
+    <div class="sm-btn l-ty" onclick="setLineFilter('toyoko', this)">東横線</div>
+    <div class="sm-btn l-mg" onclick="setLineFilter('meguro', this)">目黒線</div>
+    <div class="sm-btn l-dt" onclick="setLineFilter('dento', this)">田園都市線</div>
+    <div class="sm-btn l-om" onclick="setLineFilter('oimachi', this)">大井町線</div>
+    <div class="sm-btn" onclick="setLineFilter('extra_tymg', this)">非定期(東)</div>
+    <div class="sm-btn" onclick="setLineFilter('extra_dtom', this)">非定期(田)</div>
     <div style="width:1px; background:#ccc; margin:0 5px;"></div>
-    <div class="sm-btn" id="tabDaily" onclick="changeTab('daily')">毎日記録</div>
-    <div class="sm-btn" id="tabWeekday" onclick="changeTab('weekday')">平日累計</div>
-    <div class="sm-btn" id="tabHoliday" onclick="changeTab('holiday')">土休累計</div>
+    <div class="sm-btn" id="tabDaily" onclick="changeTab('daily', this)">毎日記録</div>
+    <div class="sm-btn" id="tabWeekday" onclick="changeTab('weekday', this)">平日累計</div>
+    <div class="sm-btn" id="tabHoliday" onclick="changeTab('holiday', this)">土休累計</div>
   </div>
 </header>
 
@@ -200,7 +209,7 @@
       <select id="destFilter" onchange="applyFilters()"></select>
     </div>
     <label class="fm-toggle"><input type="checkbox" id="daisoFilter" onchange="applyFilters()"> 代走のみ表示</label>
-    <label class="fm-toggle"><input type="checkbox" id="formatFilter" onchange="applyFilters()"> 編成番号で表示</label>
+    <label class="fm-toggle"><input type="checkbox" id="formatFilter" onchange="applyFilters()" checked> 編成番号で表示</label>
     <label class="fm-toggle"><input type="checkbox" id="runningFilter" onchange="applyFilters()"> 走行中のみ表示</label>
     
     <button style="margin-top:auto; padding:12px; background:#1976d2; color:#fff; font-weight:bold; border-radius:6px; border:none; font-size:16px;" onclick="document.getElementById('filterModal').style.display='none'">適用して閉じる</button>
@@ -231,7 +240,7 @@
 
 <script>
 // =========================================
-// 基盤ロジック（PC版と完全互換）
+// 基盤ロジック（PC版最新機能互換）
 // =========================================
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz2kiJGu75UH_dfN_3qZ3VEzgUacc7dwPM6FJE-ab-V-sR1W74QE96zhi8KPF6gh0Qo/exec";
 let logs = { weekday: {}, holiday: {}, daily: {}, appConfig: {} };
@@ -353,7 +362,7 @@ function forceSync() {
 async function fetchLiveApiData() {
   if (hasReceivedCloudData || isFetchingApi) return; 
   isFetchingApi = true;
-  const now = new Date(); let targetDateForCalc = new Date(now.getTime() - 4 * 60 * 60 * 1000); let dayType = (targetDateForCalc.getDay() === 0 || targetDateForCalc.getDay() === 6) ? 'holiday' : 'weekday'; // 簡易判定
+  const now = new Date(); let targetDateForCalc = new Date(now.getTime() - 4 * 60 * 60 * 1000); let dayType = (targetDateForCalc.getDay() === 0 || targetDateForCalc.getDay() === 6) ? 'holiday' : 'weekday'; 
   const newLiveCache = {};
   try {
       for(let api of API_ENDPOINTS) {
@@ -435,15 +444,19 @@ function updateTabs() {
   }
 }
 
-function changeTab(tabId) { 
+function changeTab(tabId, elBtn = null) { 
   currentView = tabId; 
   document.getElementById('tabWeekday').classList.remove('active');
   document.getElementById('tabHoliday').classList.remove('active');
   document.getElementById('tabDaily').classList.remove('active');
   
-  if(tabId === 'weekday') document.getElementById('tabWeekday').classList.add('active');
-  if(tabId === 'holiday') document.getElementById('tabHoliday').classList.add('active');
-  if(tabId === 'daily') document.getElementById('tabDaily').classList.add('active');
+  if (elBtn) {
+      elBtn.classList.add('active');
+  } else {
+      if(tabId === 'weekday') document.getElementById('tabWeekday').classList.add('active');
+      if(tabId === 'holiday') document.getElementById('tabHoliday').classList.add('active');
+      if(tabId === 'daily') document.getElementById('tabDaily').classList.add('active');
+  }
   
   document.getElementById('dateSelectArea').style.display = (tabId === 'daily') ? 'flex' : 'none';
   
@@ -451,12 +464,12 @@ function changeTab(tabId) {
   render(); 
 }
 
-function setLineFilter(lineId) {
+function setLineFilter(lineId, elBtn) {
     currentLine = lineId;
     document.querySelectorAll('#quickTabs .sm-btn').forEach(el => {
         if(!el.id || !el.id.startsWith('tab')) el.classList.remove('active');
     });
-    event.target.classList.add('active');
+    elBtn.classList.add('active');
     render();
 }
 
@@ -481,7 +494,7 @@ function updateDestDropdown() {
 }
 
 // ----------------------------------------------------
-// 描画エンジン（DOM最小化版）
+// ★ 改修: 描画エンジン（DOM超最小化・擬似要素活用版）
 // ----------------------------------------------------
 function render() {
   const container = document.getElementById("container");
@@ -589,20 +602,17 @@ function render() {
           let formTag = (aff || orch) ? `<span class="t-form">${fObj.dispAff ? `[${fObj.dispAff}] ` : ""}${useFmt ? fObj.fNo : orch}</span>` : "";
           let remarksTag = (t.remarks && t.remarks.trim() !== "") ? `<div class="t-remarks">✎ ${t.remarks}</div>` : "";
           
-          // スマホ向け超軽量履歴DOM
+          // ★ クラッシュ対策: タグを極限まで減らした軽量履歴生成
           let hHtml = `<div class="t-hist">`;
           let arrMax = t.history.length;
-          // 全部描画すると重いので、最大10駅程度に間引く（もしくはCSSのホワイトスペースでスクロールさせる）
-          // 今回は横スクロール対応なので全部描画するが、タグを極力減らす。
           for(let i=0; i<arrMax; i++) {
               let h = t.history[i];
               let mark = h.delay > 0 ? `<sup class="tentative-mark">⁺${h.delay}</sup>` : "";
-              hHtml += `<span class="h-st clickable-st" onclick="openStationTimetable('${h.st}', '${tUid}')">${h.t}${mark} ${h.st}</span>`;
-              if (i < arrMax -1) hHtml += `<span class="h-arr">></span>`;
+              hHtml += `<span class="h-st" onclick="openStationTimetable('${h.st}', '${tUid}')">${h.t}${mark} ${h.st}</span>`;
           }
           if (showLiveBadge) {
               let mark = currentDelay > 0 ? `<sup class="tentative-mark">⁺${currentDelay}</sup>` : "";
-              hHtml += `<span class="h-arr">></span><span class="h-st live">${currentPosT}${mark} ${currentPosSt}(Live)</span>`;
+              hHtml += `<span class="h-st live">${currentPosT}${mark} ${currentPosSt}(Live)</span>`;
           }
           hHtml += `</div>`;
 
@@ -693,11 +703,11 @@ function render() {
     }
   });
 
-  if (container) container.innerHTML = html || "<div style='padding:40px; text-align:center; color:#888; font-weight:bold;'>指定した条件に一致する列車はありません。</div>";
+  if (container) container.innerHTML = html || "<div style='padding:40px; text-align:center; color:#888; font-weight:bold;'>指定した条件に一致する運用はありません。</div>";
 }
 
 // =========================================
-// 時刻表＆ジャンプ機能（上下線完全分離版）
+// 時刻表＆ジャンプ機能（PC版互換）
 // =========================================
 function getTrainDirection(tr) {
     if (!tr || !tr.trainNo) return 1; 
@@ -824,7 +834,6 @@ function renderTimetable() {
                 <span class="tt-time">${t.time}</span>
                 ${ttState.dirMode === 'both' ? dirBadge : ''}
             </div>
-            
             <div class="tt-info">
                 <div class="tt-info-top">
                     <span class="k-badge k-${dKind}">${badgeText}</span>
@@ -865,7 +874,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('container').style.display = 'none';
       document.body.style.background = 'rgba(0,0,0,0.7)';
   }
-  changeTab('daily'); initCloudSync(); 
+  changeTab('daily', document.getElementById('tabDaily')); initCloudSync(); 
 });
 </script>
 </body>
