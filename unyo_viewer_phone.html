@@ -2,8 +2,8 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
-  <title>東急線 運用ビューワー（Mobile）</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
+  <title>東急線 運用ビューワー (Mobile)</title>
   <style>
     :root { 
       --toyoko: #d90240; --meguro: #009cd3; --dento: #01aa8f; 
@@ -20,13 +20,11 @@
     
     .btn-action { background: #333; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; white-space: nowrap; flex-shrink: 0; transition: 0.2s; }
     .btn-action:hover { opacity: 0.8; }
-    .btn-export { background: #1976d2; }
     .btn-sync { background: #ff9800; color: #fff; }
-    .btn-reset { background: #c62828; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; }
     
     #cloudStatus { font-family: monospace; font-size: 11px; color: #01aa8f; font-weight: bold; background: #e8f5e9; padding: 6px 8px; border-radius: 4px; text-align: center; white-space: nowrap; flex-shrink: 0; min-width: 140px; }
 
-    #noticeBar { background: #ffebee; color: #d32f2f; padding: 12px 20px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #ffcdd2; overflow: hidden; display: none; letter-spacing: 1px; }
+    #noticeBar { background: #ffebee; color: #d32f2f; padding: 10px 15px; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ffcdd2; overflow: hidden; display: none; }
     .marquee-container { width: 100%; overflow: hidden; white-space: nowrap; box-sizing: border-box; }
     .marquee-content { display: inline-block; padding-left: 100%; animation: marquee 20s linear infinite; }
     @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
@@ -45,10 +43,8 @@
     .filter-item { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .filter-label { font-weight: bold; color: #555; font-size: 12px; white-space: nowrap; }
     .filter-select { padding: 6px 8px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; font-weight: bold; min-width: 100px; max-width: 140px; }
-    
-    .running-toggle { cursor:pointer; font-size:12px; font-weight:bold; color:#1976d2; display:flex; align-items:center; gap:4px; background:#e3f2fd; padding:6px 10px; border-radius:4px; border:1px solid #bbdefb; white-space:nowrap; }
 
-    #container { padding: 15px; max-width: 1200px; margin: 0 auto; width: 100%; padding-bottom: 90px; } /* 余白追加 */
+    #container { padding: 15px; max-width: 1200px; margin: 0 auto; width: 100%; padding-bottom: 90px; }
     .line-section { margin-bottom: 25px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid var(--border-color); }
     .line-header { padding: 10px 15px; font-size: 15px; font-weight: bold; color: #fff; letter-spacing: 1px; }
     .line-body { padding: 10px; }
@@ -56,7 +52,8 @@
     .bg-toyoko { background: var(--toyoko); } .bg-meguro { background: var(--meguro); } .bg-dento { background: var(--dento); }
     .bg-oimachi { background: var(--oimachi); } .bg-shinyoko { background: var(--shinyoko); } .bg-extra { background: var(--extra); }
 
-    .op-box { display: flex; align-items: stretch; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
+    /* ★ 処理落ち対策: content-visibilityで画面外の描画をスキップ */
+    .op-box { display: flex; align-items: stretch; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 10px; overflow: hidden; content-visibility: auto; contain-intrinsic-size: auto 150px; }
     .op-left { width: 85px; background: #f8f9fa; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; flex-shrink: 0; }
     .op-no { font-weight: bold; font-family: monospace; font-size: 18px; color: #d32f2f; text-align: center; }
     .src-tag { font-size: 10px; background: #ddd; padding: 2px 4px; border-radius: 4px; color: #555; margin-top: 6px; text-align: center; line-height: 1.2; word-break: break-all;}
@@ -81,15 +78,19 @@
     .t-pos { width: 140px; font-size: 13px; color: #222; flex-shrink: 0; padding-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-right: 1px dashed #eee; }
     .t-pos strong { color: #1976d2; margin-right: 4px; }
     
-    .t-hist { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; display: flex; align-items: center; gap: 4px; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+    .t-hist { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; display: flex; align-items: center; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
     .t-hist::-webkit-scrollbar { height: 6px; display: block; }
     .t-hist::-webkit-scrollbar-track { background: transparent; }
     .t-hist::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
-    .t-hist::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
     
-    .hist-item { background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; border-bottom: 2px solid #ccc; display: inline-flex; align-items: center; gap: 4px; }
+    /* ★ 処理落ち対策: 矢印はCSSで描写しDOMタグ数を半減 */
+    .hist-item { background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; border-bottom: 2px solid #ccc; display: inline-flex; align-items: center; gap: 4px; position: relative; margin-right: 14px; cursor: pointer; }
+    .hist-item::after { content: '▶'; position: absolute; right: -12px; color: #aaa; font-size: 9px; top: 50%; transform: translateY(-50%); }
+    .hist-item:last-child::after { content: ''; }
+    
     .hist-item.is-ekikan { background: transparent; border: none; color: #888; font-size: 10px; padding: 2px 4px; }
-    .hist-item.live-badge { background: #e3f2fd; border-color: #1976d2; color: #1565c0; font-weight: bold; }
+    .hist-item.live-badge { background: #e3f2fd; border-color: #1976d2; color: #1565c0; font-weight: bold; margin-right: 0; }
+    .hist-item.live-badge::after { content: ''; } 
     .hist-item strong { color: #444; }
     .tentative-mark { color: #d32f2f; font-weight: bold; font-size: 11px; margin-left: 1px; }
 
@@ -108,8 +109,9 @@
       .filter-bar { padding: 8px 10px; gap: 8px; }
       .filter-select { font-size: 12px; padding: 5px 6px; }
       .op-box { flex-direction: column; }
-      .op-left { width: 100%; flex-direction: row; justify-content: space-between; border-right: none; border-bottom: 1px solid #e0e0e0; padding: 8px 15px; box-sizing: border-box; }
-      .src-tag { margin-top: 0; font-size: 11px; }
+      .op-left { width: 100%; flex-direction: row; justify-content: flex-start; gap: 15px; border-right: none; border-bottom: 1px solid #e0e0e0; padding: 8px 15px; box-sizing: border-box; align-items: center; }
+      .op-no { font-size: 16px; margin: 0; }
+      .src-tag { margin-top: 0; font-size: 11px; margin-left: auto; }
       .train-row { flex-direction: column; align-items: stretch; gap: 8px; padding: 12px; }
       .t-basic { width: 100%; border-bottom: 1px dashed #eee; padding-bottom: 8px; margin-bottom: 0; }
       .t-dest-text { font-size: 15px; white-space: normal; line-height: 1.3; }
@@ -119,38 +121,62 @@
     }
 
     /* --- FAB（浮遊フィルターボタン） --- */
-    .fab { position: fixed; bottom: 20px; right: 20px; background: #1976d2; color: #fff; width: 56px; height: 56px; border-radius: 28px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1500; cursor: pointer; border: none; font-size: 24px; }
+    .fab { position: fixed; bottom: 20px; right: 20px; background: #1976d2; color: #fff; width: 56px; height: 56px; border-radius: 28px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1500; cursor: pointer; border: none; }
     .fab:active { background: #115293; transform: scale(0.95); }
 
+    /* --- モーダル全般 --- */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999; justify-content:center; align-items:center; padding:0; }
+    .tt-modal-header { background: #1976d2; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;}
+    .tt-modal-header h3 { margin: 0; font-size: 16px; color: #fff; font-weight: bold; letter-spacing: 1px; }
+    .tt-modal-header .btn-close { background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+
     /* --- フィルターモーダル --- */
-    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; padding:0; }
-    .fm-item { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
-    .fm-item label { font-size: 13px; font-weight: bold; color: #555; }
-    .fm-toggle-row { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; color: #333; cursor: pointer; }
+    .filter-modal-box { background:#fff; width:100%; height:85vh; margin-top:auto; border-radius:12px 12px 0 0; display:flex; flex-direction:column; box-shadow:0 -10px 40px rgba(0,0,0,0.3); }
+    .fm-item { display:flex; flex-direction:column; gap:6px; margin-bottom: 12px;}
+    .fm-item label { font-weight:bold; font-size:12px; color:#555; }
+    .fm-item select, .fm-item input { padding:10px; font-size:14px; border:1px solid #ccc; border-radius:6px; background:#f9f9f9; font-weight: bold; color: #333; }
+    .fm-toggle-row { display:flex; align-items:center; gap:8px; padding:12px; border-radius:6px; font-weight:bold; font-size:14px; color:#333; cursor:pointer; }
     .fm-toggle-row input { transform: scale(1.2); }
 
-    /* --- 時刻表モーダルとハイライト用スタイル --- */
-    .modal-box { background:#fff; padding:0; border-radius:10px; width:100%; max-width:550px; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,0.3); overflow:hidden; }
-    .modal-content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; background:#fafafa; margin:0; }
+    /* --- 時刻表モーダル --- */
+    .modal-box { background:#fff; padding:0; border-radius:10px; width:95%; max-width:550px; height:85vh; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,0.3); overflow:hidden; }
+    .tt-controls-area { background: #f8f9fa; padding: 10px 15px; border-bottom: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;}
+    .tt-main-wrapper { display: flex; flex: 1; overflow: hidden; position: relative; }
+    .modal-content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; background:#fafafa; padding-bottom: 30px; }
     
-    .tt-row { display:flex; padding:10px 12px; border-bottom:1px solid #eee; cursor:pointer; align-items:center; gap:12px; transition:0.2s; background:#fff; }
-    .tt-row:hover { background:#e3f2fd; }
+    /* ★ インデックスバー (時間帯ジャンプ) */
+    .tt-index-bar { width: 30px; background: #fff; border-left: 1px solid #eee; display: flex; flex-direction: column; z-index: 10; overflow-y: auto; scrollbar-width: none; flex-shrink: 0; }
+    .tt-index-bar::-webkit-scrollbar { display: none; }
+    .tt-index-btn { flex: 1; min-height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: #777; cursor: pointer; user-select: none; border-bottom: 1px solid #f5f5f5;}
+    .tt-index-btn:active { background: #e3f2fd; color: #1976d2; }
+
+    .tt-row { display:flex; padding:12px 10px; border-bottom:1px solid #eee; cursor:pointer; align-items:center; gap:10px; transition:0.2s; background:#fff; }
+    .tt-row.is-active { background:#fffde7; border-left:5px solid #fbc02d; }
+    .tt-row.is-pass { background:#fdfdfd; }
+    .tt-row.is-pass .tt-time { color:#aaa; font-size:15px; }
+    .tt-row.is-pass .dest-text { color:#888; }
     
-    .tt-row.is-active { background:#fff9c4; border-left:5px solid #fbc02d; font-weight:bold; }
-    .tt-row.is-active:hover { background:#fff59d; }
+    .tt-time-area { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 55px; flex-shrink: 0; gap: 4px; }
+    .tt-time { font-weight:bold; font-size:17px; color:#1976d2; font-family: monospace; letter-spacing: -0.5px; line-height: 1; text-align: center; }
     
-    .tt-time { font-weight:bold; font-size:16px; color:#1976d2; width:50px; flex-shrink:0; text-align:center; }
-    .tt-info { flex:1; display:flex; flex-direction:column; }
-    .clickable-st:hover { background:#e0e0e0 !important; opacity:0.8; }
+    .tt-dir-badge { font-size: 10px; font-weight: bold; border-radius: 3px; padding: 2px 4px; line-height: 1; white-space: nowrap; }
+    .tt-dir-up { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+    .tt-dir-down { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+
+    .tt-info { flex:1; display:flex; flex-direction:column; min-width: 0; }
+    .dest-text { color: #111; font-size: 14px; font-weight: bold; white-space: nowrap; }
+    
+    .extra-badge { font-size:10px; background:#9c27b0; color:#fff; padding:2px 4px; border-radius:3px; font-weight:bold; }
+    .terminal-badge { font-size:10px; background:#d32f2f; color:#fff; padding:2px 4px; border-radius:3px; font-weight:bold; }
+    .active-badge { font-size:10px; background:#fbc02d; color:#333; padding:2px 5px; border-radius:3px; font-weight:bold; margin-left:auto; }
+    .pass-badge { font-size:10px; background:#eee; color:#777; padding:2px 4px; border-radius:3px; border:1px solid #ccc; font-weight:bold; }
     
     .highlight-flash { animation: flash-bg 2.5s ease-out; }
     @keyframes flash-bg { 0% { background-color: #ffeb3b; } 100% { background-color: transparent; } }
 
-    /* ★ インデックスバー */
-    .tt-index-bar { width: 35px; background: #fff; border-left: 1px solid #eee; display: flex; flex-direction: column; overflow-y: auto; scrollbar-width: none; flex-shrink: 0; }
-    .tt-index-bar::-webkit-scrollbar { display: none; }
-    .tt-index-btn { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #666; cursor: pointer; min-height: 25px; border-bottom: 1px solid #f5f5f5; user-select: none; }
-    .tt-index-btn:active { background: #e3f2fd; color: #1976d2; }
+    .tt-tab-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tt-tab-btn { border: 1px solid #ccc; background: #fff; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; color: #555; transition: 0.2s; font-size: 12px; }
+    .tt-tab-btn.active { background: #333; color: #fff; border-color: #333; }
   </style>
 </head>
 <body>
@@ -159,9 +185,7 @@
   <div class="header-top">
     <h1>東急線 運用ビューワー</h1>
     <div class="header-right">
-      <button class="btn-action" onclick="location.href='index.html'+location.search">路線図</button>
       <button class="btn-action btn-sync" onclick="forceSync()">🔄 強制同期</button>
-      <button class="btn-action btn-export" onclick="exportData()">💾 JSON保存</button>
       <div id="cloudStatus">☁️ 待機中</div>
     </div>
   </div>
@@ -182,34 +206,35 @@
     
     <div class="filter-item"><span class="filter-label">路線:</span>
       <select id="lineFilter" class="filter-select" onchange="updateFormDropdown(); render();">
-        <option value="all">すべての路線</option>
+        <option value="all">全路線</option>
         <option value="toyoko">東横線</option>
         <option value="meguro">目黒線</option>
         <option value="dento">田園都市線</option>
         <option value="oimachi">大井町線</option>
-        <option value="extra_tymg">東横・目黒非定期運用</option>
-        <option value="extra_dtom">田都・大井非定期運用</option>
+        <option value="extra_tymg">非定期(東)</option>
+        <option value="extra_dtom">非定期(田)</option>
       </select>
     </div>
     
     <div class="filter-item"><span class="filter-label">運番:</span>
-        <input type="text" id="opNumSearch" autocomplete="off" data-lpignore="true" class="filter-select" placeholder="例: 01K" oninput="updateFormDropdown(); render();" style="width: 80px;">
+        <input type="text" id="opNumSearch" autocomplete="off" class="filter-select" placeholder="例: 01K" oninput="updateFormDropdown(); render();" style="width: 80px;">
     </div>
   </div>
 </div>
 
 <div id="container"></div>
 
-<button class="fab" onclick="document.getElementById('filterModal').style.display='flex'">🔍</button>
+<button class="fab" onclick="document.getElementById('filterModal').style.display='flex'">
+  <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+</button>
 
 <div id="filterModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
-  <div class="modal-box" style="height:90vh; margin-top:auto; border-radius:16px 16px 0 0; padding:0; display:flex; flex-direction:column; max-width: 600px;">
-    <div style="background:#1976d2; padding:15px; color:#fff; display:flex; justify-content:space-between; align-items:center;">
-      <h3 style="margin:0; font-size:16px;">詳細フィルター</h3>
-      <button style="background:transparent; color:#fff; border:none; font-size:24px; line-height:1; cursor:pointer;" onclick="document.getElementById('filterModal').style.display='none'">×</button>
+  <div class="filter-modal-box" style="max-width: 600px; margin: auto auto 0 auto;">
+    <div class="tt-modal-header">
+      <h3 style="margin:0;">詳細フィルター</h3>
+      <button class="btn-close" style="background:transparent; font-size:24px; padding:0 10px;" onclick="document.getElementById('filterModal').style.display='none'">×</button>
     </div>
-    <div style="padding:15px; overflow-y:auto; flex:1; background:#fafafa; display:flex; flex-direction:column; gap:5px;">
-      
+    <div class="modal-content" style="padding:15px; display:flex; flex-direction:column; background:#fff;">
       <div class="fm-item">
         <label>区間:</label>
         <select id="sectionFilter" class="filter-select" style="width:100%; max-width:none;" onchange="updateDestDropdown(); updateFormDropdown(); render();">
@@ -229,7 +254,7 @@
       </div>
 
       <div class="fm-item">
-        <label>運用:</label>
+        <label>運用会社:</label>
         <select id="companyFilter" class="filter-select" style="width:100%; max-width:none;" onchange="updateFormDropdown(); render()">
           <option value="all">すべて</option>
           <option value="K">東急車 (K)</option>
@@ -271,24 +296,38 @@
       </div>
       
       <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
-        <label class="fm-toggle-row" style="background:#fff3e0; border:1px solid #ffcc80;"><input type="checkbox" id="daisoFilter" onchange="updateFormDropdown(); render()"> 代走のみ</label>
-        <label class="fm-toggle-row" style="background:#e8eaf6; border:1px solid #9fa8da;"><input type="checkbox" id="formatFilter" onchange="updateFormDropdown(); render();" checked> 🚃 編成表記</label>
-        <label class="fm-toggle-row" style="background:#e8f5e9; border:1px solid #a5d6a7;"><input type="checkbox" id="runningFilter" onchange="updateFormDropdown(); render()"> 🚄 走行中のみ</label>
+        <label class="fm-toggle-row" style="background:#fff3e0; border:1px solid #ffcc80;"><input type="checkbox" id="daisoFilter" onchange="updateFormDropdown(); render()"> 代走のみ表示</label>
+        <label class="fm-toggle-row" style="background:#e8eaf6; border:1px solid #9fa8da;"><input type="checkbox" id="formatFilter" onchange="updateFormDropdown(); render();" checked> 🚃 編成表記を有効化</label>
+        <label class="fm-toggle-row" style="background:#e8f5e9; border:1px solid #a5d6a7;"><input type="checkbox" id="runningFilter" onchange="updateFormDropdown(); render()"> 🚄 走行中のみ表示</label>
       </div>
     </div>
-    <div style="padding:15px; background:#fff; border-top:1px solid #ddd;">
+    <div style="padding:15px; background:#fff; border-top:1px solid #ddd; flex-shrink:0;">
       <button style="width:100%; padding:14px; background:#1976d2; color:#fff; border:none; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer;" onclick="document.getElementById('filterModal').style.display='none'">適用して閉じる</button>
     </div>
   </div>
 </div>
 
 <div id="timetableModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
-  <div class="modal-box" style="padding:0; display:flex; flex-direction:column; overflow:hidden;">
-    <div style="display:flex; justify-content:space-between; align-items:center; background:#1976d2; padding:15px; color:#fff;">
-      <h3 id="ttModalTitle" style="margin:0; font-size:16px; font-weight:bold;">駅名 時刻表</h3>
-      <button class="btn-action" style="background:rgba(255,255,255,0.2); padding:6px 12px;" onclick="document.getElementById('timetableModal').style.display='none'">✕</button>
+  <div class="modal-box">
+    <div class="tt-modal-header">
+      <h3 id="ttModalTitle">駅名 時刻表</h3>
+      <button class="btn-close" onclick="document.getElementById('timetableModal').style.display='none'">✕</button>
     </div>
-    <div class="tt-main-wrapper" style="display:flex; flex:1; overflow:hidden; position:relative;">
+    <div class="tt-controls-area">
+      <div style="display:flex; gap:10px; align-items:center;">
+        <span style="font-weight:bold; font-size:12px; color:#666; width:35px; flex-shrink:0;">方向:</span>
+        <div class="tt-tab-group" id="ttDirTabs">
+          <button class="tt-tab-btn" onclick="setTtDir('up')" id="ttTabUp">上り</button>
+          <button class="tt-tab-btn" onclick="setTtDir('down')" id="ttTabDown">下り</button>
+          <button class="tt-tab-btn" onclick="setTtDir('both')" id="ttTabBoth">同時表示</button>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;" id="ttLineControlRow">
+        <span style="font-weight:bold; font-size:12px; color:#666; width:35px; flex-shrink:0;">路線:</span>
+        <div class="tt-tab-group" id="ttLineTabs"></div>
+      </div>
+    </div>
+    <div class="tt-main-wrapper">
       <div id="ttModalContent" class="modal-content"></div>
       <div id="ttIndexBar" class="tt-index-bar"></div>
     </div>
@@ -309,6 +348,15 @@ let currentView = "weekday";
 let isFetchingApi = false; let isFetchingCloud = false; let publicHolidays = {};
 let lastCloudTime = ""; let lastApiTime = "";
 
+let targetTimetableStation = null;
+
+let ttState = {
+  stName: "", trains: [], dirMode: "both", lineMode: "all", availableLines: [], currentTUid: null
+};
+
+// レンダリング制御用トークン（プログレッシブレンダリングの中断用）
+let renderToken = 0;
+
 const API_ENDPOINTS = [{id:'toyoko',url:"https://w-tid.jp/tokyu/toyoko.json"},{id:'meguro',url:"https://w-tid.jp/tokyu/meguro.json"},{id:'shinyokohama',url:"https://w-tid.jp/tokyu/shinyokohama.json"},{id:'dento',url:"https://w-tid.jp/tokyu/dento.json"},{id:'oimachi',url:"https://w-tid.jp/tokyu/oimachi.json"}];
 const DEST_MAP_TYMG = { 0:"", 33:"副都心線", 54:"三田線", 67:"南北線", 71:"目黒", 73:"武蔵小山", 76:"大岡山", 77:"奥沢", 78:"渋谷", 84:"自由が丘", 88:"武蔵小杉", 89:"元住吉", 90:"日吉", 93:"菊名", 98:"横浜", 103:"元町・中華街", 108:"新横浜", 111:"相鉄線" };
 const DEST_MAP_DTOM = { 0:"", 45:"半蔵門線", 51:"大井町", 58:"大岡山", 60:"自由が丘", 65:"渋谷", 69:"用賀", 71:"二子玉川", 74:"溝の口", 75:"梶が谷", 78:"鷺沼", 80:"あざみ野", 86:"長津田", 91:"中央林間", 95:"恩田", 96:"こどもの国", 137:"元住吉" };
@@ -316,7 +364,6 @@ const SECTION_KIND_MAP = { "all": ["all", "各停", "B", "G", "準急", "急行"
 const MASTER_LINE_ORDERS = { "東横線": ["副都心線", "渋谷", "中目黒", "自由が丘", "武蔵小杉", "元住吉", "日吉", "菊名", "横浜", "元町・中華街", "新横浜", "相鉄線"], "目黒線": ["三田線", "南北線", "目黒", "武蔵小山", "大岡山", "奥沢", "武蔵小杉", "元住吉", "日吉", "新横浜", "相鉄線"], "新横浜線": ["副都心線", "三田線", "南北線", "渋谷", "目黒", "日吉", "新横浜", "相鉄線"], "田園都市線": ["半蔵門線", "渋谷", "用賀", "二子玉川", "溝の口", "梶が谷", "鷺沼", "あざみ野", "長津田", "中央林間", "大井町", "大岡山", "恩田", "こどもの国"], "大井町線": ["大井町", "大岡山", "自由が丘", "二子玉川", "溝の口", "鷺沼", "長津田", "恩田", "中央林間"] };
 const STATION_MAP = { 26:"渋谷", 908:"代官山", 909:"中目黒", 910:"祐天寺", 911:"学芸大学", 912:"都立大学", 913:"自由が丘", 914:"田園調布", 915:"多摩川", 916:"新丸子", 57:"武蔵小杉", 918:"元住吉", 919:"日吉", 920:"綱島", 921:"大倉山", 108:"菊名", 923:"妙蓮寺", 924:"白楽", 925:"東白楽", 926:"反町", 5:"横浜", 24:"目黒", 929:"不動前", 930:"武蔵小山", 931:"西小山", 932:"洗足", 933:"大岡山", 934:"奥沢", 942:"池尻大橋", 943:"三軒茶屋", 944:"駒沢大学", 945:"桜新町", 946:"用賀", 947:"二子玉川", 948:"二子新地", 949:"高津", 950:"溝の口", 951:"梶が谷", 952:"宮崎台", 953:"宮前平", 954:"鷺沼", 955:"たまプラーザ", 956:"あざみ野", 957:"江田", 958:"市が尾", 959:"藤が丘", 960:"青葉台", 961:"田奈", 114:"長津田", 963:"つくし野", 964:"すずかけ台", 965:"南町田", 966:"つきみ野", 967:"中央林間", 494:"大井町", 969:"下神明", 970:"戸越公園", 971:"中延", 972:"荏原町", 973:"旗の台", 974:"北千束", 976:"緑が丘", 978:"九品仏", 979:"尾山台", 980:"等々力", 981:"上野毛", 982:"新綱島", 983:"新横浜" };
 const ST_COLOR_MAP = { "代官山":"var(--toyoko)","中目黒":"var(--toyoko)","祐天寺":"var(--toyoko)","学芸大学":"var(--toyoko)","都立大学":"var(--toyoko)","綱島":"var(--toyoko)","大倉山":"var(--toyoko)","菊名":"var(--toyoko)","妙蓮寺":"var(--toyoko)","白楽":"var(--toyoko)","東白楽":"var(--toyoko)","反町":"var(--toyoko)","横浜":"var(--toyoko)","目黒":"var(--meguro)","不動前":"var(--meguro)","武蔵小山":"var(--meguro)","西小山":"var(--meguro)","洗足":"var(--meguro)","奥沢":"var(--meguro)","池尻大橋":"var(--dento)","三軒茶屋":"var(--dento)","駒沢大学":"var(--dento)","桜新町":"var(--dento)","用賀":"var(--dento)","梶が谷":"var(--dento)","宮崎台":"var(--dento)","宮前平":"var(--dento)","鷺沼":"var(--dento)","たまプラーザ":"var(--dento)","あざみ野":"var(--dento)","江田":"var(--dento)","市が尾":"var(--dento)","藤が丘":"var(--dento)","青葉台":"var(--dento)","田奈":"var(--dento)","長津田":"var(--dento)","つくし野":"var(--dento)","すずかけ台":"var(--dento)","南町田":"var(--dento)","つきみ野":"var(--dento)","中央林間":"var(--dento)","恩田":"var(--dento)","こどもの国":"var(--dento)","大井町":"var(--oimachi)","下神明":"var(--oimachi)","戸越公園":"var(--oimachi)","中延":"var(--oimachi)","荏原町":"var(--oimachi)","旗の台":"var(--oimachi)","北千束":"var(--oimachi)","緑が丘":"var(--oimachi)","九品仏":"var(--oimachi)","尾山台":"var(--oimachi)","等々力":"var(--oimachi)","上野毛":"var(--oimachi)","新綱島":"var(--shinyoko)","新横浜":"var(--shinyoko)" };
-const KIND_OPTIONS = [ { value: "all", label: "すべて表示" }, { value: "各停", label: "各停" }, { value: "B", label: "B各停" }, { value: "G", label: "G各停" }, { value: "準急", label: "準急" }, { value: "急行", label: "急行" }, { value: "通特", label: "通特" }, { value: "特急_all", label: "Fラ/特急" }, { value: "特急", label: "特急" }, { value: "F", label: "Fラ" }, { value: "Sトレイン", label: "S" }, { value: "回送", label: "回送" } ];
 
 const OP_SETS = { 
   weekday: { toyoko: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65], S:[1,2,3,4,5,7,9,11,13,15,17,19,23,25,29,31,33,41,45,47,53,63,67,71,75,77,79,81,85,87,89,91], M:[2,4,6,10,14,18,20,22,24,28,30,34], T:[3,5,13,19,21,23], G:[91,92,93,94,95]}, meguro: { K:[1,2,4,5,7,8,9,10,11,12,13,14,15,16,17,18,20,21,22,23,25,26,27,29,30,31,33,34,36,38,40,41,43,46,47,48], S:[30,32,34,36,38,40,42,44,46,50,52,54,56,60,62,64,66,68,70], T:[21,23,25,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85,87,89], M:[80,82,84,86,88,90,92,94,96], G:[31,32,33,35,37,38,39,42,43,44]}, dento: { K:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44], S:[51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85,87,89,91,93], T:[50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82], N:[181,182,183]}, oimachi: { O:[101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,131,132,133,134,135,136,137]} }, 
@@ -324,25 +371,17 @@ const OP_SETS = {
 };
 
 // =========================================
-// 高速化：ローカルキャッシュ機能
+// ローカルキャッシュ機能
 // =========================================
-function saveCache(data) {
-  try {
-    localStorage.setItem('tokyu_unyo_cache_pc', JSON.stringify(data));
-    localStorage.setItem('tokyu_unyo_cache_time_pc', Date.now());
-  } catch (e) {}
-}
+function saveCache(data) { try { localStorage.setItem('tokyu_unyo_cache_pc', JSON.stringify(data)); localStorage.setItem('tokyu_unyo_cache_time_pc', Date.now()); } catch (e) {} }
 
 function loadCache() {
   try {
     let cached = localStorage.getItem('tokyu_unyo_cache_pc');
     if (cached) {
       let data = JSON.parse(cached);
-      logs.weekday = data.weekday || {};
-      logs.holiday = data.holiday || {};
-      logs.daily = data.daily || {};
-      logs.customViews = data.customViews || [];
-      if(data.appConfig) logs.appConfig = data.appConfig;
+      logs.weekday = data.weekday || {}; logs.holiday = data.holiday || {}; logs.daily = data.daily || {};
+      logs.customViews = data.customViews || []; if(data.appConfig) logs.appConfig = data.appConfig;
       hasReceivedCloudData = true;
       updateTabs(); updateNotice();
       
@@ -350,36 +389,29 @@ function loadCache() {
       const dailySel = document.getElementById("dailyDateSelect");
       if(dailySel && currentView === 'daily') selectedDaily = dailySel.value;
       if (!currentView.startsWith("import")) {
-        updateContextUI(selectedDaily); 
-        updateDestDropdown(); updateFormDropdown(); render();
+        updateContextUI(selectedDaily); updateDestDropdown(); updateFormDropdown(); render();
       }
       
       let cTime = localStorage.getItem('tokyu_unyo_cache_time_pc');
       if (cTime) {
-        lastCloudTime = new Date(parseInt(cTime)).toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + " (キャッシュ)";
+        lastCloudTime = new Date(parseInt(cTime)).toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + " (C)";
         updateStatusDisplay();
       }
     }
   } catch(e) {}
 }
 
-async function loadHolidays() { try { const res = await fetch("https://holidays-jp.github.io/api/v1/date.json"); if (res.ok) publicHolidays = await res.json(); } catch(e) {} }
-
 function updateStatusDisplay() {
     const el = document.getElementById("cloudStatus");
     if (hasReceivedCloudData) { el.textContent = `☁️ ${lastCloudTime || '待機中'}`; } 
     else { el.textContent = `☁️ 取得待機中 | 📡 ${lastApiTime || 'プレビュー表示'}`; }
-    
     if (lastCloudTime.includes('エラー') || lastApiTime.includes('エラー')) {
         el.style.color = "#d32f2f"; el.style.background = "#ffebee";
     } else { el.style.color = "#01aa8f"; el.style.background = "#e8f5e9"; }
 }
 
 function forceSync() {
-    lastCloudTime = "同期中...";
-    updateStatusDisplay();
-    fetchFromCloud();
-    fetchLiveApiData();
+    lastCloudTime = "同期中..."; updateStatusDisplay(); fetchFromCloud(); fetchLiveApiData();
 }
 
 function getTv(tStr) { if(!tStr) return -1; let [h, m] = tStr.split(':').map(Number); if(isNaN(h) || isNaN(m)) return -1; if(h < 4) h += 24; return h * 60 + m; }
@@ -438,18 +470,12 @@ function getUnyoInfoStr(opNo, tNo, lineKey, dayType) {
   let checkVal = XX; if (detectedHl === 'oimachi' || detectedHl === 'dento') checkVal = opRaw;
   
   let isReg = false;
-  if (OP_SETS && OP_SETS[dayType] && OP_SETS[dayType][detectedHl] && OP_SETS[dayType][detectedHl][detectedSys]) {
-      isReg = OP_SETS[dayType][detectedHl][detectedSys].includes(checkVal);
-  }
+  if (OP_SETS && OP_SETS[dayType] && OP_SETS[dayType][detectedHl] && OP_SETS[dayType][detectedHl][detectedSys]) { isReg = OP_SETS[dayType][detectedHl][detectedSys].includes(checkVal); }
   
-  if (isReg) { 
-      hl = detectedHl; 
-  } else {
+  if (isReg) { hl = detectedHl; } else {
       if (['toyoko', 'meguro', 'shinyokohama'].includes(lineKey)) { 
           hl = "extra_tymg"; 
-          if (lineKey === 'meguro' || detectedHl === 'meguro') {
-              label = tNo ? tNo.substring(0, 3) : String(opRaw).padStart(3, '0');
-          }
+          if (lineKey === 'meguro' || detectedHl === 'meguro') { label = tNo ? tNo.substring(0, 3) : String(opRaw).padStart(3, '0'); }
       } else { hl = "extra_dtom"; }
   }
   
@@ -461,21 +487,11 @@ function getUnyoInfoStr(opNo, tNo, lineKey, dayType) {
 function getAffiliationGroup(lineId, aff) {
     if (!aff) return null;
     if (lineId === 'meguro' || lineId === 'extra_meguro') {
-        if (aff.includes("急") || aff.includes("東")) return "K";
-        if (aff.includes("メ") || aff.includes("営") || aff.includes("南") || aff.includes("副")) return "S";
-        if (aff.includes("都") || aff.includes("三")) return "T";
-        if (aff.includes("埼") || aff.includes("西")) return "M";
-        if (aff.includes("相") || aff.includes("G")) return "G";
+        if (aff.includes("急") || aff.includes("東")) return "K"; if (aff.includes("メ") || aff.includes("営") || aff.includes("南") || aff.includes("副")) return "S"; if (aff.includes("都") || aff.includes("三")) return "T"; if (aff.includes("埼") || aff.includes("西")) return "M"; if (aff.includes("相") || aff.includes("G")) return "G";
     } else if (lineId === 'dento' || lineId === 'extra_dtom') {
-        if (aff.includes("急") || aff.includes("東")) return "K";
-        if (aff.includes("メ") || aff.includes("営") || aff.includes("半")) return "S";
-        if (aff.includes("武") || aff.includes("東武")) return "T";
+        if (aff.includes("急") || aff.includes("東")) return "K"; if (aff.includes("メ") || aff.includes("営") || aff.includes("半")) return "S"; if (aff.includes("武") || aff.includes("東武")) return "T";
     } else { 
-        if (aff.includes("急") || aff.includes("み") || aff.includes("東")) return "K";
-        if (aff.includes("メ") || aff.includes("営") || aff.includes("副")) return "S";
-        if (aff.includes("武") || aff.includes("都")) return "T";
-        if (aff.includes("西") || aff.includes("埼")) return "M";
-        if (aff.includes("相") || aff.includes("G")) return "G";
+        if (aff.includes("急") || aff.includes("み") || aff.includes("東")) return "K"; if (aff.includes("メ") || aff.includes("営") || aff.includes("副")) return "S"; if (aff.includes("武") || aff.includes("都")) return "T"; if (aff.includes("西") || aff.includes("埼")) return "M"; if (aff.includes("相") || aff.includes("G")) return "G";
     }
     return null;
 }
@@ -483,7 +499,6 @@ function getAffiliationGroup(lineId, aff) {
 function getFormationString(lineId, aff, orchStr, useFormat) {
     if (!aff && !orchStr) return { dispAff: "", fNo: "" };
     if (!useFormat || lineId.includes('extra_dtom') || lineId.includes('extra_oimachi')) { return { dispAff: aff, fNo: orchStr }; }
-    
     let orch = parseInt(orchStr, 10); let orchStrPad = String(orch).padStart(2, '0');
     if (isNaN(orch)) return { dispAff: aff, fNo: orchStr };
     
@@ -546,19 +561,16 @@ function updateFormDropdown() {
   if (currentView === 'weekday' || currentView === 'holiday') { formFilterArea.style.display = 'none'; formSelect.innerHTML = '<option value="all">すべて表示</option>'; return; }
   formFilterArea.style.display = 'flex';
   const currentForm = formSelect.value || "all"; let forms = new Set();
-  const data = getActiveData(); const useFmt = document.getElementById("formatFilter")?.checked;
+  const data = getActiveData(); const useFmt = document.getElementById("formatFilter") ? document.getElementById("formatFilter").checked : true;
   const lineF = document.getElementById("lineFilter").value;
   const compF = document.getElementById("companyFilter").value;
   const secF = document.getElementById("sectionFilter").value;
   const opSearch = document.getElementById("opNumSearch") ? document.getElementById("opNumSearch").value.trim().toUpperCase() : "";
 
   const checkComp = (label) => {
-      if (compF === "all") return true;
-      if (!label) return false;
-      if (compF === "K" && label.includes("K")) return true;
-      if (compF === "S" && label.includes("S")) return true;
-      if (compF === "T" && label.includes("T")) return true;
-      if (compF === "M" && label.includes("M")) return true;
+      if (compF === "all") return true; if (!label) return false;
+      if (compF === "K" && label.includes("K")) return true; if (compF === "S" && label.includes("S")) return true;
+      if (compF === "T" && label.includes("T")) return true; if (compF === "M" && label.includes("M")) return true;
       if (compF === "G" && label.includes("G")) return true;
       if (label.match(/^\d+$/)) { let num = parseInt(label, 10); if (compF === "O100" && num >= 100 && num <= 129) return true; if (compF === "O130" && num >= 130) return true; }
       return false;
@@ -568,18 +580,13 @@ function updateFormDropdown() {
       if (!aff && (!orch || orch === "00")) return;
       let fObj = getFormationString(hl, aff, orch, useFmt);
       let dispText = useFmt ? fObj.fNo : orch;
-      if (dispText) {
-          let val = hl.includes('oimachi') ? dispText : (fObj.dispAff ? `[${fObj.dispAff}] ${dispText}` : dispText);
-          forms.add(val);
-      }
+      if (dispText) { let val = hl.includes('oimachi') ? dispText : (fObj.dispAff ? `[${fObj.dispAff}] ${dispText}` : dispText); forms.add(val); }
   };
 
   if (data) {
     for (const opKey in data) { 
-      let hl = data[opKey].homeLine;
-      if (hl === 'extra_toyoko' || hl === 'extra_meguro') hl = 'extra_tymg';
+      let hl = data[opKey].homeLine; if (hl === 'extra_toyoko' || hl === 'extra_meguro') hl = 'extra_tymg';
       if (lineF !== "all" && lineF !== hl) continue;
-      
       let label = data[opKey].label;
       if (opSearch && !label.toUpperCase().includes(opSearch)) continue;
       if (!checkComp(label)) continue;
@@ -587,11 +594,7 @@ function updateFormDropdown() {
       if(!data[opKey] || !data[opKey].trains) continue;
       for (const tUid in data[opKey].trains) {
         const t = data[opKey].trains[tUid];
-        
-        if (currentView === 'weekday' || currentView === 'holiday') {
-            if (t.trainNo && (t.trainNo.endsWith("000") || t.trainNo.endsWith("990"))) continue;
-        }
-        
+        if (currentView === 'weekday' || currentView === 'holiday') { if (t.trainNo && (t.trainNo.endsWith("000") || t.trainNo.endsWith("990"))) continue; }
         if (t && !t.deleted && (t.affiliation || t.orchestration)) {
             let srcMatch = false;
             if (secF === "all") srcMatch = true;
@@ -609,15 +612,12 @@ function updateFormDropdown() {
           let hl = opKey.split('_')[0]; if (opKey.startsWith("extra_")) hl = opKey.split('_').slice(0,2).join('_');
           if (hl === 'extra_toyoko' || hl === 'extra_meguro') hl = 'extra_tymg';
           if (lineF !== "all" && lineF !== hl) continue;
-          
           let label = opKey.split('_')[1];
           if (opSearch && !label.toUpperCase().includes(opSearch)) continue;
           if (!checkComp(label)) continue;
-          
           let trains = apiLiveCache[opKey];
           for (let tNo in trains) { 
-              let t = trains[tNo];
-              let srcMatch = false;
+              let t = trains[tNo]; let srcMatch = false;
               if (secF === "all") srcMatch = true;
               else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(t.sourceName)) srcMatch = true;
               else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(t.sourceName)) srcMatch = true;
@@ -644,16 +644,11 @@ function updateContextUI(preservedDailyDate = null) {
     const label = document.createElement("span"); label.className = "filter-label"; label.textContent = "表示日:"; ctx.appendChild(label);
     const select = document.createElement("select"); select.id = "dailyDateSelect"; select.className = "filter-select"; select.style.maxWidth = "110px";
     select.onchange = () => { 
-        updateDestDropdown(); updateFormDropdown(); render(); 
-        document.getElementById("cloudStatus").textContent = "☁️ 読込中...";
-        fetchFromCloud(); 
-        
-        let isTodayDaily = (select.value === getDailyKey(new Date()));
-        if (isTodayDaily) fetchLiveApiData();
+        updateDestDropdown(); updateFormDropdown(); render(); document.getElementById("cloudStatus").textContent = "☁️ 読込中..."; fetchFromCloud(); 
+        if (select.value === getDailyKey(new Date())) fetchLiveApiData();
     };
     const keys = Object.keys(logs.daily || {}).sort().reverse();
-    if (keys.length === 0) select.appendChild(new Option("記録なし", getDailyKey()));
-    else keys.forEach(k => select.appendChild(new Option(k, k)));
+    if (keys.length === 0) select.appendChild(new Option("記録なし", getDailyKey())); else keys.forEach(k => select.appendChild(new Option(k, k)));
     if (preservedDailyDate && Array.from(select.options).some(o => o.value === preservedDailyDate)) { select.value = preservedDailyDate; }
     ctx.appendChild(select);
   } else if (currentView.startsWith("import") && logs[currentView]) {
@@ -699,25 +694,22 @@ function changeTab(tabId) {
   updateContextUI(); updateDestDropdown(); updateFormDropdown(); render(); 
   
   if (!tabId.startsWith('import')) {
-      document.getElementById("cloudStatus").textContent = "☁️ 読込中...";
-      fetchFromCloud();
-      
-      let isTodayDaily = (tabId === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-      if (isTodayDaily) {
-          fetchLiveApiData();
-      }
+      document.getElementById("cloudStatus").textContent = "☁️ 読込中..."; fetchFromCloud();
+      if (tabId === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date())) { fetchLiveApiData(); }
   } else {
-      document.getElementById("cloudStatus").textContent = "☁️ オフライン";
-      document.getElementById("cloudStatus").style.background = "#fff3e0";
-      document.getElementById("cloudStatus").style.color = "#e65100";
+      document.getElementById("cloudStatus").textContent = "☁️ オフライン (インポート)";
+      document.getElementById("cloudStatus").style.background = "#fff3e0"; document.getElementById("cloudStatus").style.color = "#e65100";
   }
 }
 
 // =========================================
-// 描画ロジック
+// ★ 描画ロジック（プログレッシブレンダリング搭載）
 // =========================================
 function render() {
+  renderToken++;
+  const currentToken = renderToken;
   const container = document.getElementById("container");
+  
   if (currentView.startsWith("import") && (!logs[currentView] || Object.keys(logs[currentView]).length === 0)) {
     container.innerHTML = `<div style="text-align:center; padding:40px; background:#fff; border-radius:8px;">
         <p style="font-weight:bold; margin-bottom:15px; color:#555;">JSONファイルを読み込んで表示します。</p>
@@ -735,19 +727,18 @@ function render() {
   const kindF = document.getElementById("kindFilter") ? document.getElementById("kindFilter").value : "all";
   const destF = document.getElementById("destFilter") ? document.getElementById("destFilter").value : "all";
   const showRunningOnly = document.getElementById("runningFilter")?.checked;
-  const useFmt = document.getElementById("formatFilter")?.checked; 
+  const useFmt = document.getElementById("formatFilter") ? document.getElementById("formatFilter").checked : true; 
   const formSelVal = document.getElementById("formFilterSel")?.value || "all";
   const daisoF = document.getElementById("daisoFilter") ? document.getElementById("daisoFilter").checked : false;
   const opSearch = document.getElementById("opNumSearch") ? document.getElementById("opNumSearch").value.trim().toUpperCase() : "";
 
-  let html = "";
-  
   const groups = [
     { id: 'toyoko', name: '東横線 定期運用', cl: 'bg-toyoko' }, { id: 'meguro', name: '目黒線 定期運用', cl: 'bg-meguro' },
     { id: 'dento', name: '田園都市線 定期運用', cl: 'bg-dento' }, { id: 'oimachi', name: '大井町線 定期運用', cl: 'bg-oimachi' },
-    { id: 'extra_tymg', name: '東横・目黒非定期運用', cl: 'bg-extra' },
-    { id: 'extra_dtom', name: '田都・大井非定期運用', cl: 'bg-extra' }
+    { id: 'extra_tymg', name: '東横・目黒非定期運用', cl: 'bg-extra' }, { id: 'extra_dtom', name: '田都・大井非定期運用', cl: 'bg-extra' }
   ];
+
+  let renderedGroups = [];
 
   groups.forEach(g => {
     if (!currentView.startsWith("import") && !currentView.startsWith("custom_")) { if (cfg.lines && cfg.lines[g.id] && cfg.lines[g.id].disp === false) return; }
@@ -773,15 +764,23 @@ function render() {
         });
     }
 
+    // ★ 運用の並び順をPC版通り（完全ソート）に設定
     let opKeysArr = Array.from(opKeys).sort((a, b) => {
-      const getRank = s => { if(s.includes('K')) return 1; if(s.includes('S')) return 2; if(s.includes('T')) return 3; return 4; };
-      return getRank(a) - getRank(b) || a.localeCompare(b);
+      let partsA = a.split('_'); let labelA = partsA[partsA.length - 1];
+      let partsB = b.split('_'); let labelB = partsB[partsB.length - 1];
+      
+      const getRank = s => { if(s.includes('K')) return 1; if(s.includes('S')) return 2; if(s.includes('T')) return 3; if(s.includes('M')) return 4; if(s.includes('G')) return 5; return 6; };
+      let rankA = getRank(labelA); let rankB = getRank(labelB);
+      if (rankA !== rankB) return rankA - rankB;
+      
+      let numA = parseInt(labelA.match(/\d+/) || 0, 10); let numB = parseInt(labelB.match(/\d+/) || 0, 10);
+      if (numA !== numB) return numA - numB;
+      return a.localeCompare(b);
     });
     
     if(opKeysArr.length === 0) return;
 
-    let groupHtml = `<div class="line-section"><div class="line-header ${g.cl}">${g.name}</div><div class="line-body">`;
-    let hasContent = false;
+    let groupOpsHtml = [];
 
     opKeysArr.forEach(ok => {
       const u = data ? data[ok] : null; 
@@ -859,8 +858,6 @@ function render() {
 
             if (showRunningOnly && !isRunning) return;
 
-            hasContent = true; 
-            
             let formTag = "";
             if ((currentView === 'daily' || currentView.startsWith('custom_') || currentView.startsWith('import'))) {
                 if (aff || orch) {
@@ -875,6 +872,7 @@ function render() {
                 remarksTag = `<div style="font-size:11px; color:#555; background:#fff9c4; padding:2px 6px; border-radius:4px; margin-top:4px; border:1px solid #fff59d; display:inline-block; max-width:100%; white-space:normal; word-break:break-all;">✎ ${t.remarks}</div>`;
             }
 
+            // ★ スマホクラッシュ対策: CSS疑似要素でDOM数を半減
             let hHtml = `<div class="t-hist">`;
             t.history.forEach((h, i) => {
               const isEkikan = h.st.includes("駅間");
@@ -966,8 +964,6 @@ function render() {
                   let fObj = getFormationString(g.id, liveInfo.affiliation, liveInfo.orchestration, useFmt);
                   if (currentView !== 'weekday' && currentView !== 'holiday' && formSelVal !== "all" && formSelVal !== `[${fObj.dispAff}] ${fObj.fNo}`) return;
 
-                  hasContent = true;
-                  
                   let formTag = "";
                   if (liveInfo.affiliation || liveInfo.orchestration) {
                       let dispText = useFmt ? fObj.fNo : liveInfo.orchestration;
@@ -1006,17 +1002,75 @@ function render() {
           });
       }
       
-      if(tHtml) groupHtml += `<div class="op-box">
-        <div class="op-left">
-          <div class="op-no">${label || "不明"}</div>
-          ${g.id.startsWith('extra')?`<div class="src-tag">from<br>${srcName}</div>`:''}
-        </div>
-        <div class="op-right">${tHtml}</div>
-      </div>`;
+      if(tHtml) {
+          let finalOpHtml = `<div class="op-box">
+            <div class="op-left">
+              <div class="op-no">${label || "不明"}</div>
+              ${g.id.startsWith('extra')?`<div class="src-tag">from<br>${srcName}</div>`:''}
+            </div>
+            <div class="op-right">${tHtml}</div>
+          </div>`;
+          groupOpsHtml.push(finalOpHtml);
+      }
     });
-    if(hasContent) html += groupHtml + "</div></div>";
+    
+    if(groupOpsHtml.length > 0) {
+        renderedGroups.push({ g: g, opsHtml: groupOpsHtml });
+    }
   });
-  if (container) container.innerHTML = html || "<div style='padding:40px; text-align:center; color:#888; font-weight:bold;'>指定した条件に一致する列車はありません。</div>";
+
+  if (renderedGroups.length === 0) {
+      container.innerHTML = "<div style='padding:40px; text-align:center; color:#888; font-weight:bold;'>指定した条件に一致する運用はありません。</div>";
+      return;
+  }
+
+  // ★ プログレッシブレンダリング（非同期描画）で処理落ちを完全回避
+  container.innerHTML = `<div id="loadingMsg" style="text-align:center; padding:30px; color:#1976d2; font-weight:bold;">🔄 データを展開中...</div>`;
+  
+  let currentGroupIdx = 0;
+  let currentOpIdx = 0;
+
+  function renderNextChunk() {
+      if (renderToken !== currentToken) return;
+
+      const loadingMsg = document.getElementById("loadingMsg");
+      if (loadingMsg) loadingMsg.remove();
+
+      let opsRenderedThisFrame = 0;
+      const OPS_PER_FRAME = 15; // 1フレームに15運用ずつ描画して負担を分散
+
+      while(opsRenderedThisFrame < OPS_PER_FRAME && currentGroupIdx < renderedGroups.length) {
+          let currentGroup = renderedGroups[currentGroupIdx];
+          let groupBodyId = `lb_${currentGroup.g.id}_${currentToken}`;
+          let groupBodyEl = document.getElementById(groupBodyId);
+
+          if (!groupBodyEl) {
+              let section = document.createElement('div');
+              section.className = "line-section";
+              section.innerHTML = `<div class="line-header ${currentGroup.g.cl}">${currentGroup.g.name}</div><div class="line-body" id="${groupBodyId}"></div>`;
+              container.appendChild(section);
+              groupBodyEl = section.querySelector('.line-body');
+          }
+
+          let opsToInsert = currentGroup.opsHtml.slice(currentOpIdx, currentOpIdx + (OPS_PER_FRAME - opsRenderedThisFrame));
+          if (opsToInsert.length > 0) {
+              groupBodyEl.insertAdjacentHTML('beforeend', opsToInsert.join(""));
+              opsRenderedThisFrame += opsToInsert.length;
+              currentOpIdx += opsToInsert.length;
+          }
+
+          if (currentOpIdx >= currentGroup.opsHtml.length) {
+              currentGroupIdx++;
+              currentOpIdx = 0;
+          }
+      }
+
+      if (currentGroupIdx < renderedGroups.length) {
+          setTimeout(renderNextChunk, 16); 
+      }
+  }
+
+  renderNextChunk();
 }
 
 // =========================================
@@ -1025,9 +1079,7 @@ function render() {
 function getTrainDirection(tr) {
     if (!tr || !tr.trainNo) return 1; 
     let lastDigit = parseInt(tr.trainNo.slice(-1), 10);
-    if (!isNaN(lastDigit)) {
-        return (lastDigit % 2 === 0) ? 0 : 1; 
-    }
+    if (!isNaN(lastDigit)) { return (lastDigit % 2 === 0) ? 0 : 1; }
     return 1;
 }
 
@@ -1045,13 +1097,9 @@ function isPassStation(kind, stName) {
         "Sトレイン": ["渋谷", "自由が丘", "横浜"]
     };
 
-    let baseKind = kind;
-    if (kind === "特急_all") baseKind = "特急";
-
-    if (stopDict[baseKind]) {
-        return !stopDict[baseKind].includes(stName);
-    }
-    return false; // デフォルトは停車
+    let baseKind = kind === "特急_all" ? "特急" : kind;
+    if (stopDict[baseKind]) { return !stopDict[baseKind].includes(stName); }
+    return false;
 }
 
 function openStationTimetable(stName, currentTUid) {
@@ -1062,15 +1110,11 @@ function openStationTimetable(stName, currentTUid) {
   let clickedTrainData = null;
   
   Object.keys(data).forEach(opKey => {
-    let u = data[opKey];
-    if (!u || !u.trains) return;
-    
+    let u = data[opKey]; if (!u || !u.trains) return;
     let isExtra = opKey.startsWith("extra_");
 
     Object.keys(u.trains).forEach(tUid => {
-      let tr = u.trains[tUid];
-      if (!tr || tr.deleted) return;
-      
+      let tr = u.trains[tUid]; if (!tr || tr.deleted) return;
       if ((currentView === 'weekday' || currentView === 'holiday') && tr.trainNo && (tr.trainNo.endsWith("000") || tr.trainNo.endsWith("990"))) return;
 
       let targetHist = tr.history.find(h => h.st === stName);
@@ -1082,19 +1126,10 @@ function openStationTimetable(stName, currentTUid) {
         if (isTerminal || isFirst) isPass = false;
 
         let tData = {
-          time: targetHist.t,
-          tv: getTv(targetHist.t),
-          delay: targetHist.delay || 0,
-          opLabel: u.label,
-          kind: tr.kind,
-          dest: tr.dest,
-          tNo: tr.trainNo,
-          tUid: tUid,
-          sourceName: tr.sourceName || "不明",
-          dir: getTrainDirection(tr),
-          isTerminal: isTerminal,
-          isExtra: isExtra,
-          isPass: isPass
+          time: targetHist.t, tv: getTv(targetHist.t), delay: targetHist.delay || 0,
+          opLabel: u.label, kind: tr.kind, dest: tr.dest, tNo: tr.trainNo, tUid: tUid,
+          sourceName: tr.sourceName || "不明", dir: getTrainDirection(tr),
+          isTerminal: isTerminal, isExtra: isExtra, isPass: isPass
         };
         trainsAtSt.push(tData);
         if (tUid === currentTUid) clickedTrainData = tData;
@@ -1104,38 +1139,25 @@ function openStationTimetable(stName, currentTUid) {
 
   trainsAtSt.sort((a, b) => a.tv - b.tv);
   
-  ttState.stName = stName;
-  ttState.trains = trainsAtSt;
-  ttState.currentTUid = currentTUid;
-  
+  ttState.stName = stName; ttState.trains = trainsAtSt; ttState.currentTUid = currentTUid;
   ttState.dirMode = clickedTrainData ? (clickedTrainData.dir === 0 ? "up" : "down") : "up";
-  ttState.lineMode = "all";
-  ttState.availableLines = [];
+  ttState.lineMode = "all"; ttState.availableLines = [];
   
   const ST_GROUPS = {
-    "渋谷": { separate: true, lines: ["東横線", "田園都市線"] },
-    "自由が丘": { separate: true, lines: ["東横線", "大井町線"] },
-    "田園調布": { separate: false, lines: ["東横線", "目黒線"] },
-    "多摩川": { separate: false, lines: ["東横線", "目黒線"] },
-    "新丸子": { separate: false, lines: ["東横線", "目黒線"] },
-    "武蔵小杉": { separate: false, lines: ["東横線", "目黒線"] },
-    "元住吉": { separate: false, lines: ["東横線", "目黒線"] },
-    "日吉": { separate: false, lines: ["東横線", "目黒線", "新横浜線"] },
-    "大岡山": { separate: false, lines: ["目黒線", "大井町線"] },
-    "二子玉川": { separate: false, lines: ["田園都市線", "大井町線"] },
-    "二子新地": { separate: false, lines: ["田園都市線", "大井町線"] },
-    "高津": { separate: false, lines: ["田園都市線", "大井町線"] },
+    "渋谷": { separate: true, lines: ["東横線", "田園都市線"] }, "自由が丘": { separate: true, lines: ["東横線", "大井町線"] },
+    "田園調布": { separate: false, lines: ["東横線", "目黒線"] }, "多摩川": { separate: false, lines: ["東横線", "目黒線"] },
+    "新丸子": { separate: false, lines: ["東横線", "目黒線"] }, "武蔵小杉": { separate: false, lines: ["東横線", "目黒線"] },
+    "元住吉": { separate: false, lines: ["東横線", "目黒線"] }, "日吉": { separate: false, lines: ["東横線", "目黒線", "新横浜線"] },
+    "大岡山": { separate: false, lines: ["目黒線", "大井町線"] }, "二子玉川": { separate: false, lines: ["田園都市線", "大井町線"] },
+    "二子新地": { separate: false, lines: ["田園都市線", "大井町線"] }, "高津": { separate: false, lines: ["田園都市線", "大井町線"] },
     "溝の口": { separate: false, lines: ["田園都市線", "大井町線"] }
   };
   
   if (ST_GROUPS[stName]) {
       ttState.availableLines = ST_GROUPS[stName].lines;
       if (ST_GROUPS[stName].separate) {
-          if (clickedTrainData) {
-              ttState.lineMode = ttState.availableLines.find(l => clickedTrainData.sourceName.includes(l)) || ttState.availableLines[0];
-          } else {
-              ttState.lineMode = ttState.availableLines[0];
-          }
+          if (clickedTrainData) { ttState.lineMode = ttState.availableLines.find(l => clickedTrainData.sourceName.includes(l)) || ttState.availableLines[0]; } 
+          else { ttState.lineMode = ttState.availableLines[0]; }
       }
   }
 
@@ -1151,10 +1173,7 @@ function setTtLine(line) { ttState.lineMode = line; renderTimetable(); }
 function renderTimetable() {
     let filtered = ttState.trains.filter(t => {
         if (ttState.lineMode !== "all" && !t.sourceName.includes(ttState.lineMode)) return false;
-        if (ttState.dirMode !== "both") {
-            let targetDir = (ttState.dirMode === "up") ? 0 : 1;
-            if (t.dir !== targetDir) return false;
-        }
+        if (ttState.dirMode !== "both") { let targetDir = (ttState.dirMode === "up") ? 0 : 1; if (t.dir !== targetDir) return false; }
         return true;
     });
 
@@ -1165,19 +1184,14 @@ function renderTimetable() {
     if (ttState.availableLines.length > 0) {
         lineRow.style.display = 'flex';
         let lineHtml = `<button class="tt-tab-btn ${ttState.lineMode === 'all' ? 'active' : ''}" onclick="setTtLine('all')">すべて表示</button>`;
-        ttState.availableLines.forEach(l => {
-            lineHtml += `<button class="tt-tab-btn ${ttState.lineMode === l ? 'active' : ''}" onclick="setTtLine('${l}')">${l}</button>`;
-        });
+        ttState.availableLines.forEach(l => { lineHtml += `<button class="tt-tab-btn ${ttState.lineMode === l ? 'active' : ''}" onclick="setTtLine('${l}')">${l}</button>`; });
         document.getElementById('ttLineTabs').innerHTML = lineHtml;
-    } else {
-        lineRow.style.display = 'none';
-    }
+    } else { lineRow.style.display = 'none'; }
 
     let html = "";
     filtered.forEach(t => {
         let dKind = t.kind === "通勤特急" ? "通特" : t.kind;
-        let badgeText = dKind;
-        if (dKind === "F") badgeText = "Fラ"; else if (dKind === "B") badgeText = "B各停"; else if (dKind === "G") badgeText = "G各停"; else if (dKind === "Sトレイン") badgeText = "S";
+        let badgeText = dKind; if (dKind === "F") badgeText = "Fラ"; else if (dKind === "B") badgeText = "B各停"; else if (dKind === "G") badgeText = "G各停"; else if (dKind === "Sトレイン") badgeText = "S";
         
         let dispNo = t.tNo ? `${t.tNo.substring(0,3)}-${t.tNo.substring(3)}` : "不明";
         let delayHtml = t.delay > 0 ? `<span class="t-delay" style="margin-left:6px; font-weight:normal;">${t.delay}分遅れ</span>` : "";
@@ -1185,28 +1199,22 @@ function renderTimetable() {
         let rowIdAttr = (t.tUid === ttState.currentTUid) ? "id='tt_active_row'" : "";
         let passClass = t.isPass ? "is-pass" : "";
 
-        let dirBadge = t.dir === 0 
-            ? `<div class="tt-dir-badge tt-dir-up">▲ 上り</div>` 
-            : `<div class="tt-dir-badge tt-dir-down">▼ 下り</div>`;
+        let dirBadge = t.dir === 0 ? `<div class="tt-dir-badge tt-dir-up">▲ 上り</div>` : `<div class="tt-dir-badge tt-dir-down">▼ 下り</div>`;
 
         html += `<div class="tt-row ${isActive} ${passClass}" ${rowIdAttr} onclick="jumpToTrain('${t.tUid}')">
-            
             <div class="tt-time-area">
                 <div class="tt-time">${t.time}</div>
                 ${ttState.dirMode === 'both' ? dirBadge : ''}
             </div>
-            
             <div class="tt-info">
                 <div style="font-size:14px; font-weight:bold; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                     <span class="kind-badge kind-${dKind}">${badgeText}</span>
                     <span class="dest-text">${t.dest}${t.dest.endsWith('線')?'直通':'行'}</span>
-                    
                     ${t.isPass ? '<span class="pass-badge">通過</span>' : ''}
                     ${t.isExtra ? '<span class="extra-badge">不定期</span>' : ''}
                     ${t.isTerminal ? '<span class="terminal-badge">当駅止まり</span>' : ''}
                     ${t.tUid === ttState.currentTUid ? '<span class="active-badge">選択中</span>' : ''}
                 </div>
-                
                 <div style="font-size:12px; color:#777; margin-top:5px; display:flex; flex-wrap:wrap; gap:10px;">
                     <span>運用: <strong style="color:#444;">${t.opLabel}</strong></span>
                     <span>列車: ${dispNo}</span>
@@ -1218,11 +1226,7 @@ function renderTimetable() {
     });
 
     document.getElementById('ttModalContent').innerHTML = html || "<div style='padding:40px; text-align:center; color:#888;'>該当する列車がありません。</div>";
-
-    setTimeout(() => {
-        let activeRow = document.getElementById('tt_active_row');
-        if (activeRow) activeRow.scrollIntoView({ behavior: 'auto', block: 'center' });
-    }, 30);
+    setTimeout(() => { let activeRow = document.getElementById('tt_active_row'); if (activeRow) activeRow.scrollIntoView({ behavior: 'auto', block: 'center' }); }, 30);
 }
 
 // ★ 時間帯ジャンプ関数
@@ -1243,7 +1247,7 @@ function jumpToTime(hour) {
         if (targetHour < 4) targetHour += 24;
         
         if (tHour >= targetHour) {
-            row.scrollIntoView({ behavior: 'auto', block: 'start' });
+            row.scrollIntoView({ behavior: 'smooth', block: 'start' });
             row.classList.remove('highlight-flash');
             void row.offsetWidth;
             row.classList.add('highlight-flash');
@@ -1259,24 +1263,19 @@ function closeTimetableModal(e) {
 
 function closeTimetable() {
   document.getElementById('timetableModal').style.display = 'none';
-  if (targetTimetableStation) {
-      window.location.href = window.location.pathname;
-  }
+  if (targetTimetableStation) { window.location.href = window.location.pathname; }
 }
 
 function jumpToTrain(tUid) {
   closeTimetable();
   if (targetTimetableStation) return; 
-
   const targetEl = document.getElementById(`train_row_${tUid}`);
   if (targetEl) {
     targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     targetEl.classList.remove('highlight-flash');
     void targetEl.offsetWidth;
     targetEl.classList.add('highlight-flash');
-  } else {
-    alert("該当する列車が現在のフィルター条件で見つかりません。");
-  }
+  } else { alert("該当する列車が現在のフィルター条件で見つかりません。"); }
 }
 
 // =========================================
@@ -1324,8 +1323,7 @@ async function fetchLiveApiData() {
               if (!newLiveCache[opKey]) newLiveCache[opKey] = {};
               newLiveCache[opKey][tNo] = {
                   trainNo: tNo, kind: dispKind, dest: destStr,
-                  sourceName: info.sourceName,
-                  st: stName, t: actualTimeStr, delay: delay,
+                  sourceName: info.sourceName, st: stName, t: actualTimeStr, delay: delay,
                   affiliation: t.affiliation || "", orchestration: t.train_orchestration_number || ""
               };
           });
@@ -1338,122 +1336,81 @@ async function fetchLiveApiData() {
           if (!currentView.startsWith("import")) { updateDestDropdown(); updateFormDropdown(); render(); }
       }
   } catch (err) {
-      lastApiTime = "⚠ エラー (自動再試行中)";
-      updateStatusDisplay();
-  } finally {
-      isFetchingApi = false;
-  }
+      lastApiTime = "⚠ エラー (自動再試行中)"; updateStatusDisplay();
+  } finally { isFetchingApi = false; }
 }
 
 async function fetchFromCloud() {
   if (isFetchingCloud) return;
-  isFetchingCloud = true;
-  document.getElementById("cloudStatus").textContent = "☁️ 受信中...";
+  isFetchingCloud = true; document.getElementById("cloudStatus").textContent = "☁️ 受信中...";
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000); 
+    const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 45000); 
     const res = await fetch(GAS_URL + "?t=" + Date.now(), { signal: controller.signal });
     clearTimeout(timeoutId);
-    
     if (!res.ok) throw new Error("HTTP " + res.status);
     
-    let text = await res.text();
-    let data = null;
-    try {
-        data = JSON.parse(text);
-    } catch (parseError) {
-        console.warn("JSON解析エラー。連結されたデータから最新分を抽出します...");
-        let lastIdx = text.lastIndexOf('{"weekday"');
-        if (lastIdx === -1) lastIdx = text.lastIndexOf('{"appConfig"');
+    let text = await res.text(); let data = null;
+    try { data = JSON.parse(text); } catch (parseError) {
+        let lastIdx = text.lastIndexOf('{"weekday"'); if (lastIdx === -1) lastIdx = text.lastIndexOf('{"appConfig"');
         if (lastIdx !== -1) {
-            let recoveredText = text.substring(lastIdx);
-            let endIdx = recoveredText.lastIndexOf('}');
+            let recoveredText = text.substring(lastIdx); let endIdx = recoveredText.lastIndexOf('}');
             if (endIdx !== -1) recoveredText = recoveredText.substring(0, endIdx + 1);
             data = JSON.parse(recoveredText);
-        } else {
-            throw parseError; 
-        }
+        } else { throw parseError; }
     }
     
     if (data) {
-      saveCache(data); 
-      hasReceivedCloudData = true; 
-      apiLiveCache = {}; 
-      
-      let selectedDaily = null;
-      const dailySel = document.getElementById("dailyDateSelect");
+      saveCache(data); hasReceivedCloudData = true; apiLiveCache = {}; 
+      let selectedDaily = null; const dailySel = document.getElementById("dailyDateSelect");
       if(dailySel && currentView === 'daily') selectedDaily = dailySel.value;
       
-      logs.weekday = data.weekday || {};
-      logs.holiday = data.holiday || {};
-      logs.daily = data.daily || {};
-      logs.customViews = data.customViews || [];
-      if(data.appConfig) logs.appConfig = data.appConfig;
+      logs.weekday = data.weekday || {}; logs.holiday = data.holiday || {}; logs.daily = data.daily || {};
+      logs.customViews = data.customViews || []; if(data.appConfig) logs.appConfig = data.appConfig;
       
       updateTabs(); updateNotice();
-      
-      if (!currentView.startsWith("import")) {
-        updateContextUI(selectedDaily); 
-        updateDestDropdown(); updateFormDropdown(); render();
-      }
+      if (!currentView.startsWith("import")) { updateContextUI(selectedDaily); updateDestDropdown(); updateFormDropdown(); render(); }
       
       lastCloudTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
       updateStatusDisplay();
       
       if (targetTimetableStation && !hasOpenedStandalone) {
-          hasOpenedStandalone = true;
-          setTimeout(() => openStationTimetable(targetTimetableStation, null), 300);
+          hasOpenedStandalone = true; setTimeout(() => openStationTimetable(targetTimetableStation, null), 300);
       }
     }
   } catch (err) {
-    if (!hasReceivedCloudData) {
-        lastCloudTime = "⚠ エラー (自動再試行中)";
-    } else {
-        lastCloudTime += " [更新遅延]";
-    }
+    if (!hasReceivedCloudData) { lastCloudTime = "⚠ エラー (自動再試行中)"; } else { lastCloudTime += " [更新遅延]"; }
     updateStatusDisplay();
-  } finally {
-    isFetchingCloud = false;
-  }
+  } finally { isFetchingCloud = false; }
 }
 
 async function cloudLoop() {
     let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-    if (isTodayDaily && !isFetchingCloud) {
-        await fetchFromCloud();
-    }
+    if (isTodayDaily && !isFetchingCloud) { await fetchFromCloud(); }
     setTimeout(cloudLoop, 3000); 
 }
 
 async function apiLoop() {
     let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-    if (isTodayDaily && !isFetchingApi) {
-        await fetchLiveApiData();
-    }
+    if (isTodayDaily && !isFetchingApi) { await fetchLiveApiData(); }
     setTimeout(apiLoop, 3000); 
 }
 
 function initCloudSync() {
-  loadCache(); 
-  document.getElementById("cloudStatus").textContent = "☁️ 読込中... | 📡 読込中...";
-  
-  fetchFromCloud();
-  fetchLiveApiData();
-  
-  setTimeout(cloudLoop, 3000);
-  setTimeout(apiLoop, 4500); 
+  loadCache(); document.getElementById("cloudStatus").textContent = "☁️ 読込中... | 📡 読込中...";
+  fetchFromCloud(); fetchLiveApiData();
+  setTimeout(cloudLoop, 3000); setTimeout(apiLoop, 4500); 
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // ★ 時間帯ジャンプボタンの生成
+  // ★ 時間帯ジャンプのインデックス生成 (04〜25時)
   let ibar = document.getElementById("ttIndexBar");
   if(ibar) {
-      let ibarHtml = "";
+      let hHtml = "";
       for(let h=4; h<=25; h++) {
           let displayH = h >= 24 ? h - 24 : h;
-          ibarHtml += `<div class="tt-index-btn" onclick="jumpToTime(${h})">${displayH}</div>`;
+          hHtml += `<div class="tt-index-btn" onclick="jumpToTime(${h})">${displayH}</div>`;
       }
-      ibar.innerHTML = ibarHtml;
+      ibar.innerHTML = hHtml;
   }
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -1471,8 +1428,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (opts.includes(params)) document.getElementById("opFilter").value = params;
   }
   
-  changeTab('daily'); 
-  initCloudSync(); 
+  changeTab('daily'); initCloudSync(); 
 });
 </script>
 </body>
