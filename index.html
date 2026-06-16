@@ -54,7 +54,8 @@
   <div id="diag"></div>
   <div id="sel">
     <button class="linebtn kaiBtn" onclick="location.href='kai.html'+location.search">回送一覧</button>
-    <button class="linebtn unyoBtn" onclick="location.href='unyo_viewer_phone.html'+location.search">運用記録</button>
+    <button class="linebtn unyoBtn" onclick="location.href='unyo_viewer.html'+location.search">運用記録(PC)</button>
+    <button class="linebtn unyoBtn" onclick="location.href='unyo_viewer_phone.html'+location.search">運用記録(スマホ)</button>
   </div>
   <div id="main"></div>
   <div id="log"></div>
@@ -372,11 +373,17 @@
     kaiBtn.addEventListener("click", ()=>{ location.href = "kai.html" + location.search; });
     sel.appendChild(kaiBtn);
     
-    const unyoBtn = document.createElement("button");
-    unyoBtn.className = "linebtn unyoBtn";
-    unyoBtn.textContent = "運用記録";
-    unyoBtn.addEventListener("click", ()=>{ location.href = "unyo_viewer.html" + location.search; });
-    sel.appendChild(unyoBtn);
+    const unyoBtnPC = document.createElement("button");
+    unyoBtnPC.className = "linebtn unyoBtn";
+    unyoBtnPC.textContent = "運用記録(PC)";
+    unyoBtnPC.addEventListener("click", ()=>{ location.href = "unyo_viewer.html" + location.search; });
+    sel.appendChild(unyoBtnPC);
+
+    const unyoBtnSP = document.createElement("button");
+    unyoBtnSP.className = "linebtn unyoBtn";
+    unyoBtnSP.textContent = "運用記録(スマホ)";
+    unyoBtnSP.addEventListener("click", ()=>{ location.href = "unyo_viewer_phone.html" + location.search; });
+    sel.appendChild(unyoBtnSP);
 
 const main = document.getElementById("main");
     main.innerHTML = "";
