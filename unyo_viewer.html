@@ -468,12 +468,22 @@ function getDispKind(rawKind, groupId) {
 
 function getAffiliationGroup(lineId, aff) {
     if (!aff) return null;
-    let isTobu = aff.includes("東武") || aff.includes("武");
+    let isTobu = aff === "武" || aff.includes("東武");
+    let isTokyu = aff === "急" || aff === "み" || aff.includes("東急");
+    
+    // 東武と東急の判別：「東」だけの場合の文脈処理
+    if (aff === "東") {
+        if (lineId === 'meguro' || lineId === 'extra_meguro') {
+            isTokyu = true;
+        } else {
+            isTobu = true; // 東横線(toyoko)や田園都市線(dento)などでは「東武」
+        }
+    }
+
     let isMetro = aff.includes("メ") || aff.includes("営") || aff.includes("副") || aff.includes("半") || aff.includes("南");
     let isToei = aff.includes("都") || aff.includes("三");
     let isSaitamaSeibu = aff.includes("埼") || aff.includes("西");
     let isSotetsu = aff.includes("相") || aff.includes("G") || aff.includes("Ｇ");
-    let isTokyu = aff.includes("急") || aff.includes("み") || (!isTobu && aff.includes("東"));
 
     if (lineId === 'meguro' || lineId === 'extra_meguro') {
         if (isTokyu) return "K";
@@ -485,7 +495,7 @@ function getAffiliationGroup(lineId, aff) {
         if (isTokyu) return "K";
         if (isMetro) return "S";
         if (isTobu) return "T";
-    } else { 
+    } else { // toyoko, shinyokohama, extra_tymg 等
         if (isTokyu) return "K";
         if (isMetro) return "S";
         if (isTobu || isToei) return "T";
