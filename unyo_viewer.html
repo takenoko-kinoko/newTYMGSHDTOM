@@ -468,19 +468,38 @@ function getDispKind(rawKind, groupId) {
 
 function getAffiliationGroup(lineId, aff) {
     if (!aff) return null;
+    let isTobu = aff.includes("東武") || aff.includes("武");
+    let isMetro = aff.includes("メ") || aff.includes("営") || aff.includes("副") || aff.includes("半") || aff.includes("南");
+    let isToei = aff.includes("都") || aff.includes("三");
+    let isSaitamaSeibu = aff.includes("埼") || aff.includes("西");
+    let isSotetsu = aff.includes("相") || aff.includes("G") || aff.includes("Ｇ");
+    let isTokyu = aff.includes("急") || aff.includes("み") || (!isTobu && aff.includes("東"));
+
     if (lineId === 'meguro' || lineId === 'extra_meguro') {
-        if (aff.includes("急") || aff.includes("東")) return "K"; if (aff.includes("メ") || aff.includes("営") || aff.includes("南") || aff.includes("副")) return "S"; if (aff.includes("都") || aff.includes("三")) return "T"; if (aff.includes("埼") || aff.includes("西")) return "M"; if (aff.includes("相") || aff.includes("G")) return "G";
+        if (isTokyu) return "K";
+        if (isMetro) return "S";
+        if (isToei) return "T";
+        if (isSaitamaSeibu) return "M";
+        if (isSotetsu) return "G";
     } else if (lineId === 'dento' || lineId === 'extra_dtom') {
-        if (aff.includes("急") || aff.includes("東")) return "K"; if (aff.includes("メ") || aff.includes("営") || aff.includes("半")) return "S"; if (aff.includes("武") || aff.includes("東武")) return "T";
+        if (isTokyu) return "K";
+        if (isMetro) return "S";
+        if (isTobu) return "T";
     } else { 
-        if (aff.includes("急") || aff.includes("み") || aff.includes("東")) return "K"; if (aff.includes("メ") || aff.includes("営") || aff.includes("副")) return "S"; if (aff.includes("武") || aff.includes("都")) return "T"; if (aff.includes("西") || aff.includes("埼")) return "M"; if (aff.includes("相") || aff.includes("G")) return "G";
+        if (isTokyu) return "K";
+        if (isMetro) return "S";
+        if (isTobu || isToei) return "T";
+        if (isSaitamaSeibu) return "M";
+        if (isSotetsu) return "G";
     }
     return null;
 }
 
 function getFormationString(lineId, aff, orchStr, useFormat) {
     if (!aff && !orchStr) return { dispAff: "", fNo: "" };
-    if (!useFormat || lineId.includes('extra_dtom') || lineId.includes('extra_oimachi')) { return { dispAff: aff, fNo: orchStr }; }
+    if (!useFormat || lineId.includes('extra_dtom') || lineId.includes('extra_oimachi') || lineId === 'oimachi') { 
+        return { dispAff: aff, fNo: orchStr }; 
+    }
     
     let orch = parseInt(orchStr, 10); let orchStrPad = String(orch).padStart(2, '0');
     if (isNaN(orch)) return { dispAff: aff, fNo: orchStr };
@@ -833,11 +852,29 @@ function render() {
             if(destF !== "all" && t.dest !== destF) return;
 
             let isDaiso = false; let aff = t.affiliation || ""; let orch = (t.orchestration && t.orchestration !== "00") ? t.orchestration : "";
-            if (aff && label) { const opAlphaMatch = label.match(/[A-Za-z]/); if (opAlphaMatch) { const affGroup = getAffiliationGroup(g.id, aff); if (affGroup && opAlphaMatch[0] !== affGroup) isDaiso = true; } }
+            if (aff && label) { 
+                const opAlphaMatch = label.match(/[A-Za-z]/); 
+                if (opAlphaMatch) { 
+                    const opGroup = opAlphaMatch[0].toUpperCase();
+                    const affGroup = getAffiliationGroup(g.id, aff); 
+                    if (affGroup && opGroup !== affGroup) {
+                        // 目黒線の5xx(M)に南北線の車両(S)が入るのは正規。逆も除外。
+                        if (['meguro', 'extra_meguro', 'extra_tymg'].some(h => hl.includes(h)) && opGroup === 'M' && affGroup === 'S') {
+                            isDaiso = false;
+                        } else if (['meguro', 'extra_meguro', 'extra_tymg'].some(h => hl.includes(h)) && opGroup === 'S' && affGroup === 'M') {
+                            isDaiso = false;
+                        } else {
+                            isDaiso = true; 
+                        }
+                    } 
+                } 
+            }
             if (daisoF && !isDaiso) return;
             
             let fObj = getFormationString(t.formatType || g.id, aff, orch, useFmt);
-            if (currentView !== 'weekday' && currentView !== 'holiday' && formSelVal !== "all" && formSelVal !== `[${fObj.dispAff}] ${fObj.fNo}`) return;
+            let dispTextForFilter = useFmt ? fObj.fNo : orch;
+            let expectedFormVal = hl.includes('oimachi') ? dispTextForFilter : (fObj.dispAff ? `[${fObj.dispAff}] ${dispTextForFilter}` : dispTextForFilter);
+            if (currentView !== 'weekday' && currentView !== 'holiday' && formSelVal !== "all" && formSelVal !== expectedFormVal) return;
 
             let isRunning = false; 
             
@@ -852,7 +889,7 @@ function render() {
             if ((currentView === 'daily' || currentView.startsWith('custom_') || currentView.startsWith('import'))) {
                 if (aff || orch) {
                     let dispText = useFmt ? `${fObj.fNo}` : `${orch}`;
-                    let affPart = fObj.dispAff ? `[${fObj.dispAff}] ` : "";
+                    let affPart = (fObj.dispAff && !hl.includes('oimachi')) ? `[${fObj.dispAff}] ` : "";
                     formTag = `<div class="t-tr-form" title="${affPart}${dispText}">${affPart}${dispText}</div>`;
                 }
             }
