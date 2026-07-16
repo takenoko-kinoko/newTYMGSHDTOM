@@ -368,6 +368,7 @@ var TRACK_CIRCLES = { "1":"①","2":"②","3":"③","4":"④","5":"⑤","6":"⑥
 var API_ENDPOINTS = [{id:'toyoko',url:"https://w-tid.jp/tokyu/toyoko.json"},{id:'meguro',url:"https://w-tid.jp/tokyu/meguro.json"},{id:'shinyokohama',url:"https://w-tid.jp/tokyu/shinyokohama.json"},{id:'dento',url:"https://w-tid.jp/tokyu/dento.json"},{id:'oimachi',url:"https://w-tid.jp/tokyu/oimachi.json"}];
 var DEST_MAP_TYMG = { 0:"", 33:"副都心線", 54:"三田線", 67:"南北線", 71:"目黒", 73:"武蔵小山", 76:"大岡山", 77:"奥沢", 78:"渋谷", 84:"自由が丘", 88:"武蔵小杉", 89:"元住吉", 90:"日吉", 93:"菊名", 98:"横浜", 103:"元町・中華街", 108:"新横浜", 111:"相鉄線" };
 var DEST_MAP_DTOM = { 0:"", 45:"半蔵門線", 51:"大井町", 58:"大岡山", 60:"自由が丘", 65:"渋谷", 69:"用賀", 71:"二子玉川", 74:"溝の口", 75:"梶が谷", 78:"鷺沼", 80:"あざみ野", 86:"長津田", 91:"中央林間", 95:"恩田", 96:"こどもの国", 137:"元住吉" };
+var SECTION_KIND_MAP = { "all": ["all", "各停", "B", "G", "準急", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "東横線": ["all", "各停", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "目黒線": ["all", "各停", "急行", "回送"], "田園都市線": ["all", "各停", "準急", "急行", "回送"], "大井町線": ["all", "各停", "B", "G", "急行", "回送"], "新横浜線": ["all", "各停", "急行", "特急_all", "特急", "F", "回送"] };
 var MASTER_LINE_ORDERS = { "東横線": ["副都心線", "渋谷", "中目黒", "自由が丘", "武蔵小杉", "元住吉", "日吉", "菊名", "横浜", "元町・中華街", "新横浜", "相鉄線"], "目黒線": ["三田線", "南北線", "目黒", "武蔵小山", "大岡山", "奥沢", "武蔵小杉", "元住吉", "日吉", "新横浜", "相鉄線"], "新横浜線": ["副都心線", "三田線", "南北線", "渋谷", "目黒", "日吉", "新横浜", "相鉄線"], "田園都市線": ["半蔵門線", "渋谷", "用賀", "二子玉川", "溝の口", "梶が谷", "鷺沼", "あざみ野", "長津田", "中央林間", "大井町", "大岡山", "恩田", "こどもの国"], "大井町線": ["大井町", "大岡山", "自由が丘", "二子玉川", "溝の口", "鷺沼", "長津田", "恩田", "中央林間"] };
 var STATION_MAP = { 26:"渋谷", 908:"代官山", 909:"中目黒", 910:"祐天寺", 911:"学芸大学", 912:"都立大学", 913:"自由が丘", 914:"田園調布", 915:"多摩川", 916:"新丸子", 57:"武蔵小杉", 918:"元住吉", 919:"日吉", 920:"綱島", 921:"大倉山", 108:"菊名", 923:"妙蓮寺", 924:"白楽", 925:"東白楽", 926:"反町", 5:"横浜", 24:"目黒", 929:"不動前", 930:"武蔵小山", 931:"西小山", 932:"洗足", 933:"大岡山", 934:"奥沢", 942:"池尻大橋", 943:"三軒茶屋", 944:"駒沢大学", 945:"桜新町", 946:"用賀", 947:"二子玉川", 948:"二子新地", 949:"高津", 950:"溝の口", 951:"梶が谷", 952:"宮崎台", 953:"宮前平", 954:"鷺沼", 955:"たまプラーザ", 956:"あざみ野", 957:"江田", 958:"市が尾", 959:"藤が丘", 960:"青葉台", 961:"田奈", 114:"長津田", 963:"つくし野", 964:"すずかけ台", 965:"南町田", 966:"つきみ野", 967:"中央林間", 494:"大井町", 969:"下神明", 970:"戸越公園", 971:"中延", 972:"荏原町", 973:"旗の台", 974:"北千束", 976:"緑が丘", 978:"九品仏", 979:"尾山台", 980:"等々力", 981:"上野毛", 982:"新綱島", 983:"新横浜" };
 var ST_COLOR_MAP = { "代官山":"var(--toyoko)","中目黒":"var(--toyoko)","祐天寺":"var(--toyoko)","学芸大学":"var(--toyoko)","都立大学":"var(--toyoko)","綱島":"var(--toyoko)","大倉山":"var(--toyoko)","菊名":"var(--toyoko)","妙蓮寺":"var(--toyoko)","白楽":"var(--toyoko)","東白楽":"var(--toyoko)","反町":"var(--toyoko)","横浜":"var(--toyoko)","目黒":"var(--meguro)","不動前":"var(--meguro)","武蔵小山":"var(--meguro)","西小山":"var(--meguro)","洗足":"var(--meguro)","奥沢":"var(--meguro)","池尻大橋":"var(--dento)","三軒茶屋":"var(--dento)","駒沢大学":"var(--dento)","桜新町":"var(--dento)","用賀":"var(--dento)","梶が谷":"var(--dento)","宮崎台":"var(--dento)","宮前平":"var(--dento)","鷺沼":"var(--dento)","たまプラーザ":"var(--dento)","あざみ野":"var(--dento)","江田":"var(--dento)","市が尾":"var(--dento)","藤が丘":"var(--dento)","青葉台":"var(--dento)","田奈":"var(--dento)","長津田":"var(--dento)","つくし野":"var(--dento)","すずかけ台":"var(--dento)","南町田":"var(--dento)","つきみ野":"var(--dento)","中央林間":"var(--dento)","恩田":"var(--dento)","こどもの国":"var(--dento)","大井町":"var(--oimachi)","下神明":"var(--oimachi)","戸越公園":"var(--oimachi)","中延":"var(--oimachi)","荏原町":"var(--oimachi)","旗の台":"var(--oimachi)","北千束":"var(--oimachi)","緑が丘":"var(--oimachi)","九品仏":"var(--oimachi)","尾山台":"var(--oimachi)","等々力":"var(--oimachi)","上野毛":"var(--oimachi)","新綱島":"var(--shinyoko)","新横浜":"var(--shinyoko)" };
@@ -398,14 +399,18 @@ function calculateSourceName(tr, hl) {
         
         if (hasOimachiTrack) return "大井町線";
         if (hasDentoTrack || hasDentoSection) return "田園都市線";
+        
         return (hl === 'oimachi') ? "大井町線" : "田園都市線";
     } else {
         let hasShinYoko = tr.history.some(h => ["新横浜", "新綱島"].some(s => h.st.includes(s)));
         if (hasShinYoko) return "新横浜線";
+        
         let baseLine = "東横線";
         if (hl === 'meguro') baseLine = "目黒線";
         else if (hl === 'shinyokohama') baseLine = "新横浜線";
-        else if (hl === 'extra_tymg') { if (tr.trainNo && String(tr.trainNo).match(/^[2-6]/)) baseLine = "目黒線"; }
+        else if (hl === 'extra_tymg') {
+            if (tr.trainNo && String(tr.trainNo).match(/^[2-6]/)) baseLine = "目黒線";
+        }
         return baseLine;
     }
 }
@@ -489,10 +494,12 @@ function getAffiliationGroup(lineId, aff) {
     if (!aff) return null;
     let isTobu = aff === "武" || aff.includes("東武");
     let isTokyu = aff === "急" || aff === "み" || aff.includes("東急");
+    
     if (aff === "東") {
         if (lineId === 'meguro' || lineId === 'extra_meguro') isTokyu = true;
-        else isTobu = true;
+        else isTobu = true; 
     }
+
     let isMetro = aff.includes("メ") || aff.includes("営") || aff.includes("副") || aff.includes("半") || aff.includes("南");
     let isToei = aff.includes("都") || aff.includes("三");
     let isSaitamaSeibu = aff.includes("埼") || aff.includes("西");
@@ -502,7 +509,7 @@ function getAffiliationGroup(lineId, aff) {
         if (isTokyu) return "K"; if (isMetro) return "S"; if (isToei) return "T"; if (isSaitamaSeibu) return "M"; if (isSotetsu) return "G";
     } else if (lineId === 'dento' || lineId === 'extra_dtom') {
         if (isTokyu) return "K"; if (isMetro) return "S"; if (isTobu) return "T";
-    } else {
+    } else { 
         if (isTokyu) return "K"; if (isMetro) return "S"; if (isTobu || isToei) return "T"; if (isSaitamaSeibu) return "M"; if (isSotetsu) return "G";
     }
     return null;
@@ -720,13 +727,7 @@ function buildFormList(data) {
     }
   }
   
-  let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-  let targetDateForCalc = new Date(new Date().getTime() - 4 * 60 * 60 * 1000);
-  let autoInfo = getAutoDayType(targetDateForCalc);
-  let todayDayType = autoInfo.type;
-  const canUseLiveCache = isTodayDaily || (currentView === todayDayType);
-
-  if (canUseLiveCache) {
+  if (!hasReceivedCloudData || (currentView === 'daily' && document.getElementById("dailyDateSelect")?.value === getDailyKey(new Date()))) {
       for (const opKey in apiLiveCache) {
           let hl = opKey.split('_')[0]; if (opKey.startsWith("extra_")) hl = opKey.split('_').slice(0,2).join('_');
           if (hl === 'extra_toyoko' || hl === 'extra_meguro') hl = 'extra_tymg';
@@ -1034,7 +1035,7 @@ window.render = function() {
             let cars8MinamiClass = isCars8Minami ? 'cars8-minami-badge' : '';
 
             let formTag = "";
-            if ((currentView === 'daily' || currentView.startsWith('custom_') || currentView.startsWith('import')) || canUseLiveCache) {
+            if (currentView !== 'weekday' && currentView !== 'holiday') {
                 let orchToUse = (t.orchestration && t.orchestration !== "00" && t.orchestration !== "0") ? t.orchestration : "";
                 if (t.affiliation || orchToUse) {
                     let dispText = useFmt ? `${fObj.fNo}` : `${orchToUse}`;
@@ -1131,14 +1132,16 @@ window.render = function() {
                   let isCars8Minami = (liveInfo.cars === 8 && liveInfo.affiliation === "南" && (g.id.includes('meguro') || (g.id === 'extra_tymg' && String(tNo).match(/^[2-6]/))));
                   let cars8MinamiClass = isCars8Minami ? 'cars8-minami-badge' : '';
                   
-                  let orchToUse = (liveInfo.orchestration && liveInfo.orchestration !== "00" && liveInfo.orchestration !== "0") ? liveInfo.orchestration : "";
                   let formTag = "";
-                  if (liveInfo.affiliation || orchToUse) { 
-                      let dispText = useFmt ? fObj.fNo : orchToUse; 
-                      let affPart = (fObj.dispAff && !g.id.includes('oimachi')) ? `[${fObj.dispAff}] ` : ""; 
-                      let innerText = `${affPart}${dispText}`.trim();
-                      if (innerText !== "") {
-                          formTag = `<div class="t-tr-form" title="${innerText}"><span class="${cars8MinamiClass}">${innerText}</span></div>`; 
+                  if (currentView !== 'weekday' && currentView !== 'holiday') {
+                      let orchToUse = (liveInfo.orchestration && liveInfo.orchestration !== "00" && liveInfo.orchestration !== "0") ? liveInfo.orchestration : "";
+                      if (liveInfo.affiliation || orchToUse) { 
+                          let dispText = useFmt ? fObj.fNo : orchToUse; 
+                          let affPart = (fObj.dispAff && !g.id.includes('oimachi')) ? `[${fObj.dispAff}] ` : ""; 
+                          let innerText = `${affPart}${dispText}`.trim();
+                          if (innerText !== "") {
+                              formTag = `<div class="t-tr-form" title="${innerText}"><span class="${cars8MinamiClass}">${innerText}</span></div>`; 
+                          }
                       }
                   }
                   
@@ -1504,8 +1507,13 @@ async function cloudLoop() {
 }
 
 async function apiLoop() {
+    let targetDateForCalc = new Date(new Date().getTime() - 4 * 60 * 60 * 1000);
+    let autoInfo = getAutoDayType(targetDateForCalc);
+    let todayDayType = autoInfo.type;
     let isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === getDailyKey(new Date()));
-    if (isTodayDaily && !isFetchingApi) { await fetchLiveApiData(); } setTimeout(apiLoop, 3000); 
+    let canUseLiveCache = isTodayDaily || (currentView === todayDayType);
+
+    if (canUseLiveCache && !isFetchingApi) { await fetchLiveApiData(); } setTimeout(apiLoop, 3000); 
 }
 
 window.exportData = function() {
