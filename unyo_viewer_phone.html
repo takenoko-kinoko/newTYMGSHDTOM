@@ -100,7 +100,7 @@
     .kind-通特 { background: #fff; border: 1px solid #d90240; color: #d90240; padding: 1px 0;} 
     .kind-Sトレイン { background: #fff; color: #009688; border: 1px solid #009688; } .kind-回送 { background: #757575; }
 
-    /* ★ 両数バッジ（目黒線の特定条件用） */
+    /* ★ 両数バッジ */
     .cars-badge { font-size:10px; color:#fff; background:#1976d2; padding:1px 3px; border-radius:3px; margin-left:4px; display:inline-block; vertical-align:middle; line-height:1; }
 
     @media (max-width: 800px) {
@@ -208,7 +208,7 @@
     <div id="contextFilters" style="display:flex; align-items:center; gap:8px;"></div>
     
     <div class="filter-item"><span class="filter-label">路線:</span>
-      <select id="lineFilter" class="filter-select" onchange="updateFormDropdown(); render();">
+      <select id="lineFilter" class="filter-select" onchange="render(); updateFormDropdown();">
         <option value="all">全路線</option>
         <option value="toyoko">東横線</option>
         <option value="meguro">目黒線</option>
@@ -220,7 +220,7 @@
     </div>
     
     <div class="filter-item"><span class="filter-label">運番:</span>
-        <input type="text" id="opNumSearch" autocomplete="off" class="filter-select" placeholder="例: 01K" oninput="updateFormDropdown(); render();" style="width: 80px;">
+        <input type="text" id="opNumSearch" autocomplete="off" class="filter-select" placeholder="例: 01K" oninput="render(); updateFormDropdown();" style="width: 80px;">
     </div>
   </div>
 </div>
@@ -354,6 +354,9 @@ let lastCloudTime = ""; let lastApiTime = "";
 let targetTimetableStation = null;
 let hasOpenedStandalone = false;
 
+// ★ 差分更新用キャッシュ
+let currentFilterState = {};
+
 let ttState = {
   stName: "", trains: [], dirMode: "both", lineMode: "all", availableLines: [], currentTUid: null
 };
@@ -361,7 +364,6 @@ let ttState = {
 const API_ENDPOINTS = [{id:'toyoko',url:"https://w-tid.jp/tokyu/toyoko.json"},{id:'meguro',url:"https://w-tid.jp/tokyu/meguro.json"},{id:'shinyokohama',url:"https://w-tid.jp/tokyu/shinyokohama.json"},{id:'dento',url:"https://w-tid.jp/tokyu/dento.json"},{id:'oimachi',url:"https://w-tid.jp/tokyu/oimachi.json"}];
 const DEST_MAP_TYMG = { 0:"", 33:"副都心線", 54:"三田線", 67:"南北線", 71:"目黒", 73:"武蔵小山", 76:"大岡山", 77:"奥沢", 78:"渋谷", 84:"自由が丘", 88:"武蔵小杉", 89:"元住吉", 90:"日吉", 93:"菊名", 98:"横浜", 103:"元町・中華街", 108:"新横浜", 111:"相鉄線" };
 const DEST_MAP_DTOM = { 0:"", 45:"半蔵門線", 51:"大井町", 58:"大岡山", 60:"自由が丘", 65:"渋谷", 69:"用賀", 71:"二子玉川", 74:"溝の口", 75:"梶が谷", 78:"鷺沼", 80:"あざみ野", 86:"長津田", 91:"中央林間", 95:"恩田", 96:"こどもの国", 137:"元住吉" };
-const SECTION_KIND_MAP = { "all": ["all", "各停", "B", "G", "準急", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "東横線": ["all", "各停", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "目黒線": ["all", "各停", "急行", "回送"], "田園都市線": ["all", "各停", "準急", "急行", "回送"], "大井町線": ["all", "各停", "B", "G", "急行", "回送"], "新横浜線": ["all", "各停", "急行", "特急_all", "特急", "F", "回送"] };
 const MASTER_LINE_ORDERS = { "東横線": ["副都心線", "渋谷", "中目黒", "自由が丘", "武蔵小杉", "元住吉", "日吉", "菊名", "横浜", "元町・中華街", "新横浜", "相鉄線"], "目黒線": ["三田線", "南北線", "目黒", "武蔵小山", "大岡山", "奥沢", "武蔵小杉", "元住吉", "日吉", "新横浜", "相鉄線"], "新横浜線": ["副都心線", "三田線", "南北線", "渋谷", "目黒", "日吉", "新横浜", "相鉄線"], "田園都市線": ["半蔵門線", "渋谷", "用賀", "二子玉川", "溝の口", "梶が谷", "鷺沼", "あざみ野", "長津田", "中央林間", "大井町", "大岡山", "恩田", "こどもの国"], "大井町線": ["大井町", "大岡山", "自由が丘", "二子玉川", "溝の口", "鷺沼", "長津田", "恩田", "中央林間"] };
 const STATION_MAP = { 26:"渋谷", 908:"代官山", 909:"中目黒", 910:"祐天寺", 911:"学芸大学", 912:"都立大学", 913:"自由が丘", 914:"田園調布", 915:"多摩川", 916:"新丸子", 57:"武蔵小杉", 918:"元住吉", 919:"日吉", 920:"綱島", 921:"大倉山", 108:"菊名", 923:"妙蓮寺", 924:"白楽", 925:"東白楽", 926:"反町", 5:"横浜", 24:"目黒", 929:"不動前", 930:"武蔵小山", 931:"西小山", 932:"洗足", 933:"大岡山", 934:"奥沢", 942:"池尻大橋", 943:"三軒茶屋", 944:"駒沢大学", 945:"桜新町", 946:"用賀", 947:"二子玉川", 948:"二子新地", 949:"高津", 950:"溝の口", 951:"梶が谷", 952:"宮崎台", 953:"宮前平", 954:"鷺沼", 955:"たまプラーザ", 956:"あざみ野", 957:"江田", 958:"市が尾", 959:"藤が丘", 960:"青葉台", 961:"田奈", 114:"長津田", 963:"つくし野", 964:"すずかけ台", 965:"南町田", 966:"つきみ野", 967:"中央林間", 494:"大井町", 969:"下神明", 970:"戸越公園", 971:"中延", 972:"荏原町", 973:"旗の台", 974:"北千束", 976:"緑が丘", 978:"九品仏", 979:"尾山台", 980:"等々力", 981:"上野毛", 982:"新綱島", 983:"新横浜" };
 const ST_COLOR_MAP = { "代官山":"var(--toyoko)","中目黒":"var(--toyoko)","祐天寺":"var(--toyoko)","学芸大学":"var(--toyoko)","都立大学":"var(--toyoko)","綱島":"var(--toyoko)","大倉山":"var(--toyoko)","菊名":"var(--toyoko)","妙蓮寺":"var(--toyoko)","白楽":"var(--toyoko)","東白楽":"var(--toyoko)","反町":"var(--toyoko)","横浜":"var(--toyoko)","目黒":"var(--meguro)","不動前":"var(--meguro)","武蔵小山":"var(--meguro)","西小山":"var(--meguro)","洗足":"var(--meguro)","奥沢":"var(--meguro)","池尻大橋":"var(--dento)","三軒茶屋":"var(--dento)","駒沢大学":"var(--dento)","桜新町":"var(--dento)","用賀":"var(--dento)","梶が谷":"var(--dento)","宮崎台":"var(--dento)","宮前平":"var(--dento)","鷺沼":"var(--dento)","たまプラーザ":"var(--dento)","あざみ野":"var(--dento)","江田":"var(--dento)","市が尾":"var(--dento)","藤が丘":"var(--dento)","青葉台":"var(--dento)","田奈":"var(--dento)","長津田":"var(--dento)","つくし野":"var(--dento)","すずかけ台":"var(--dento)","南町田":"var(--dento)","つきみ野":"var(--dento)","中央林間":"var(--dento)","恩田":"var(--dento)","こどもの国":"var(--dento)","大井町":"var(--oimachi)","下神明":"var(--oimachi)","戸越公園":"var(--oimachi)","中延":"var(--oimachi)","荏原町":"var(--oimachi)","旗の台":"var(--oimachi)","北千束":"var(--oimachi)","緑が丘":"var(--oimachi)","九品仏":"var(--oimachi)","尾山台":"var(--oimachi)","等々力":"var(--oimachi)","上野毛":"var(--oimachi)","新綱島":"var(--shinyoko)","新横浜":"var(--shinyoko)" };
@@ -678,10 +680,9 @@ function getActiveData() {
   return null;
 }
 
-function updateDestDropdown() {
-  const destSelect = document.getElementById("destFilter"); const currentDest = destSelect.value || "all";
+// ★ 差分更新用ヘルパー関数
+function buildDestList(data) {
   let allDests = []; Object.values(MASTER_LINE_ORDERS).forEach(list => { list.forEach(d => { if (!allDests.includes(d)) allDests.push(d); }); });
-  const data = getActiveData();
   if (data) {
     for (const opKey in data) { 
       if(!data[opKey] || !data[opKey].trains) continue;
@@ -691,17 +692,12 @@ function updateDestDropdown() {
       }
     }
   }
-  destSelect.innerHTML = '<option value="all">すべての行先</option>';
-  allDests.forEach(d => destSelect.appendChild(new Option(d.endsWith("線") ? d + "直通" : d + "行", d)));
-  destSelect.value = allDests.includes(currentDest) ? currentDest : "all";
+  return allDests;
 }
 
-function updateFormDropdown() {
-  const formFilterArea = document.getElementById("formFilterArea"); const formSelect = document.getElementById("formFilterSel");
-  if (currentView === 'weekday' || currentView === 'holiday') { formFilterArea.style.display = 'none'; formSelect.innerHTML = '<option value="all">すべて表示</option>'; return; }
-  formFilterArea.style.display = 'flex';
-  const currentForm = formSelect.value || "all"; let forms = new Set();
-  const data = getActiveData(); const useFmt = document.getElementById("formatFilter")?.checked;
+function buildFormList(data) {
+  let forms = new Set();
+  const useFmt = document.getElementById("formatFilter")?.checked;
   const lineF = document.getElementById("lineFilter").value;
   const compF = document.getElementById("companyFilter").value;
   const secF = document.getElementById("sectionFilter").value;
@@ -737,7 +733,6 @@ function updateFormDropdown() {
         const t = data[opKey].trains[tUid];
         if (currentView === 'weekday' || currentView === 'holiday') { if (t.trainNo && (t.trainNo.endsWith("000") || t.trainNo.endsWith("990"))) continue; }
         if (t && !t.deleted && (t.affiliation || t.orchestration)) {
-            
             let calcSrc = calculateSourceName(t, hl);
             let srcMatch = false;
             if (secF === "all") srcMatch = true; 
@@ -776,21 +771,57 @@ function updateFormDropdown() {
           
           let trains = apiLiveCache[opKey];
           for (let tNo in trains) { 
-              let t = trains[tNo]; 
-              let srcMatch = false;
-              if (secF === "all") srcMatch = true; 
-              else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(t.sourceName)) srcMatch = true; 
-              else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(t.sourceName)) srcMatch = true; 
-              else if (t.sourceName === secF) srcMatch = true;
+              let t = trains[tNo]; let srcMatch = false;
+              if (secF === "all") srcMatch = true; else if (secF === "system_tymg" && ["東横線", "目黒線", "新横浜線"].includes(t.sourceName)) srcMatch = true; else if (secF === "system_dtom" && ["田園都市線", "大井町線"].includes(t.sourceName)) srcMatch = true; else if (t.sourceName === secF) srcMatch = true;
               if (srcMatch) addForm(hl, t.affiliation, t.orchestration, null, t.cars, label);
           }
       }
   }
-
-  formSelect.innerHTML = '<option value="all">すべて表示</option>';
-  Array.from(forms).sort().forEach(f => { formSelect.appendChild(new Option(f, f)); });
-  formSelect.value = Array.from(forms).includes(currentForm) ? currentForm : "all";
+  return Array.from(forms).sort();
 }
+
+function isArrayEqual(arr1, arr2) {
+    if (arr1.length !== arr2.length) return false;
+    for (let i = 0; i < arr1.length; i++) { if (arr1[i] !== arr2[i]) return false; }
+    return true;
+}
+
+// ★ 差分更新対応のドロップダウン更新関数
+window.updateDestDropdown = function() {
+  const data = getActiveData();
+  const newDests = buildDestList(data);
+  if (!currentFilterState.dests || !isArrayEqual(currentFilterState.dests, newDests)) {
+      currentFilterState.dests = newDests;
+      const destSelect = document.getElementById("destFilter");
+      const currentDest = destSelect.value || "all";
+      destSelect.innerHTML = '<option value="all">すべての行先</option>';
+      newDests.forEach(d => destSelect.appendChild(new Option(d.endsWith("線") ? d + "直通" : d + "行", d)));
+      destSelect.value = newDests.includes(currentDest) ? currentDest : "all";
+  }
+};
+
+window.updateFormDropdown = function() {
+  const formFilterArea = document.getElementById("formFilterArea"); const formSelect = document.getElementById("formFilterSel");
+  if (currentView === 'weekday' || currentView === 'holiday') { 
+      formFilterArea.style.display = 'none'; 
+      if (!currentFilterState.forms || currentFilterState.forms.length > 0) {
+          formSelect.innerHTML = '<option value="all">すべて表示</option>'; 
+          currentFilterState.forms = [];
+      }
+      return; 
+  }
+  formFilterArea.style.display = 'flex';
+  const data = getActiveData();
+  const newForms = buildFormList(data);
+  
+  if (!currentFilterState.forms || !isArrayEqual(currentFilterState.forms, newForms)) {
+      currentFilterState.forms = newForms;
+      const currentForm = formSelect.value || "all";
+      formSelect.innerHTML = '<option value="all">すべて表示</option>';
+      newForms.forEach(f => { formSelect.appendChild(new Option(f, f)); });
+      formSelect.value = newForms.includes(currentForm) ? currentForm : "all";
+  }
+};
 
 function updateNotice() {
   const noticeBar = document.getElementById('noticeBar'); const noticeText = document.getElementById('noticeText');
@@ -804,7 +835,7 @@ function updateContextUI(preservedDailyDate = null) {
     const label = document.createElement("span"); label.className = "filter-label"; label.textContent = "表示日:"; ctx.appendChild(label);
     const select = document.createElement("select"); select.id = "dailyDateSelect"; select.className = "filter-select"; select.style.maxWidth = "110px";
     select.onchange = () => { 
-        updateDestDropdown(); updateFormDropdown(); render(); document.getElementById("cloudStatus").textContent = "☁️ 読込中..."; fetchFromCloud(); 
+        window.updateDestDropdown(); window.updateFormDropdown(); window.render(); document.getElementById("cloudStatus").textContent = "☁️ 読込中..."; fetchFromCloud(); 
         if (select.value === getDailyKey(new Date())) fetchLiveApiData();
     };
     const keys = Object.keys(logs.daily || {}).sort().reverse();
@@ -813,7 +844,7 @@ function updateContextUI(preservedDailyDate = null) {
     ctx.appendChild(select);
   } else if (currentView.startsWith("import") && logs[currentView]) {
     const clearBtn = document.createElement("button"); clearBtn.className = "btn-reset"; clearBtn.textContent = "✖ 破棄";
-    clearBtn.onclick = () => { if(confirm(`読み込んだデータを破棄しますか？`)) { logs[currentView] = null; changeTab('daily'); } };
+    clearBtn.onclick = () => { if(confirm(`読み込んだデータを破棄しますか？`)) { logs[currentView] = null; window.changeTab('daily'); } };
     ctx.appendChild(clearBtn);
   }
 }
@@ -831,8 +862,8 @@ function updateTabs() {
   if (currentView === 'daily' && cfg.dispD === false) needsSwitch = true;
 
   if (needsSwitch) {
-      if (cfg.dispW !== false) changeTab('weekday'); else if (cfg.dispH !== false) changeTab('holiday');
-      else if (cfg.dispD !== false) changeTab('daily'); else changeTab('import1'); 
+      if (cfg.dispW !== false) window.changeTab('weekday'); else if (cfg.dispH !== false) window.changeTab('holiday');
+      else if (cfg.dispD !== false) window.changeTab('daily'); else window.changeTab('import1'); 
   }
 
   document.querySelectorAll('.tab-custom').forEach(el => el.remove());
@@ -841,7 +872,7 @@ function updateTabs() {
     logs.customViews.forEach((cv, i) => {
       if (cv.active && cv.title) {
         let btn = document.createElement('button'); btn.id = `tab_custom_${i}`; btn.className = `tab tab-custom ${currentView === `custom_${i}` ? 'active' : ''}`;
-        btn.onclick = () => changeTab(`custom_${i}`); btn.textContent = cv.title; tabArea.appendChild(btn);
+        btn.onclick = () => window.changeTab(`custom_${i}`); btn.textContent = cv.title; tabArea.appendChild(btn);
       }
     });
   }
@@ -851,7 +882,11 @@ window.changeTab = function(tabId) {
   currentView = tabId; 
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
   const target = document.getElementById('tab_' + tabId); if(target) target.classList.add('active');
-  updateContextUI(); updateDestDropdown(); updateFormDropdown(); render(); 
+  updateContextUI(); 
+  
+  // タブ切り替え時は状態をリセットして強制更新
+  currentFilterState = {}; 
+  window.updateDestDropdown(); window.updateFormDropdown(); window.render(); 
   
   if (!tabId.startsWith('import')) {
       document.getElementById("cloudStatus").textContent = "☁️ 読込中..."; fetchFromCloud();
@@ -871,7 +906,7 @@ window.render = function() {
     container.innerHTML = `<div style="text-align:center; padding:40px; background:#fff; border-radius:8px;">
         <p style="font-weight:bold; margin-bottom:15px; color:#555;">JSONファイルを読み込んで表示します。</p>
         <input type="file" id="jsonUpload_${currentView}" accept=".json" style="margin-bottom: 15px;"><br>
-        <button class="btn-action btn-export" style="margin:0 auto; padding:10px 20px; font-size:14px;" onclick="importJSONData(document.getElementById('jsonUpload_${currentView}').files[0], '${currentView}')">ファイルを読み込む</button>
+        <button class="btn-action btn-export" style="margin:0 auto; padding:10px 20px; font-size:14px;" onclick="window.importJSONData(document.getElementById('jsonUpload_${currentView}').files[0], '${currentView}')">ファイルを読み込む</button>
       </div>`;
     return;
   }
@@ -1040,7 +1075,6 @@ window.render = function() {
                 remarksTag = `<div style="font-size:11px; color:#555; background:#fff9c4; padding:2px 6px; border-radius:4px; margin-top:4px; border:1px solid #fff59d; display:inline-block; max-width:100%; white-space:normal; word-break:break-all;">✎ ${t.remarks}</div>`;
             }
 
-            // ★ スマホクラッシュ対策: map().join() による爆速レンダリング
             let hHtml = `<div class="t-hist">` + t.history.map(h => {
               const isEkikan = h.st.includes("駅間");
               const cls = `hist-item ${isEkikan ? 'is-ekikan' : ''}`;
@@ -1442,7 +1476,7 @@ async function fetchLiveApiData() {
       }
       if (!hasReceivedCloudData) {
           apiLiveCache = newLiveCache; lastApiTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-          updateStatusDisplay(); if (!currentView.startsWith("import")) { updateDestDropdown(); updateFormDropdown(); render(); }
+          updateStatusDisplay(); if (!currentView.startsWith("import")) { window.updateDestDropdown(); window.updateFormDropdown(); window.render(); }
       }
   } catch (err) { lastApiTime = "⚠ エラー (自動再試行中)"; updateStatusDisplay(); } finally { isFetchingApi = false; }
 }
@@ -1473,10 +1507,10 @@ async function fetchFromCloud() {
       logs.customViews = data.customViews || []; if(data.appConfig) logs.appConfig = data.appConfig;
       
       updateTabs(); updateNotice();
-      if (!currentView.startsWith("import")) { updateContextUI(selectedDaily); updateDestDropdown(); updateFormDropdown(); render(); }
+      if (!currentView.startsWith("import")) { updateContextUI(selectedDaily); window.updateDestDropdown(); window.updateFormDropdown(); window.render(); }
       
       lastCloudTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'}); updateStatusDisplay();
-      if (targetTimetableStation && !hasOpenedStandalone) { hasOpenedStandalone = true; setTimeout(() => window.openStationTimetable(targetTimetableStation, null), 300); }
+      if (targetTimetableStation && !hasOpenedStandalone) { hasOpenedStandalone = true; setTimeout(() => openStationTimetable(targetTimetableStation, null), 300); }
     }
   } catch (err) { if (!hasReceivedCloudData) { lastCloudTime = "⚠ エラー"; } else { lastCloudTime += " [遅延]"; } updateStatusDisplay(); } finally { isFetchingCloud = false; }
 }
@@ -1511,7 +1545,8 @@ window.importJSONData = function(file, targetView) {
             
             logs[targetView] = sourceLogs;
             alert("読み込み成功しました。");
-            updateDestDropdown(); updateFormDropdown(); render();
+            currentFilterState = {}; // インポート時もリセット
+            window.updateDestDropdown(); window.updateFormDropdown(); window.render();
         } catch(err) {
             alert("読み込み失敗: " + err.message);
         }
