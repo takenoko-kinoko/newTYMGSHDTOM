@@ -66,7 +66,17 @@
     .t-tr { width: 65px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
     .t-tr-no { font-family: monospace; color: #1976d2; font-weight: bold; font-size: 14px; line-height: 1.2; }
     .t-tr-sub { font-size: 10px; color: #666; margin-top: 2px; }
+    
+    /* ★ 編成表示のスタイル */
     .t-tr-form { font-size: 11px; color: #4886a5; font-weight: bold; margin-top: 2px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+    
+    /* ★ 目黒線・南北線・8両用の専用スタイル（エメラルドグリーンの太い下線） */
+    .cars8-minami-badge { 
+        text-decoration: underline;
+        text-decoration-color: #00ada9;
+        text-decoration-thickness: 5px;
+        text-underline-offset: 2px;
+    }
     
     .t-dest { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; overflow: hidden; }
     .t-dest-text { font-size: 14px; font-weight: bold; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
@@ -95,9 +105,6 @@
     .kind-急行 { background: #d90240; } .kind-特急, .kind-F { background: #ff9800; } 
     .kind-通特 { background: #fff; border: 1px solid #d90240; color: #d90240; padding: 1px 0;} 
     .kind-Sトレイン { background: #fff; color: #009688; border: 1px solid #009688; } .kind-回送 { background: #757575; }
-
-    /* ★ 両数バッジ */
-    .cars-badge { font-size:10px; color:#fff; background:#1976d2; padding:1px 3px; border-radius:3px; margin-left:4px; display:inline-block; vertical-align:middle; line-height:1; }
 
     @media (max-width: 800px) {
       .header-top { padding: 8px 10px; gap: 5px; flex-wrap: wrap; }
@@ -360,6 +367,7 @@ let ttState = {
 const API_ENDPOINTS = [{id:'toyoko',url:"https://w-tid.jp/tokyu/toyoko.json"},{id:'meguro',url:"https://w-tid.jp/tokyu/meguro.json"},{id:'shinyokohama',url:"https://w-tid.jp/tokyu/shinyokohama.json"},{id:'dento',url:"https://w-tid.jp/tokyu/dento.json"},{id:'oimachi',url:"https://w-tid.jp/tokyu/oimachi.json"}];
 const DEST_MAP_TYMG = { 0:"", 33:"副都心線", 54:"三田線", 67:"南北線", 71:"目黒", 73:"武蔵小山", 76:"大岡山", 77:"奥沢", 78:"渋谷", 84:"自由が丘", 88:"武蔵小杉", 89:"元住吉", 90:"日吉", 93:"菊名", 98:"横浜", 103:"元町・中華街", 108:"新横浜", 111:"相鉄線" };
 const DEST_MAP_DTOM = { 0:"", 45:"半蔵門線", 51:"大井町", 58:"大岡山", 60:"自由が丘", 65:"渋谷", 69:"用賀", 71:"二子玉川", 74:"溝の口", 75:"梶が谷", 78:"鷺沼", 80:"あざみ野", 86:"長津田", 91:"中央林間", 95:"恩田", 96:"こどもの国", 137:"元住吉" };
+const SECTION_KIND_MAP = { "all": ["all", "各停", "B", "G", "準急", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "東横線": ["all", "各停", "急行", "通特", "特急_all", "特急", "F", "Sトレイン", "回送"], "目黒線": ["all", "各停", "急行", "回送"], "田園都市線": ["all", "各停", "準急", "急行", "回送"], "大井町線": ["all", "各停", "B", "G", "急行", "回送"], "新横浜線": ["all", "各停", "急行", "特急_all", "特急", "F", "回送"] };
 const MASTER_LINE_ORDERS = { "東横線": ["副都心線", "渋谷", "中目黒", "自由が丘", "武蔵小杉", "元住吉", "日吉", "菊名", "横浜", "元町・中華街", "新横浜", "相鉄線"], "目黒線": ["三田線", "南北線", "目黒", "武蔵小山", "大岡山", "奥沢", "武蔵小杉", "元住吉", "日吉", "新横浜", "相鉄線"], "新横浜線": ["副都心線", "三田線", "南北線", "渋谷", "目黒", "日吉", "新横浜", "相鉄線"], "田園都市線": ["半蔵門線", "渋谷", "用賀", "二子玉川", "溝の口", "梶が谷", "鷺沼", "あざみ野", "長津田", "中央林間", "大井町", "大岡山", "恩田", "こどもの国"], "大井町線": ["大井町", "大岡山", "自由が丘", "二子玉川", "溝の口", "鷺沼", "長津田", "恩田", "中央林間"] };
 const STATION_MAP = { 26:"渋谷", 908:"代官山", 909:"中目黒", 910:"祐天寺", 911:"学芸大学", 912:"都立大学", 913:"自由が丘", 914:"田園調布", 915:"多摩川", 916:"新丸子", 57:"武蔵小杉", 918:"元住吉", 919:"日吉", 920:"綱島", 921:"大倉山", 108:"菊名", 923:"妙蓮寺", 924:"白楽", 925:"東白楽", 926:"反町", 5:"横浜", 24:"目黒", 929:"不動前", 930:"武蔵小山", 931:"西小山", 932:"洗足", 933:"大岡山", 934:"奥沢", 942:"池尻大橋", 943:"三軒茶屋", 944:"駒沢大学", 945:"桜新町", 946:"用賀", 947:"二子玉川", 948:"二子新地", 949:"高津", 950:"溝の口", 951:"梶が谷", 952:"宮崎台", 953:"宮前平", 954:"鷺沼", 955:"たまプラーザ", 956:"あざみ野", 957:"江田", 958:"市が尾", 959:"藤が丘", 960:"青葉台", 961:"田奈", 114:"長津田", 963:"つくし野", 964:"すずかけ台", 965:"南町田", 966:"つきみ野", 967:"中央林間", 494:"大井町", 969:"下神明", 970:"戸越公園", 971:"中延", 972:"荏原町", 973:"旗の台", 974:"北千束", 976:"緑が丘", 978:"九品仏", 979:"尾山台", 980:"等々力", 981:"上野毛", 982:"新綱島", 983:"新横浜" };
 const ST_COLOR_MAP = { "代官山":"var(--toyoko)","中目黒":"var(--toyoko)","祐天寺":"var(--toyoko)","学芸大学":"var(--toyoko)","都立大学":"var(--toyoko)","綱島":"var(--toyoko)","大倉山":"var(--toyoko)","菊名":"var(--toyoko)","妙蓮寺":"var(--toyoko)","白楽":"var(--toyoko)","東白楽":"var(--toyoko)","反町":"var(--toyoko)","横浜":"var(--toyoko)","目黒":"var(--meguro)","不動前":"var(--meguro)","武蔵小山":"var(--meguro)","西小山":"var(--meguro)","洗足":"var(--meguro)","奥沢":"var(--meguro)","池尻大橋":"var(--dento)","三軒茶屋":"var(--dento)","駒沢大学":"var(--dento)","桜新町":"var(--dento)","用賀":"var(--dento)","梶が谷":"var(--dento)","宮崎台":"var(--dento)","宮前平":"var(--dento)","鷺沼":"var(--dento)","たまプラーザ":"var(--dento)","あざみ野":"var(--dento)","江田":"var(--dento)","市が尾":"var(--dento)","藤が丘":"var(--dento)","青葉台":"var(--dento)","田奈":"var(--dento)","長津田":"var(--dento)","つくし野":"var(--dento)","すずかけ台":"var(--dento)","南町田":"var(--dento)","つきみ野":"var(--dento)","中央林間":"var(--dento)","恩田":"var(--dento)","こどもの国":"var(--dento)","大井町":"var(--oimachi)","下神明":"var(--oimachi)","戸越公園":"var(--oimachi)","中延":"var(--oimachi)","荏原町":"var(--oimachi)","旗の台":"var(--oimachi)","北千束":"var(--oimachi)","緑が丘":"var(--oimachi)","九品仏":"var(--oimachi)","尾山台":"var(--oimachi)","等々力":"var(--oimachi)","上野毛":"var(--oimachi)","新綱島":"var(--shinyoko)","新横浜":"var(--shinyoko)" };
@@ -479,50 +487,6 @@ function getDispKind(rawKind, groupId) {
   if (rawKind === "G" || rawKind === "Ｇ") return "G";
   if (rawKind.includes("S") || rawKind.includes("Ｓ") || rawKind.includes("Sトレイン") || rawKind.includes("Ｓトレイン")) return "Sトレイン";
   return rawKind;
-}
-
-function getUnyoInfoStr(opNo, tNo, lineKey, dayType) {
-  const opRaw = parseInt(opNo, 10); if (opRaw === 0 || isNaN(opRaw)) return null;
-  const H = opNo.charAt(0); const XX_str = opNo.substring(1); const XX = parseInt(XX_str, 10);
-  let hl = "extra"; let label = String(opRaw); let detectedHl = "extra"; let detectedSys = "";
-  
-  if (['toyoko', 'meguro', 'shinyokohama'].includes(lineKey)) {
-    if (H==='0') { detectedHl="toyoko"; detectedSys="K"; label=XX_str+"K"; } 
-    else if (H==='1') { detectedHl="toyoko"; detectedSys="M"; label=XX_str+"M"; } 
-    else if (H==='7') { detectedHl="toyoko"; detectedSys="S"; label=XX_str+"S"; } 
-    else if (H==='8') { detectedHl="toyoko"; detectedSys="T"; label=XX_str+"T"; } 
-    else if (H==='9') { detectedHl="toyoko"; detectedSys="G"; label=XX_str+"G"; } 
-    else if (H==='2') { detectedHl="meguro"; detectedSys="K"; label=XX_str+"K"; } 
-    else if (H==='3') { detectedHl="meguro"; detectedSys="S"; label=XX_str+"S"; } 
-    else if (H==='4') { detectedHl="meguro"; detectedSys="T"; label=XX_str+"T"; } 
-    else if (H==='5') { detectedHl="meguro"; detectedSys="M"; label=XX_str+"M"; } 
-    else if (H==='6') { detectedHl="meguro"; detectedSys="G"; label=XX_str+"G"; }
-  } else if (['dento', 'oimachi'].includes(lineKey)) {
-    if (opRaw>=101 && opRaw<=149) { detectedHl="oimachi"; detectedSys="O"; label=String(opRaw); } 
-    else if (opRaw>=181 && opRaw<=183) { detectedHl="dento"; detectedSys="N"; label=String(opRaw); } 
-    else if (opRaw>=1 && opRaw<=49) { detectedHl="dento"; detectedSys="K"; label=String(opRaw).padStart(2,'0')+"K"; } 
-    else if (opRaw>=50 && opRaw<=99) {
-      detectedHl="dento";
-      if ([90,92,94,96,98,99].includes(opRaw)) { detectedSys="K"; label=String(opRaw).padStart(2,'0')+"K"; } 
-      else { detectedSys=(opRaw%2===1?"S":"T"); label=String(opRaw).padStart(2,'0')+detectedSys; }
-    }
-  }
-  let checkVal = XX; if (detectedHl === 'oimachi' || detectedHl === 'dento') checkVal = opRaw;
-  
-  let isReg = false;
-  if (OP_SETS && OP_SETS[dayType] && OP_SETS[dayType][detectedHl] && OP_SETS[dayType][detectedHl][detectedSys]) {
-      isReg = OP_SETS[dayType][detectedHl][detectedSys].includes(checkVal);
-  }
-  
-  if (isReg) { hl = detectedHl; } else {
-      if (['toyoko', 'meguro', 'shinyokohama'].includes(lineKey)) { 
-          hl = "extra_tymg"; 
-          if (lineKey === 'meguro' || detectedHl === 'meguro') { label = tNo ? tNo.substring(0, 3) : String(opRaw).padStart(3, '0'); }
-      } else { hl = "extra_dtom"; }
-  }
-  let srcName = {toyoko:"東横線", meguro:"目黒線", shinyokohama:"新横浜線", dento:"田園都市線", oimachi:"大井町線"}[lineKey] || lineKey;
-  if (lineKey === 'shinyokohama') { srcName = (detectedHl === 'toyoko') ? "東横線" : "目黒線"; }
-  return { homeLine: hl, label: label, sourceName: srcName };
 }
 
 function getAffiliationGroup(lineId, aff) {
@@ -1055,18 +1019,16 @@ window.render = function() {
 
             hasContent = true; 
             
-            let carsTag = "";
-            if (t.cars === 8 && aff === "南" && (hl.includes('meguro') || (hl === 'extra_tymg' && String(t.trainNo).match(/^[2-6]/)))) {
-                carsTag = `<span class="cars-badge">⑧</span>`;
-            }
+            // ★ 南北線8両の特別クラス
+            let isCars8Minami = (t.cars === 8 && aff === "南" && (hl.includes('meguro') || (hl === 'extra_tymg' && String(t.trainNo).match(/^[2-6]/))));
+            let cars8MinamiClass = isCars8Minami ? 'cars8-minami-badge' : '';
 
             let formTag = "";
             if ((currentView === 'daily' || currentView.startsWith('custom_') || currentView.startsWith('import'))) {
                 if (aff || orch) {
-                    let dispText = useFmt ? `${fObj.fNo}` : `${orch}`; let affPart = (fObj.dispAff && !hl.includes('oimachi')) ? `[${fObj.dispAff}] ` : "";
-                    formTag = `<div class="t-tr-form" title="${affPart}${dispText}">${affPart}${dispText}${carsTag}</div>`;
-                } else if (carsTag) {
-                    formTag = `<div class="t-tr-form">${carsTag}</div>`;
+                    let dispText = useFmt ? `${fObj.fNo}` : `${orch}`;
+                    let affPart = (fObj.dispAff && !hl.includes('oimachi')) ? `[${fObj.dispAff}] ` : "";
+                    formTag = `<div class="t-tr-form" title="${affPart}${dispText}"><span class="${cars8MinamiClass}">${affPart}${dispText}</span></div>`;
                 }
             }
             
@@ -1075,6 +1037,7 @@ window.render = function() {
                 remarksTag = `<div style="font-size:11px; color:#555; background:#fff9c4; padding:2px 6px; border-radius:4px; margin-top:4px; border:1px solid #fff59d; display:inline-block; max-width:100%; white-space:normal; word-break:break-all;">✎ ${t.remarks}</div>`;
             }
 
+            // ★ スマホクラッシュ対策: map().join() による爆速レンダリング
             let hHtml = `<div class="t-hist">` + t.history.map(h => {
               const isEkikan = h.st.includes("駅間");
               const cls = `hist-item ${isEkikan ? 'is-ekikan' : ''}`;
@@ -1151,18 +1114,14 @@ window.render = function() {
                   if (currentView !== 'weekday' && currentView !== 'holiday' && formSelVal !== "all" && formSelVal !== `[${fObj.dispAff}] ${fObj.fNo}`) return;
                   hasContent = true;
                   
-                  let carsTag = "";
-                  if (liveInfo.cars === 8 && liveInfo.affiliation === "南" && (g.id.includes('meguro') || (g.id === 'extra_tymg' && String(tNo).match(/^[2-6]/)))) {
-                      carsTag = `<span class="cars-badge">⑧</span>`;
-                  }
+                  let isCars8Minami = (liveInfo.cars === 8 && liveInfo.affiliation === "南" && (g.id.includes('meguro') || (g.id === 'extra_tymg' && String(tNo).match(/^[2-6]/))));
+                  let cars8MinamiClass = isCars8Minami ? 'cars8-minami-badge' : '';
                   
                   let formTag = "";
                   if (liveInfo.affiliation || liveInfo.orchestration) { 
                       let dispText = useFmt ? fObj.fNo : liveInfo.orchestration; 
                       let affPart = (fObj.dispAff && !g.id.includes('oimachi')) ? `[${fObj.dispAff}] ` : ""; 
-                      formTag = `<div class="t-tr-form">${affPart}${dispText}${carsTag}</div>`; 
-                  } else if (carsTag) {
-                      formTag = `<div class="t-tr-form">${carsTag}</div>`;
+                      formTag = `<div class="t-tr-form" title="${affPart}${dispText}"><span class="${cars8MinamiClass}">${affPart}${dispText}</span></div>`; 
                   }
                   
                   let badgeText = liveInfo.kind; if (badgeText === "F") badgeText = "Fラ"; else if (badgeText === "B") badgeText = "B各停"; else if (badgeText === "G") badgeText = "G各停"; else if (badgeText === "Sトレイン") badgeText = "S";
@@ -1232,7 +1191,7 @@ function isPassStation(kind, stName) {
         "特急": ["渋谷", "中目黒", "自由が丘", "武蔵小杉", "菊名", "横浜", "新横浜", "新綱島", "日吉"],
         "F": ["渋谷", "中目黒", "自由が丘", "武蔵小杉", "菊名", "横浜", "新横浜", "新綱島", "日吉"],
         "通特": ["渋谷", "中目黒", "学芸大学", "自由が丘", "田園調布", "多摩川", "武蔵小杉", "日吉", "菊名", "横浜", "新横浜", "新綱島"],
-        "急行": ["渋谷", "中目黒", "学芸大学", "自由が丘", "田園調布", "多摩川", "武蔵小杉", "日吉", "綱গামী", "菊名", "横浜", "目黒", "武蔵小山", "大岡山", "新横浜", "新綱島", "三軒茶屋", "二子玉川", "溝の口", "鷺沼", "たまプラーザ", "あざみ野", "青葉台", "長津田", "南町田", "南町田グランベリーパーク", "中央林間", "大井町", "旗の台"],
+        "急行": ["渋谷", "中目黒", "学芸大学", "自由が丘", "田園調布", "多摩川", "武蔵小杉", "日吉", "綱島", "菊名", "横浜", "目黒", "武蔵小山", "大岡山", "新横浜", "新綱島", "三軒茶屋", "二子玉川", "溝の口", "鷺沼", "たまプラーザ", "あざみ野", "青葉台", "長津田", "南町田", "南町田グランベリーパーク", "中央林間", "大井町", "旗の台"],
         "準急": ["渋谷", "池尻大橋", "三軒茶屋", "駒沢大学", "桜新町", "用賀", "二子玉川", "溝の口", "鷺沼", "たまプラーザ", "あざみ野", "青葉台", "長津田", "つくし野", "すずかけ台", "南町田", "南町田グランベリーパーク", "つきみ野", "中央林間"],
         "Sトレイン": ["渋谷", "自由が丘", "横浜"]
     };
@@ -1334,7 +1293,7 @@ function renderTimetable() {
     let lineRow = document.getElementById('ttLineControlRow');
     if (ttState.availableLines.length > 0) {
         lineRow.style.display = 'flex';
-        let lineHtml = `<button class="tt-tab-btn ${ttState.lineMode === 'all' ? 'active' : ''}" onclick="window.setTtLine('all')">すべて</button>`;
+        let lineHtml = `<button class="tt-tab-btn ${ttState.lineMode === 'all' ? 'active' : ''}" onclick="window.setTtLine('all')">すべて表示</button>`;
         ttState.availableLines.forEach(l => { lineHtml += `<button class="tt-tab-btn ${ttState.lineMode === l ? 'active' : ''}" onclick="window.setTtLine('${l}')">${l}</button>`; });
         document.getElementById('ttLineTabs').innerHTML = lineHtml;
     } else { lineRow.style.display = 'none'; }
@@ -1353,10 +1312,8 @@ function renderTimetable() {
 
         let dirBadge = t.dir === 0 ? `<div class="tt-dir-badge tt-dir-up">▲ 上り</div>` : `<div class="tt-dir-badge tt-dir-down">▼ 下り</div>`;
 
-        let carsTag = "";
-        if (t.cars === 8 && t.affiliation === "南" && (t.sourceName.includes('目黒') || t.sourceName.includes('新横浜') || (t.sourceName.includes('非定期') && String(t.tNo).match(/^[2-6]/)))) {
-            carsTag = `<span class="cars-badge">⑧</span>`;
-        }
+        let isCars8Minami = (t.cars === 8 && t.affiliation === "南" && (t.sourceName.includes('目黒') || t.sourceName.includes('新横浜') || (t.sourceName.includes('非定期') && String(t.tNo).match(/^[2-6]/))));
+        let cars8MinamiClass = isCars8Minami ? 'cars8-minami-badge' : '';
 
         html += `<div class="tt-row ${isActive} ${passClass}" ${rowIdAttr} onclick="window.jumpToTrain('${t.tUid}')">
             <div class="tt-time-area">
@@ -1364,13 +1321,16 @@ function renderTimetable() {
                 ${ttState.dirMode === 'both' ? dirBadge : ''}
             </div>
             <div class="tt-info">
-                <div style="font-size:14px; font-weight:bold; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <div style="font-size:14px; font-weight:bold; display:flex; align-items:center; gap:6px; flex-wrap:nowrap; overflow:hidden;">
                     <span class="kind-badge kind-${dKind}">${badgeText}</span>
-                    <span class="dest-text">${t.dest}${t.dest.endsWith('線')?'直通':'行'}</span>${carsTag}
+                    <span class="dest-text" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.dest}${t.dest.endsWith('線')?'直通':'行'}</span>
                     
-                    ${t.isPass ? '<span class="pass-badge">通過</span>' : ''}
-                    ${t.isExtra ? '<span class="extra-badge">不定期</span>' : ''}
-                    ${t.isTerminal ? '<span class="terminal-badge">当駅止</span>' : ''}
+                    <div style="display:flex; gap:4px; flex-shrink:0;">
+                        ${t.isPass ? '<span class="pass-badge">通過</span>' : ''}
+                        ${t.isExtra ? '<span class="extra-badge">不定期</span>' : ''}
+                        ${t.isTerminal ? '<span class="terminal-badge">当駅止</span>' : ''}
+                    </div>
+
                     ${t.tUid === ttState.currentTUid ? '<span class="active-badge">選択中</span>' : ''}
                 </div>
                 <div style="font-size:12px; color:#777; margin-top:5px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
@@ -1518,7 +1478,7 @@ async function fetchFromCloud() {
       if (!currentView.startsWith("import")) { updateContextUI(selectedDaily); window.updateDestDropdown(); window.updateFormDropdown(); window.render(); }
       
       lastCloudTime = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit', second:'2-digit'}); updateStatusDisplay();
-      if (targetTimetableStation && !hasOpenedStandalone) { hasOpenedStandalone = true; setTimeout(() => openStationTimetable(targetTimetableStation, null), 300); }
+      if (targetTimetableStation && !hasOpenedStandalone) { hasOpenedStandalone = true; setTimeout(() => window.openStationTimetable(targetTimetableStation, null), 300); }
     }
   } catch (err) { if (!hasReceivedCloudData) { lastCloudTime = "⚠ エラー"; } else { lastCloudTime += " [遅延]"; } updateStatusDisplay(); } finally { isFetchingCloud = false; }
 }
