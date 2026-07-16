@@ -74,8 +74,17 @@
     
     /* ★ 編成表示のスタイル */
     .t-tr-form { font-size: 11px; color: #4886a5; font-weight: bold; margin-top: 2px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
-    /* ★ 目黒線・南北線・8両用の専用バッジスタイル */
-    .cars8-minami-badge { background-color: #1976d2; color: #fff; padding: 2px 5px; border-radius: 4px; font-weight: bold; display: inline-block; margin-top: 2px;}
+    
+    /* ★ 目黒線・南北線・8両用の専用スタイル（#00ada9 のバッジ） */
+    .cars8-minami-badge { 
+        background-color: #00ada9; 
+        color: #fff; 
+        padding: 2px 5px; 
+        border-radius: 4px; 
+        font-weight: bold; 
+        display: inline-block; 
+        line-height: 1.2;
+    }
 
     .t-dest { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; overflow: hidden; }
     .t-dest-text { font-size: 14px; font-weight: bold; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
@@ -341,7 +350,7 @@ const LINE_EXCLUSIVES = {
     "大井町線": ["大井町", "下神明", "戸越公園", "中延", "荏原町", "旗の台", "北千束", "緑が丘", "九品仏", "尾山台", "等々力", "上野毛"]
 };
 
-const MASTER_LINE_ORDERS = { "東横線": ["副都心線", "渋谷", "中目黒", "自由が丘", "武蔵小杉", "元住吉", "日吉", "菊名", "横浜", "元町・中華街", "新横浜", "相鉄線"], "目黒線": ["三田線", "南北線", "目黒", "武蔵小山", "大岡山", "奥沢", "武蔵小杉", "元住吉", "日吉", "新横浜", "相鉄線"], "新横浜線": ["副都心線", "三田線", "南北線", "渋谷", "目黒", "日吉", "新横浜", "相鉄線"], "田園都市線": ["半蔵門線", "渋谷", "用が", "二子玉川", "溝の口", "梶が谷", "鷺沼", "あざみ野", "長津田", "中央林間", "大井町", "大岡山", "恩田", "こどもの国"], "大井町線": ["大井町", "大岡山", "自由が丘", "二子玉川", "溝の口", "鷺沼", "長津田", "恩田", "中央林間"] };
+const MASTER_LINE_ORDERS = { "東横線": ["副都心線", "渋谷", "中目黒", "自由が丘", "武蔵小杉", "元住吉", "日吉", "菊名", "横浜", "元町・中華街", "新横浜", "相鉄線"], "目黒線": ["三田線", "南北線", "目黒", "武蔵小山", "大岡山", "奥沢", "武蔵小杉", "元住吉", "日吉", "新横浜", "相鉄線"], "新横浜線": ["副都心線", "三田線", "南北線", "渋谷", "目黒", "日吉", "新横浜", "相鉄線"], "田園都市線": ["半蔵門線", "渋谷", "用賀", "二子玉川", "溝の口", "梶が谷", "鷺沼", "あざみ野", "長津田", "中央林間", "大井町", "大岡山", "恩田", "こどもの国"], "大井町線": ["大井町", "大岡山", "自由が丘", "二子玉川", "溝の口", "鷺沼", "長津田", "恩田", "中央林間"] };
 const ST_COLOR_MAP = { "代官山":"var(--toyoko)","中目黒":"var(--toyoko)","祐天寺":"var(--toyoko)","学芸大学":"var(--toyoko)","都立大学":"var(--toyoko)","綱島":"var(--toyoko)","大倉山":"var(--toyoko)","菊名":"var(--toyoko)","妙蓮寺":"var(--toyoko)","白楽":"var(--toyoko)","東白楽":"var(--toyoko)","反町":"var(--toyoko)","横浜":"var(--toyoko)","目黒":"var(--meguro)","不動前":"var(--meguro)","武蔵小山":"var(--meguro)","西小山":"var(--meguro)","洗足":"var(--meguro)","奥沢":"var(--meguro)","池尻大橋":"var(--dento)","三軒茶屋":"var(--dento)","駒沢大学":"var(--dento)","桜新町":"var(--dento)","用賀":"var(--dento)","梶が谷":"var(--dento)","宮崎台":"var(--dento)","宮前平":"var(--dento)","鷺沼":"var(--dento)","たまプラーザ":"var(--dento)","あざみ野":"var(--dento)","江田":"var(--dento)","市が尾":"var(--dento)","藤が丘":"var(--dento)","青葉台":"var(--dento)","田奈":"var(--dento)","長津田":"var(--dento)","つくし野":"var(--dento)","すずかけ台":"var(--dento)","南町田":"var(--dento)","つきみ野":"var(--dento)","中央林間":"var(--dento)","恩田":"var(--dento)","こどもの国":"var(--dento)","大井町":"var(--oimachi)","下神明":"var(--oimachi)","戸越公園":"var(--oimachi)","中延":"var(--oimachi)","荏原町":"var(--oimachi)","旗の台":"var(--oimachi)","北千束":"var(--oimachi)","緑が丘":"var(--oimachi)","九品仏":"var(--oimachi)","尾山台":"var(--oimachi)","等々力":"var(--oimachi)","上野毛":"var(--oimachi)","新綱島":"var(--shinyoko)","新横浜":"var(--shinyoko)" };
 
 // =========================================
@@ -518,25 +527,36 @@ function getFormationString(lineId, aff, orchStr, useFormat, cars, opLabel) {
     let opNum = opLabel ? parseInt(opLabel.replace(/[^0-9]/g, ''), 10) : 0;
     
     // --- Exclusion rules for non-regular formatting ---
+    // 大井町線は運行番号が101~137,150~153以外の運行番号の場合で編成変換の対象外とする
     if (lineId === 'oimachi' || lineId === 'extra_dtom' || lineId.includes('oimachi')) {
         if (!(opNum >= 101 && opNum <= 137) && !(opNum >= 150 && opNum <= 153)) {
             return { dispAff: aff, fNo: orchStr };
         }
     }
+    // 非定期列車において目黒線は社局が”急”もしくは社局なしの場合...編成変換の対象外とする
     if (lineId === 'extra_meguro' || (lineId === 'extra_tymg' && opLabel && opLabel.match(/^[2-6]/))) {
         if (aff === "急" || !aff) {
             return { dispAff: aff, fNo: orchStr };
         }
     }
 
-    let orch = parseInt(orchStr, 10); let orchStrPad = String(orch).padStart(2, '0');
+    let orch = parseInt(orchStr, 10); 
+    let orchStrPad = String(orch).padStart(2, '0');
     if (isNaN(orch)) return { dispAff: aff, fNo: orchStr };
     
     let fNo = ""; let dispAff = aff; 
-    
+
+    // --- Formatting logic ---
     if (lineId === 'meguro' || lineId === 'extra_meguro' || (lineId === 'extra_tymg' && aff && !aff.includes("急") && !aff.includes("み") && !aff.includes("相") && !aff.includes("武"))) {
-        if (aff === "急" || aff === "東") { dispAff = aff; if ((orch >= 1 && orch <= 13) || (orch >= 21 && orch <= 23)) fNo = `31${orchStrPad}F`; else if (orch >= 31 && orch <= 40) fNo = `51${String(orch + 50).padStart(2, '0')}F`; else fNo = orchStr; } 
-        else if (aff === "相" || aff === "G" || aff === "Ｇ") { fNo = `211${orchStrPad}F`; } 
+        if (aff === "急" || aff === "東") { 
+            dispAff = aff; 
+            if ((orch >= 1 && orch <= 13) || (orch >= 21 && orch <= 23)) fNo = `31${orchStrPad}F`; 
+            else if (orch >= 31 && orch <= 40) fNo = `51${String(orch + 50).padStart(2, '0')}F`; 
+            else fNo = orchStr; 
+        } 
+        else if (aff === "相" || aff === "G" || aff === "Ｇ") { 
+            fNo = `211${orchStrPad}F`; 
+        }
         else if (aff === "都" || aff === "三") {
             if (cars === 8) fNo = `65${orchStrPad}F`;
             else if (cars === 6) fNo = `63${String(orch - 20).padStart(2, '0')}F`;
@@ -553,13 +573,25 @@ function getFormationString(lineId, aff, orchStr, useFormat, cars, opLabel) {
                 fNo = orchStr;
             }
         }
-        else { fNo = orchStr; }
-    } else if (lineId === 'toyoko' || lineId === 'extra_toyoko' || lineId === 'extra_tymg' || lineId === 'extra_shinyokohama') {
+        else { 
+            fNo = orchStr; 
+        }
+    } 
+    else if (lineId === 'toyoko' || lineId === 'extra_toyoko' || lineId === 'extra_tymg' || lineId === 'extra_shinyokohama') {
         if (aff === "相" || aff === "G" || aff === "Ｇ") { fNo = `201${orchStrPad}F`; } 
         else if (aff === "副" || aff === "メ" || aff === "営") { if (orch >= 81 && orch <= 95) fNo = `171${orchStrPad}F`; else if (orch >= 41 && orch <= 76) fNo = `101${String(orch - 40).padStart(2, '0')}F`; else if (orch >= 21 && orch <= 26) fNo = `171${String(orch - 20).padStart(2, '0')}F`; else fNo = orchStr; } 
         else if (aff === "東" || aff === "武") { if ((orch >= 1 && orch <= 8) || orch === 51 || orch === 52) fNo = `91${orchStrPad}F`; else if (orch >= 71 && orch <= 77) fNo = `510${orchStrPad}F`; else fNo = orchStr; } 
         else if (aff === "み") { fNo = `Y51${orch % 10}F`; } 
-        else if (aff === "急") { if (orch >= 81 && orch <= 87) { dispAff = "み"; fNo = `Y51${orch % 10}F`; } else if (orch >= 50 && orch <= 79) fNo = `51${String(orch).padStart(2, '0')}F`; else if (orch === 38) fNo = `5118F`; else if (orch === 39) fNo = `5119F`; else if (orch === 41) fNo = `5121F`; else if (orch === 42) fNo = `5122F`; else if (orch >= 1 && orch <= 15) fNo = `41${String(orch).padStart(2, '0')}F`; else fNo = orchStr; } 
+        else if (aff === "急" || aff === "東") { 
+            if (orch >= 81 && orch <= 87) { dispAff = "み"; fNo = `Y51${orch % 10}F`; } 
+            else if (orch >= 50 && orch <= 79) fNo = `51${String(orch).padStart(2, '0')}F`; 
+            else if (orch === 38) fNo = `5118F`; 
+            else if (orch === 39) fNo = `5119F`; 
+            else if (orch === 41) fNo = `5121F`; 
+            else if (orch === 42) fNo = `5122F`; 
+            else if (orch >= 1 && orch <= 15) fNo = `41${String(orch).padStart(2, '0')}F`; 
+            else fNo = orchStr; 
+        } 
         else if (aff === "西" || aff === "埼") {
             if ((orch >= 1 && orch <= 19) || (orch >= 51 && orch <= 58)) { fNo = `61${orchStrPad}F`; } 
             else if (orch >= 61 && orch <= 66) { fNo = `4010${orch - 60}F`; } 
@@ -567,7 +599,8 @@ function getFormationString(lineId, aff, orchStr, useFormat, cars, opLabel) {
             else { fNo = orchStr; }
         }
         else { fNo = orchStr; }
-    } else if (lineId === 'oimachi' || lineId.includes('oimachi')) {
+    } 
+    else if (lineId === 'oimachi' || lineId.includes('oimachi')) {
         if (cars === 7) {
             fNo = `61${orchStrPad}F`;
         } else if (cars === 5) {
@@ -948,14 +981,17 @@ function render() {
 
             // ★ 南北線8両の特別クラス
             let isCars8Minami = (t.cars === 8 && aff === "南" && (hl.includes('meguro') || (hl === 'extra_tymg' && String(t.trainNo).match(/^[2-6]/))));
-            let cars8MinamiClass = isCars8Minami ? 'cars8-minami-badge' : '';
 
             let formTag = "";
             if ((currentView === 'daily' || currentView.startsWith('custom_') || currentView.startsWith('import'))) {
                 if (aff || orch) {
                     let dispText = useFmt ? `${fObj.fNo}` : `${orch}`;
                     let affPart = (fObj.dispAff && !hl.includes('oimachi')) ? `[${fObj.dispAff}] ` : "";
-                    formTag = `<div class="t-tr-form ${cars8MinamiClass}" title="${affPart}${dispText}">${affPart}${dispText}</div>`;
+                    if (isCars8Minami) {
+                        formTag = `<div class="t-tr-form" title="${affPart}${dispText}"><span class="cars8-minami-badge">${affPart}${dispText}</span></div>`;
+                    } else {
+                        formTag = `<div class="t-tr-form" title="${affPart}${dispText}">${affPart}${dispText}</div>`;
+                    }
                 }
             }
             
@@ -1140,7 +1176,9 @@ function openStationTimetable(stName, currentTUid) {
           track: targetHist.track || "", 
           opLabel: u.label, kind: tr.kind, dest: tr.dest, tNo: tr.trainNo, tUid: tUid,
           sourceName: dispLine, dir: getTrainDirection(tr),
-          isTerminal: isTerminal, isExtra: isExtra, isPass: isPass
+          isTerminal: isTerminal, isExtra: isExtra, isPass: isPass,
+          affiliation: tr.affiliation || "", orchestration: tr.orchestration || "", cars: tr.cars || 0,
+          formatType: tr.formatType || ""
         };
         trainsAtSt.push(tData);
         if (tUid === currentTUid) clickedTrainData = tData;
@@ -1211,6 +1249,9 @@ function renderTimetable() {
         let passClass = t.isPass ? "is-pass" : "";
 
         let dirBadge = t.dir === 0 ? `<div class="tt-dir-badge tt-dir-up">▲ 上り</div>` : `<div class="tt-dir-badge tt-dir-down">▼ 下り</div>`;
+
+        let isCars8Minami = (t.cars === 8 && t.affiliation === "南" && (t.sourceName.includes('目黒') || t.sourceName.includes('新横浜') || (t.sourceName.includes('非定期') && String(t.tNo).match(/^[2-6]/))));
+        let cars8MinamiClass = isCars8Minami ? 'cars8-minami-badge' : '';
 
         html += `<div class="tt-row ${isActive} ${passClass}" ${rowIdAttr} onclick="jumpToTrain('${t.tUid}')">
             <div class="tt-time-area">
