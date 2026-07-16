@@ -66,8 +66,6 @@
     .t-tr { width: 65px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
     .t-tr-no { font-family: monospace; color: #1976d2; font-weight: bold; font-size: 14px; line-height: 1.2; }
     .t-tr-sub { font-size: 10px; color: #666; margin-top: 2px; }
-    
-    /* ★ 編成表示のスタイル */
     .t-tr-form { font-size: 11px; color: #4886a5; font-weight: bold; margin-top: 2px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
     
     /* ★ 目黒線・南北線・8両用の専用スタイル（エメラルドグリーンの太い下線） */
@@ -489,6 +487,50 @@ function getDispKind(rawKind, groupId) {
   return rawKind;
 }
 
+function getUnyoInfoStr(opNo, tNo, lineKey, dayType) {
+  const opRaw = parseInt(opNo, 10); if (opRaw === 0 || isNaN(opRaw)) return null;
+  const H = opNo.charAt(0); const XX_str = opNo.substring(1); const XX = parseInt(XX_str, 10);
+  let hl = "extra"; let label = String(opRaw); let detectedHl = "extra"; let detectedSys = "";
+  
+  if (['toyoko', 'meguro', 'shinyokohama'].includes(lineKey)) {
+    if (H==='0') { detectedHl="toyoko"; detectedSys="K"; label=XX_str+"K"; } 
+    else if (H==='1') { detectedHl="toyoko"; detectedSys="M"; label=XX_str+"M"; } 
+    else if (H==='7') { detectedHl="toyoko"; detectedSys="S"; label=XX_str+"S"; } 
+    else if (H==='8') { detectedHl="toyoko"; detectedSys="T"; label=XX_str+"T"; } 
+    else if (H==='9') { detectedHl="toyoko"; detectedSys="G"; label=XX_str+"G"; } 
+    else if (H==='2') { detectedHl="meguro"; detectedSys="K"; label=XX_str+"K"; } 
+    else if (H==='3') { detectedHl="meguro"; detectedSys="S"; label=XX_str+"S"; } 
+    else if (H==='4') { detectedHl="meguro"; detectedSys="T"; label=XX_str+"T"; } 
+    else if (H==='5') { detectedHl="meguro"; detectedSys="M"; label=XX_str+"M"; } 
+    else if (H==='6') { detectedHl="meguro"; detectedSys="G"; label=XX_str+"G"; }
+  } else if (['dento', 'oimachi'].includes(lineKey)) {
+    if (opRaw>=101 && opRaw<=149) { detectedHl="oimachi"; detectedSys="O"; label=String(opRaw); } 
+    else if (opRaw>=181 && opRaw<=183) { detectedHl="dento"; detectedSys="N"; label=String(opRaw); } 
+    else if (opRaw>=1 && opRaw<=49) { detectedHl="dento"; detectedSys="K"; label=String(opRaw).padStart(2,'0')+"K"; } 
+    else if (opRaw>=50 && opRaw<=99) {
+      detectedHl="dento";
+      if ([90,92,94,96,98,99].includes(opRaw)) { detectedSys="K"; label=String(opRaw).padStart(2,'0')+"K"; } 
+      else { detectedSys=(opRaw%2===1?"S":"T"); label=String(opRaw).padStart(2,'0')+detectedSys; }
+    }
+  }
+  let checkVal = XX; if (detectedHl === 'oimachi' || detectedHl === 'dento') checkVal = opRaw;
+  
+  let isReg = false;
+  if (OP_SETS && OP_SETS[dayType] && OP_SETS[dayType][detectedHl] && OP_SETS[dayType][detectedHl][detectedSys]) {
+      isReg = OP_SETS[dayType][detectedHl][detectedSys].includes(checkVal);
+  }
+  
+  if (isReg) { hl = detectedHl; } else {
+      if (['toyoko', 'meguro', 'shinyokohama'].includes(lineKey)) { 
+          hl = "extra_tymg"; 
+          if (lineKey === 'meguro' || detectedHl === 'meguro') { label = tNo ? tNo.substring(0, 3) : String(opRaw).padStart(3, '0'); }
+      } else { hl = "extra_dtom"; }
+  }
+  let srcName = {toyoko:"東横線", meguro:"目黒線", shinyokohama:"新横浜線", dento:"田園都市線", oimachi:"大井町線"}[lineKey] || lineKey;
+  if (lineKey === 'shinyokohama') { srcName = (detectedHl === 'toyoko') ? "東横線" : "目黒線"; }
+  return { homeLine: hl, label: label, sourceName: srcName };
+}
+
 function getAffiliationGroup(lineId, aff) {
     if (!aff) return null;
     let isTobu = aff === "武" || aff.includes("東武");
@@ -583,12 +625,12 @@ function getFormationString(lineId, aff, orchStr, useFormat, cars, opLabel) {
             fNo = orchStr; 
         }
     } 
-    else if (lineId === 'toyoko' || lineId === 'extra_toyoko' || lineId === 'extra_shinyokohama' || lineId === 'shinyokohama' || (lineId === 'extra_tymg' && !fNo)) {
+    else if (lineId === 'toyoko' || lineId === 'extra_toyoko' || lineId === 'extra_tymg' || lineId === 'extra_shinyokohama') {
         if (aff === "相" || aff === "G" || aff === "Ｇ") { fNo = `201${orchStrPad}F`; } 
         else if (aff === "副" || aff === "メ" || aff === "営") { if (orch >= 81 && orch <= 95) fNo = `171${orchStrPad}F`; else if (orch >= 41 && orch <= 76) fNo = `101${String(orch - 40).padStart(2, '0')}F`; else if (orch >= 21 && orch <= 26) fNo = `171${String(orch - 20).padStart(2, '0')}F`; else fNo = orchStr; } 
-        else if (aff === "東武" || aff === "武") { if ((orch >= 1 && orch <= 8) || orch === 51 || orch === 52) fNo = `91${orchStrPad}F`; else if (orch >= 71 && orch <= 77) fNo = `510${orchStrPad}F`; else fNo = orchStr; } 
+        else if (aff === "東武" || aff === "武" || aff === "東") { if ((orch >= 1 && orch <= 8) || orch === 51 || orch === 52) fNo = `91${orchStrPad}F`; else if (orch >= 71 && orch <= 77) fNo = `510${orchStrPad}F`; else fNo = orchStr; } 
         else if (aff === "み") { fNo = `Y51${orch % 10}F`; } 
-        else if (aff === "急" || aff === "東") { 
+        else if (aff === "急") { 
             if (orch >= 81 && orch <= 87) { dispAff = "み"; fNo = `Y51${orch % 10}F`; } 
             else if (orch >= 50 && orch <= 79) fNo = `51${String(orch).padStart(2, '0')}F`; 
             else if (orch === 38) fNo = `5118F`; 
@@ -1178,7 +1220,9 @@ window.render = function() {
 function getTrainDirection(tr) {
     if (!tr || !tr.trainNo) return 1; 
     let lastDigit = parseInt(tr.trainNo.slice(-1), 10);
-    if (!isNaN(lastDigit)) { return (lastDigit % 2 === 0) ? 0 : 1; }
+    if (!isNaN(lastDigit)) {
+        return (lastDigit % 2 === 0) ? 0 : 1; 
+    }
     return 1;
 }
 
@@ -1238,9 +1282,7 @@ window.openStationTimetable = function(stName, currentTUid) {
           track: targetHist.track || "", 
           opLabel: u.label, kind: tr.kind, dest: tr.dest, tNo: tr.trainNo, tUid: tUid,
           sourceName: dispLine, dir: getTrainDirection(tr),
-          isTerminal: isTerminal, isExtra: isExtra, isPass: isPass,
-          affiliation: tr.affiliation || "", orchestration: tr.orchestration || "", cars: tr.cars || 0,
-          formatType: tr.formatType || ""
+          isTerminal: isTerminal, isExtra: isExtra, isPass: isPass
         };
         trainsAtSt.push(tData);
         if (tUid === currentTUid) clickedTrainData = tData;
@@ -1311,9 +1353,6 @@ function renderTimetable() {
         let passClass = t.isPass ? "is-pass" : "";
 
         let dirBadge = t.dir === 0 ? `<div class="tt-dir-badge tt-dir-up">▲ 上り</div>` : `<div class="tt-dir-badge tt-dir-down">▼ 下り</div>`;
-
-        let isCars8Minami = (t.cars === 8 && t.affiliation === "南" && (t.sourceName.includes('目黒') || t.sourceName.includes('新横浜') || (t.sourceName.includes('非定期') && String(t.tNo).match(/^[2-6]/))));
-        let cars8MinamiClass = isCars8Minami ? 'cars8-minami-badge' : '';
 
         html += `<div class="tt-row ${isActive} ${passClass}" ${rowIdAttr} onclick="window.jumpToTrain('${t.tUid}')">
             <div class="tt-time-area">
