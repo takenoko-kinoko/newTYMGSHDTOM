@@ -456,13 +456,13 @@
     const unyoBtnPC = document.createElement("button");
     unyoBtnPC.className = "linebtn unyoBtn";
     unyoBtnPC.textContent = "運用記録(PC)";
-    unyoBtnPC.addEventListener("click", ()=>{ location.href = "unyo_viewer.html" + location.search; });
+    unyoBtnPC.addEventListener("click", ()=>{ location.href = "unyo_viewer_pw.html" + location.search; });
     sel.appendChild(unyoBtnPC);
 
     const unyoBtnSP = document.createElement("button");
     unyoBtnSP.className = "linebtn unyoBtn";
     unyoBtnSP.textContent = "運用記録(スマホ)";
-    unyoBtnSP.addEventListener("click", ()=>{ location.href = "unyo_viewer_phone.html" + location.search; });
+    unyoBtnSP.addEventListener("click", ()=>{ location.href = "unyo_viewer_phone_pw.html" + location.search; });
     sel.appendChild(unyoBtnSP);
 
     const main = document.getElementById("main");
