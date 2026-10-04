@@ -748,9 +748,11 @@ function updateFormDropdown() {
       return false;
   };
 
-  const addForm = (hl, aff, orch, tFmtType, cars, opLabel) => {
+  const addForm = (hl, aff, orch, tFmtType, cars, opLabel, disableConversion = false) => {
       if (!aff && (!orch || orch === "00")) return;
-      let fObj = getFormationString(tFmtType || hl, aff, orch, useFmt, cars, opLabel);
+      let fObj = disableConversion
+          ? { dispAff: aff, fNo: orch }
+          : getFormationString(tFmtType || hl, aff, orch, useFmt, cars, opLabel);
       let dispText = useFmt ? fObj.fNo : orch;
       if (dispText) {
           let val = hl.includes('oimachi') ? dispText : (fObj.dispAff ? `[${fObj.dispAff}] ${dispText}` : dispText);
@@ -799,7 +801,16 @@ function updateFormDropdown() {
                 }
             }
             
-            if (srcMatch) addForm(hl, t.affiliation, t.orchestration, t.formatType, t.cars, label);
+            if (srcMatch) {
+                const isMeguroExtra = (hl === 'extra_tymg' && calcSrc === '目黒線') || t.formatType === 'extra_meguro';
+                addForm(hl, t.affiliation, t.orchestration, t.formatType, t.cars, label, isMeguroExtra);
+
+                // 田園都市線はmasterが記録した実編成番号(formationNumber)でも絞り込めるようにする。
+                const isDentoRecord = hl === 'dento' || (hl === 'extra_dtom' && calcSrc === '田園都市線');
+                if (isDentoRecord && t.formationNumber) {
+                    forms.add(`${String(t.formationNumber).replace(/F$/i, '')}F`);
+                }
+            }
         }
       }
     }
@@ -816,12 +827,30 @@ function updateNotice() {
   if (txt) { noticeText.textContent = "📢 " + txt; noticeBar.style.display = "block"; } else { noticeBar.style.display = "none"; }
 }
 
+
+function updateRunningFilterAvailability() {
+  const cb = document.getElementById("runningFilter");
+  if (!cb) return;
+  const todayKey = getDailyKey(new Date());
+  const dailySel = document.getElementById("dailyDateSelect");
+  const enabled = currentView === "daily" && dailySel && dailySel.value === todayKey;
+  cb.disabled = !enabled;
+  if (!enabled) cb.checked = false;
+  const label = cb.closest("label");
+  if (label) {
+    label.style.opacity = enabled ? "1" : "0.45";
+    label.style.cursor = enabled ? "pointer" : "not-allowed";
+    label.title = enabled ? "" : "走行中絞り込みは当日の毎日記録のみ有効です";
+  }
+}
+
 function updateContextUI(preservedDailyDate = null) {
   const ctx = document.getElementById("contextFilters"); if (!ctx) return; ctx.innerHTML = "";
   if (currentView === "daily") {
     const label = document.createElement("span"); label.className = "filter-label"; label.textContent = "表示日:"; ctx.appendChild(label);
     const select = document.createElement("select"); select.id = "dailyDateSelect"; select.className = "filter-select"; select.style.maxWidth = "110px";
     select.onchange = () => { 
+        updateRunningFilterAvailability();
         updateDestDropdown(); updateFormDropdown(); render(); 
         document.getElementById("cloudStatus").textContent = "☁️ 読込中...";
         fetchFromCloud(); 
@@ -831,11 +860,13 @@ function updateContextUI(preservedDailyDate = null) {
     else keys.forEach(k => select.appendChild(new Option(k, k)));
     if (preservedDailyDate && Array.from(select.options).some(o => o.value === preservedDailyDate)) { select.value = preservedDailyDate; }
     ctx.appendChild(select);
+    updateRunningFilterAvailability();
   } else if (currentView.startsWith("import") && logs[currentView]) {
     const clearBtn = document.createElement("button"); clearBtn.className = "btn-reset"; clearBtn.textContent = "✖ 破棄";
     clearBtn.onclick = () => { if(confirm(`読み込んだデータを破棄しますか？`)) { logs[currentView] = null; changeTab('daily'); } };
     ctx.appendChild(clearBtn);
   }
+  updateRunningFilterAvailability();
 }
 
 function updateTabs() {
@@ -987,7 +1018,7 @@ function render() {
   const compF = document.getElementById("companyFilter") ? document.getElementById("companyFilter").value : "all";
   const kindF = document.getElementById("kindFilter") ? document.getElementById("kindFilter").value : "all";
   const destF = document.getElementById("destFilter") ? document.getElementById("destFilter").value : "all";
-  const showRunningOnly = document.getElementById("runningFilter")?.checked;
+  const runningFilterChecked = document.getElementById("runningFilter")?.checked;
   const useFmt = document.getElementById("formatFilter") ? document.getElementById("formatFilter").checked : true; 
   const formSelVal = document.getElementById("formFilterSel")?.value || "all";
   const daisoF = document.getElementById("daisoFilter") ? document.getElementById("daisoFilter").checked : false;
@@ -1004,6 +1035,7 @@ function render() {
 
   const todayKey = getDailyKey(new Date());
   const isTodayDaily = (currentView === 'daily' && document.getElementById("dailyDateSelect") && document.getElementById("dailyDateSelect").value === todayKey);
+  const showRunningOnly = !!runningFilterChecked && isTodayDaily;
 
   // 平日/土休タブでも今日のデータを照合して走行中を判定する
   let targetDateForCalc = new Date(new Date().getTime() - 4 * 60 * 60 * 1000);
@@ -1132,10 +1164,18 @@ function render() {
             }
             if (daisoF && !isDaiso) return;
             
-            let fObj = getFormationString(t.formatType || g.id, aff, orch, useFmt, t.cars, label);
+            const isMeguroExtra = (hl === 'extra_tymg' && calcSrc === '目黒線') || t.formatType === 'extra_meguro';
+            let fObj = isMeguroExtra
+                ? { dispAff: aff, fNo: orch }
+                : getFormationString(t.formatType || g.id, aff, orch, useFmt, t.cars, label);
             let dispTextForFilter = useFmt ? fObj.fNo : orch;
             let expectedFormVal = hl.includes('oimachi') ? dispTextForFilter : (fObj.dispAff ? `[${fObj.dispAff}] ${dispTextForFilter}` : dispTextForFilter);
-            if (currentView !== 'weekday' && currentView !== 'holiday' && formSelVal !== "all" && formSelVal !== expectedFormVal) return;
+            let expectedFormVals = [expectedFormVal];
+            const isDentoRecord = hl === 'dento' || (hl === 'extra_dtom' && calcSrc === '田園都市線');
+            if (isDentoRecord && t.formationNumber) {
+                expectedFormVals.push(`${String(t.formationNumber).replace(/F$/i, '')}F`);
+            }
+            if (currentView !== 'weekday' && currentView !== 'holiday' && formSelVal !== "all" && !expectedFormVals.includes(formSelVal)) return;
 
             let isRunning = isRunningByLiveApi(t, hl);
             if (showRunningOnly && !isRunning) return;
