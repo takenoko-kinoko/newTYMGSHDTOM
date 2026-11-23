@@ -28,7 +28,7 @@
     try {
       if (data && data.blocked) {
         document.documentElement.replaceChildren();
-        document.documentElement.innerHTML = '<head><meta charset="utf-8"><title>ご利用いただけません</title></head><body style="font-family:sans-serif;text-align:center;padding:12vh 20px"><h1></h1><p>このページは現在ご利用いただけません。</p></body>';
+        document.documentElement.innerHTML = '<head><meta charset="utf-8"><title>ご利用いただけません</title></head><body style="font-family:sans-serif;text-align:center;padding:12vh 20px"><h1>調整中</h1><p>このページは現在ご利用いただけません。</p></body>';
       }
     } finally { delete window[cb]; }
   };
